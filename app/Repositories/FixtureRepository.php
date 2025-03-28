@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Models\Fixture;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+
+class FixtureRepository
+{
+    protected $model;
+    public function __construct(Fixture $fixture)
+    {
+        $this->model = $fixture;
+    }
+    public function createOrUpdate(array $data): Fixture
+    {
+        $full_time_home_score   = null;
+        $full_time_away_score = null;
+        $half_time_home_score = null;
+        $half_time_away_score = null;
+        $extra_time_home_score = null;
+        $extra_time_away_score = null;
+        $penalties_home_score = null;
+        $penalties_away_score = null;
+        $winner = null;
+        $duration = null;
+
+        if(isset($data['score'])) {
+
+        if(isset($data['score']['fullTime'])  && isset($data['score']['halfTime'])  ){
+            $full_time_home_score   = $data['score']['fullTime']['home'] ?? null;
+            $full_time_away_score   = $data['score']['fullTime']['away'] ?? null;
+            $half_time_home_score   = $data['score']['halfTime']['home'] ?? null;
+            $half_time_away_score   = $data['score']['halfTime']['away'];
+        }
+        if(isset($data['score']['extraTime'])  ){
+            $extra_time_home_score   = $data['score']['extraTime']['home'];
+            $extra_time_away_score   = $data['score']['extraTime']['away'];
+        }
+        if(isset($data['score']['penalties'])  ){
+            $penalties_home_score   = $data['score']['penalties']['home'];
+            $penalties_away_score   = $data['score']['penalties']['away'];
+        }
+        if(isset($data['score']['winner'])  ){
+            $winner = $data['score']['winner'] ?? null;
+        }
+        if(isset($data['score']['duration']) ){
+            $duration = $data['score']['duration'] ?? null;
+        }
+    }
+
+
+        return Fixture::updateOrCreate(
+            ['id' => $data['id']],
+            [
+                'utc_date' => $data['utcDate'],
+                'status' => $data['status'],
+                'matchday' => $data['matchday'],
+                'stage' => $data['stage'],
+                'season_id' => $data['season']['id'],
+                'home_team_id' => $data['homeTeam']['id'],
+                'away_team_id' => $data['awayTeam']['id'],
+                'full_time_home_score' => $full_time_home_score,
+                'full_time_away_score' => $full_time_away_score,
+                'half_time_home_score' => $half_time_home_score,
+                'half_time_away_score' => $half_time_away_score,
+                'penalties_home_score' => $penalties_home_score,
+                'penalties_away_score' => $penalties_away_score,
+                'extra_time_home_score' => $extra_time_home_score,
+                'extra_time_away_score' => $extra_time_away_score,
+                'winner' => $winner,
+                'duration' => $duration,
+
+
+                'competition_id' => $data['competition']['id'],
+                'last_updated' => now(),
+            ]
+        );
+    }
+
+    public function findById(int $id): ?Fixture
+    {
+        try {
+            $result = $this->model->findOrFail($id);
+            return $result;
+
+        }
+       catch (\Exception $e) {
+            throw new ModelNotFoundException($e->getMessage());
+            return null;
+       }
+    }
+}

@@ -48,4 +48,4 @@ jobs:
           docker compose down | true
           docker pull ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker compose up -d
-          docker exec -it api php artisan migrate
+          # docker exec -it api bash -c "php artisan migrate"

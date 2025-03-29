@@ -1,6 +1,6 @@
 services:
     api:
-        image: trungisdead/php:latest
+        image: trungisdead1/php:latest
         build:
             context: .
             dockerfile: Dockerfile

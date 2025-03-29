@@ -55,4 +55,9 @@ class PersonRepository
         ->where('role', 'PLAYER')
         ->get();
     }
+
+    public function findById($id)
+    {
+        return $this->person->find($id);
+    }
 }

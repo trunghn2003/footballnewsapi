@@ -36,4 +36,9 @@ class Lineup extends Model
         return $this->belongsToMany(Person::class, 'lineup_players', 'lineup_id', 'player_id')
                     ->withPivot('position', 'shirt_number', 'grid_position', 'is_substitute');
     }
+
+    public function lineupPlayers()
+    {
+        return $this->hasMany(LineupPlayer::class, 'lineup_id');
+    }
 }

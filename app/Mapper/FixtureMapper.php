@@ -19,7 +19,8 @@ class FixtureMapper
             // $fixture->last_updated->format('Y-m-d\TH:i:s\Z'),
             TeamMapper::fromModel($fixture->homeTeam),
             TeamMapper::fromModel($fixture->awayTeam),
-            ScoreMapper::fromModel($fixture)
+            ScoreMapper::fromModel($fixture),
+            
 
         );
     }

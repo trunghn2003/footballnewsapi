@@ -17,6 +17,8 @@ class FixtureDTO implements \JsonSerializable
     private ?TeamDTO $awayTeam;
     private ?ScoreDTO $score;
     // private array $referees;
+    private ?LineupDTO $homeLineup  = null;
+    private ?LineupDTO $awayLineup = null;
 
     public function __construct(
         int $id,
@@ -28,6 +30,7 @@ class FixtureDTO implements \JsonSerializable
         TeamDTO $homeTeam,
         TeamDTO $awayTeam,
         ScoreDTO $score,
+
         // array $referees
     ) {
         $this->id = $id;
@@ -39,6 +42,7 @@ class FixtureDTO implements \JsonSerializable
         $this->homeTeam = $homeTeam;
         $this->awayTeam = $awayTeam;
         $this->score = $score;
+
         // $this->referees = $referees;
     }
 
@@ -89,6 +93,28 @@ class FixtureDTO implements \JsonSerializable
         return $this->score;
     }
 
+    public function getHomeLineup(): LineupDTO
+    {
+        return $this->homeLineup;
+    }
+
+    public function getAwayLineup(): LineupDTO
+    {
+        return $this->awayLineup;
+    }
+
+    public function setAwayLineup(?LineupDTO $awayLineup): void
+    {
+        $this->awayLineup = $awayLineup;
+    }
+
+    public function setHomeLineup(?LineupDTO $homeLineup): void
+    {
+        $this->homeLineup = $homeLineup;
+    }
+
+
+
 
 
     public function jsonSerialize(): array
@@ -101,7 +127,10 @@ class FixtureDTO implements \JsonSerializable
             'matchday' => $this->matchday,
             'stage' => $this->stage,
             'group' => $this->group,
-
+            'lineup' => [
+                'home' => $this->homeLineup,
+                'away' => $this->awayLineup
+            ],
             'homeTeam' => $this->homeTeam,
             'awayTeam' => $this->awayTeam,
             'score' => $this->score,

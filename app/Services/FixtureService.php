@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mapper\LineupMapper;
 use App\Repositories\FixtureRepository;
 use App\Repositories\PersonRepository;
 use App\DTO\FixtureDTO;
@@ -24,6 +25,7 @@ class FixtureService
     private LineupRepository $lineupRepository;
     private LineUpPlayerRepository $lineUpPlayerRepository;
     private PersonRepository $personRepository;
+    private LineupMapper $lineupMapper;
 
     public function __construct(
         FixtureRepository $fixtureRepository,
@@ -31,7 +33,8 @@ class FixtureService
         TeamService $teamService,
         LineupRepository $lineupRepository,
         LineUpPlayerRepository $lineUpPlayerRepository,
-        PersonRepository $personRepository
+        PersonRepository $personRepository,
+        LineupMapper $lineupMapper,
     ) {
         $this->fixtureRepository = $fixtureRepository;
         $this->apiToken = env('API_FOOTBALL_TOKEN');
@@ -41,6 +44,7 @@ class FixtureService
         $this->lineupRepository = $lineupRepository;
         $this->lineUpPlayerRepository = $lineUpPlayerRepository;
         $this->personRepository = $personRepository;
+        $this->lineupMapper = $lineupMapper;
     }
 
     public function syncFixtures()
@@ -58,7 +62,7 @@ class FixtureService
 
                 $response = Http::withHeaders([
                     'X-Auth-Token' => $this->apiToken
-                ])->get("{$this->apiUrlFootball}/competitions/PL/matches");
+                ])->get("{$this->apiUrlFootball}/competitions/{$name}/matches");
 
                 if (!$response->successful()) {
                     throw new \Exception("API request failed: {$response->status()}");
@@ -241,8 +245,15 @@ class FixtureService
                 if (!$awayLineup) {
                     $this->createRandomLineup($fixture->id, $fixture->away_team_id, $fixture->awayTeam->players, $formations[rand(0, count($formations) - 1)]);
                 }
+
                 $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                 $fixtureDto  = FixtureMapper::fromModel($fixture);
+                $homeLineupDto =  $this->lineupMapper->toDTO($fixture->homeLineup);
+                $awayLineupDto =  $this->lineupMapper->toDTO($fixture->awayLineup);
+                $fixtureDto->setHomeLineup($homeLineupDto);
+                $fixtureDto->setAwayLineup($awayLineupDto);
+                $fixtureDto->setCompetition($competition);
+
                 $fixtureDto->setCompetition($competition);
                 return $fixtureDto;
             }, $fixtures->items()),

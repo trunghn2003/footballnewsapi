@@ -45,9 +45,9 @@ jobs:
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login ${{'docker.io' }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           cd footballnewsapi
           sudo chmod 755 public/entrypoint.sh
-          # git pull origin main
+          git pull origin main
           docker compose down | true
           docker rmi ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker pull ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker compose up -d
-          # docker exec -it api bash -c "php artisan migrate"
+          docker exec -it api bash -c "php artisan migrate"

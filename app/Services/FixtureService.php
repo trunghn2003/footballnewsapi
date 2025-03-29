@@ -10,7 +10,7 @@ use App\Mapper\FixtureMapper;
 use App\Models\Formation;
 use App\Models\LineupPlayer;
 use App\Repositories\LineUpPlayerRepository;
-use App\Repositories\LineupRepository;
+use App\Repositories\LineUpRepository;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;

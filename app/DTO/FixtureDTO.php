@@ -11,14 +11,13 @@ class FixtureDTO implements \JsonSerializable
     private ?string $stage;
     private ?string $group;
 
-    private ?CompetitionDTO $competition;
+    private ?CompetitionDTO $competition =null;
 
     private ?TeamDTO $homeTeam;
     private ?TeamDTO $awayTeam;
     private ?ScoreDTO $score;
     // private array $referees;
-    private ?LineupDTO $homeLineup  = null;
-    private ?LineupDTO $awayLineup = null;
+
 
     public function __construct(
         int $id,
@@ -127,10 +126,6 @@ class FixtureDTO implements \JsonSerializable
             'matchday' => $this->matchday,
             'stage' => $this->stage,
             'group' => $this->group,
-            'lineup' => [
-                'home' => $this->homeLineup,
-                'away' => $this->awayLineup
-            ],
             'homeTeam' => $this->homeTeam,
             'awayTeam' => $this->awayTeam,
             'score' => $this->score,

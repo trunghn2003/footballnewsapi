@@ -61,8 +61,6 @@ class Fixture extends Model
         return $this->belongsTo(Team::class, 'away_team_id');
     }
 
-
-
     public function goals()
     {
         return $this->hasMany(Goal::class, 'fixture_id');
@@ -75,23 +73,22 @@ class Fixture extends Model
     public function homeLineup()
     {
         return $this->hasOne(Lineup::class, 'fixture_id')
-                    ->where('team_id', $this->home_team_id);
+
+            ->where('team_id', $this->home_team_id);
     }
 
     public function awayLineup()
+
     {
+
         return $this->hasOne(Lineup::class, 'fixture_id')
-                    ->where('team_id', $this->away_team_id);
+
+            ->where('team_id', $this->away_team_id);
+
     }
 
 
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class, 'fixture_id');
-    }
 
-    public function substitutions()
-    {
-        return $this->hasMany(Substitution::class, 'fixture_id');
-    }
+
+
 }

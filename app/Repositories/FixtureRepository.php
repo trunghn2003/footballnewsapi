@@ -126,7 +126,7 @@ class FixtureRepository
         }
 
         return $query
-            ->with(['homeTeam', 'awayTeam'])
+            ->with(['homeTeam', 'awayTeam', 'homeLineup.players.players', 'awayLineup.player.players'])
             ->orderBy('utc_date', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
     }

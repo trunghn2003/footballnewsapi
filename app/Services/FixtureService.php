@@ -201,18 +201,19 @@ class FixtureService
         return $lineup;
     }
 
-    public function getFixtureById(int $id): ?FixtureDTO
+    public function getFixtureById(int $id)
     {
         $fixture = $this->fixtureRepository->findById($id);
         $formations = ['4-4-2', '4-3-3', '3-5-2'];
 
-        $homeLineup = $fixture->homeLineup;
-        if (!$homeLineup)
-            $this->createRandomLineup($fixture->id, $fixture->home_team_id, $fixture->homeTeam->players, $formations[rand(0, count($formations) - 1)]);
+        $lineups = $fixture->lineups;
+        //        dd($fixture->homeLineup);
+        // dump($lineups, );
 
-        $awayLineup = $fixture->awayLineup;
-        // dump($awayLineup);
-        if (!$awayLineup) {
+        // dump(,$awayLineup);
+        if (!isset($lineups) || count($lineups) == 0) {
+            // dd(1);
+            $this->createRandomLineup($fixture->id, $fixture->home_team_id, $fixture->homeTeam->players, $formations[rand(0, count($formations) - 1)]);
             $this->createRandomLineup($fixture->id, $fixture->away_team_id, $fixture->awayTeam->players, $formations[rand(0, count($formations) - 1)]);
         }
         if (!$fixture) {
@@ -222,8 +223,51 @@ class FixtureService
         $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
         $fixtureDto = FixtureMapper::fromModel($fixture);
         $fixtureDto->setCompetition($competition);
+        return [
+            'fixture' => $fixtureDto ?? null,
+            "home_lineup" => collect($this->mapLineupToArray($fixture->homeLineup)) ?? null,
+            "away_lineup" => collect($this->mapLineupToArray($fixture->awayLineup)) ?? null,
+        ];
 
         return $fixtureDto;
+    }
+    public function mapLineupToArray($lineup)
+    {
+        if (!$lineup) {
+            return null;
+        }
+        return [
+
+            'formation' => $lineup->formation,
+            'startXI' => $lineup->lineupPlayers->filter(function ($player) {
+                return $player->is_substitute == 0;
+            })
+                ->sortBy(function ($player) {
+
+                    list($row, $col) = explode(':', $player->grid_position);
+                    return $row * 100 + $col;
+                })->map(function ($player) {
+                    return [
+                        'id' => $player->player_id,
+                        'position' => $player->position,
+                        'name' => $player->player->name,
+                        'shirt_number' => $player->shirt_number,
+                        'is_substitute' => $player->is_substitute,
+                        'grid' => $player->grid_position,
+                    ];
+                }),
+            'sub' => $lineup->lineupPlayers->filter(function ($player) {
+                return $player->is_substitute == 1;
+            })->map(function ($player) {
+                return [
+                    'id' => $player->player_id,
+                    'position' => $player->position,
+                    'name' => $player->player->name,
+                    'shirt_number' => $player->shirt_number,
+                    'is_substitute' => $player->is_substitute,
+                ];
+            }),
+        ];
     }
 
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
@@ -232,28 +276,8 @@ class FixtureService
 
         return [
             'data'  => array_map(function ($fixture) {
-
-                $formations = ['4-4-2', '4-3-3', '3-5-2'];
-                // dump($fixture->homeTeam);
-                // dd($fixture->homeTeam);
-                $homeLineup = $fixture->homeLineup;
-                if (!$homeLineup)
-                    $this->createRandomLineup($fixture->id, $fixture->home_team_id, $fixture->homeTeam->players, $formations[rand(0, count($formations) - 1)]);
-
-                $awayLineup = $fixture->awayLineup;
-                // dump($awayLineup);
-                if (!$awayLineup) {
-                    $this->createRandomLineup($fixture->id, $fixture->away_team_id, $fixture->awayTeam->players, $formations[rand(0, count($formations) - 1)]);
-                }
-
                 $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                 $fixtureDto  = FixtureMapper::fromModel($fixture);
-                $homeLineupDto =  $this->lineupMapper->toDTO($fixture->homeLineup);
-                $awayLineupDto =  $this->lineupMapper->toDTO($fixture->awayLineup);
-                $fixtureDto->setHomeLineup($homeLineupDto);
-                $fixtureDto->setAwayLineup($awayLineupDto);
-                $fixtureDto->setCompetition($competition);
-
                 $fixtureDto->setCompetition($competition);
                 return $fixtureDto;
             }, $fixtures->items()),

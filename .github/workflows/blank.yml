@@ -44,7 +44,7 @@ jobs:
 
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login ${{'docker.io' }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           cd footballnewsapi
-          chmod 755 public/entrypoint.sh
+          sudo chmod 755 public/entrypoint.sh
           # git pull origin main
           docker compose down | true
           docker rmi ${{ secrets.DOCKER_USERNAME }}/php:latest

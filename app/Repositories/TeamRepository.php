@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Team;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class TeamRepository
 {
@@ -12,6 +13,13 @@ class TeamRepository
      * @param array $data
      * @return Team
      */
+
+     private $model;
+
+     public function __construct(Team $team)
+     {
+        $this->model = $team;
+     }
     public function updateOrCreateTeam(array $data): Team
     {
         try {
@@ -47,5 +55,15 @@ class TeamRepository
     public function linkTeamToCompetition(Team $team, int $competitionId): void
     {
         $team->competitions()->syncWithoutDetaching([$competitionId]);
+    }
+
+    public function findById(int $id): ?Team
+    {
+        try {
+            return $this->model->find($id);
+        } catch (\Exception $e) {
+            \Log::error('Error finding team by id: ' . $e->getMessage());
+            throw new ModelNotFoundException($e->getMessage());
+        }
     }
 }

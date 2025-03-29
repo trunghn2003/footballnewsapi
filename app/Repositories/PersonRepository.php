@@ -48,4 +48,11 @@ class PersonRepository
         }
         }
     }
+
+    public  function getPersonByTeamId($teamId)
+    {
+        return $this->person->where('team_id', $teamId)
+        ->where('role', 'PLAYER')
+        ->get();
+    }
 }

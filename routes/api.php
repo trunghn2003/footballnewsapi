@@ -40,4 +40,4 @@ Route::get('/competitions/sync', [CompetitionController::class, 'sync']);
 Route::get('/areas/sync', [AreaController::class, 'sync']);
 Route::get('/teams/sync', [TeamController::class, 'sync']);
 Route::get('/seasons/sync', [SeasonController::class, 'sync']);
-Route::get('/fixtures/sync', [FixtureController::class, 'sync']);
+Route::post('/fixtures/sync', [FixtureController::class, 'sync']);

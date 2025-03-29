@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Repositories\PersonRepository;
 use App\Repositories\TeamRepository;
 use App\Repositories\PlayerRepository;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 class TeamService
 {
@@ -15,11 +15,11 @@ class TeamService
     private string $apiToken;
     public function __construct(
         TeamRepository $teamRepository,
-      
+
         PersonRepository $personRepository
     ) {
         $this->teamRepository = $teamRepository;
-       
+
         $this->personRepository = $personRepository;
         $this->apiUrl = env('API_FOOTBALL_URL');
         $this->apiToken = env('API_FOOTBALL_TOKEN');
@@ -60,7 +60,7 @@ class TeamService
                 DB::transaction(function () use ($data) {
                     foreach ($data['teams'] as $teamData) {
 
-                        $team = $this->teamRepository->updateOrCreateTeam($teamData);  
+                        $team = $this->teamRepository->updateOrCreateTeam($teamData);
 
                         foreach ($teamData['squad'] as $playerData) {
                             $this->personRepository->syncPerson($playerData, $team->id);
@@ -76,5 +76,10 @@ class TeamService
             DB::rollBack();
             return false;
         }
+    }
+
+    public function getTeamById(int $id)
+    {
+        return $this->teamRepository->findById($id);
     }
 }

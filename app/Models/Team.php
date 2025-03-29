@@ -38,7 +38,7 @@ class Team extends Model
         return $this->hasMany(Fixture::class, 'away_team_id');
     }
 
-    
+
 
     public function competitions()
     {
@@ -49,5 +49,12 @@ class Team extends Model
     {
         return Fixture::where('home_team_id', $this->id)
             ->orWhere('away_team_id', $this->id);
+    }
+
+    public function players()
+    {
+        return $this->belongsToMany(Person::class, 'person_team')
+                    ->withTimestamps();
+                    // ->where('role', 'PLAYER');
     }
 }

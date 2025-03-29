@@ -61,7 +61,5 @@ class AreaController extends Controller
         $result = $this->areaService->getPaginatedAreas($filters, $perPage, $page);
         return $this->successResponse($result);
     }
-    public function test(){
-        return $this->successResponse(User::all());
-    }
+   
 }

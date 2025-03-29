@@ -4,15 +4,18 @@ namespace App\Repositories;
 
 use App\Models\Fixture;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class FixtureRepository
 {
     protected $model;
+
     public function __construct(Fixture $fixture)
     {
         $this->model = $fixture;
     }
+
     public function createOrUpdate(array $data): Fixture
     {
         $full_time_home_score   = null;
@@ -26,30 +29,28 @@ class FixtureRepository
         $winner = null;
         $duration = null;
 
-        if(isset($data['score'])) {
-
-        if(isset($data['score']['fullTime'])  && isset($data['score']['halfTime'])  ){
-            $full_time_home_score   = $data['score']['fullTime']['home'] ?? null;
-            $full_time_away_score   = $data['score']['fullTime']['away'] ?? null;
-            $half_time_home_score   = $data['score']['halfTime']['home'] ?? null;
-            $half_time_away_score   = $data['score']['halfTime']['away'];
+        if (isset($data['score'])) {
+            if (isset($data['score']['fullTime'])  && isset($data['score']['halfTime'])) {
+                $full_time_home_score   = $data['score']['fullTime']['home'] ?? null;
+                $full_time_away_score   = $data['score']['fullTime']['away'] ?? null;
+                $half_time_home_score   = $data['score']['halfTime']['home'] ?? null;
+                $half_time_away_score   = $data['score']['halfTime']['away'];
+            }
+            if (isset($data['score']['extraTime'])) {
+                $extra_time_home_score   = $data['score']['extraTime']['home'];
+                $extra_time_away_score   = $data['score']['extraTime']['away'];
+            }
+            if (isset($data['score']['penalties'])) {
+                $penalties_home_score   = $data['score']['penalties']['home'];
+                $penalties_away_score   = $data['score']['penalties']['away'];
+            }
+            if (isset($data['score']['winner'])) {
+                $winner = $data['score']['winner'] ?? null;
+            }
+            if (isset($data['score']['duration'])) {
+                $duration = $data['score']['duration'] ?? null;
+            }
         }
-        if(isset($data['score']['extraTime'])  ){
-            $extra_time_home_score   = $data['score']['extraTime']['home'];
-            $extra_time_away_score   = $data['score']['extraTime']['away'];
-        }
-        if(isset($data['score']['penalties'])  ){
-            $penalties_home_score   = $data['score']['penalties']['home'];
-            $penalties_away_score   = $data['score']['penalties']['away'];
-        }
-        if(isset($data['score']['winner'])  ){
-            $winner = $data['score']['winner'] ?? null;
-        }
-        if(isset($data['score']['duration']) ){
-            $duration = $data['score']['duration'] ?? null;
-        }
-    }
-
 
         return Fixture::updateOrCreate(
             ['id' => $data['id']],
@@ -71,8 +72,6 @@ class FixtureRepository
                 'extra_time_away_score' => $extra_time_away_score,
                 'winner' => $winner,
                 'duration' => $duration,
-
-
                 'competition_id' => $data['competition']['id'],
                 'last_updated' => now(),
             ]
@@ -84,11 +83,51 @@ class FixtureRepository
         try {
             $result = $this->model->findOrFail($id);
             return $result;
-
-        }
-       catch (\Exception $e) {
+        } catch (\Exception $e) {
+            Log::error("Fixture not found: {$e->getMessage()}");
             throw new ModelNotFoundException($e->getMessage());
-            return null;
-       }
+        }
+    }
+
+    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1)
+    {
+        $query = $this->model->query();
+
+        if (isset($filters['competition'])) {
+            $query->where('competition_id', $filters['competition']);
+        }
+
+        if (isset($filters['ids'])) {
+            $query->whereIn('id', $filters['ids']);
+        }
+
+        if (isset($filters['dateFrom'])) {
+            $query->where('utc_date', '>=', $filters['dateFrom']);
+        }
+
+        if (isset($filters['dateTo'])) {
+            $query->where('utc_date', '<=', $filters['dateTo']);
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (isset($filters['teamName'])) {
+            $query->whereHas('homeTeam', function ($query) use ($filters) {
+                $query->where('name', 'like', '%' . $filters['teamName'] . '%');
+            })
+                ->orWhereHas('awayTeam', function ($query) use ($filters) {
+                    $query->where('name', 'like', '%' . $filters['teamName'] . '%');
+                });
+        }
+        if (isset($filters['teamId'])) {
+            $query->where('home_team_id', $filters['teamId'])
+                ->orWhere('away_team_id', $filters['teamId']);
+        }
+
+        return $query
+            ->with(['homeTeam', 'awayTeam'])
+            ->orderBy('utc_date', 'asc')
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 }

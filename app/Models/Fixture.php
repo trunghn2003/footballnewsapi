@@ -46,10 +46,7 @@ class Fixture extends Model
         return $this->belongsTo(Team::class, 'away_team_id');
     }
 
-    public function referee()
-    {
-        return $this->belongsTo(Referee::class);
-    }
+    
 
     public function goals()
     {

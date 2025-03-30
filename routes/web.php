@@ -21,3 +21,8 @@ Route::get('/', function () {
 Route::get('/test1', function () {
     return User::all();
 })->name('test');
+
+
+use App\Http\Controllers\NotificationController;
+
+Route::get('send-notification', [NotificationController::class, 'SendPushNotification']);

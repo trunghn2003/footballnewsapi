@@ -44,7 +44,8 @@ jobs:
 
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login ${{'docker.io' }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           cd footballnewsapi
-          sudo chmod 755 public/entrypoint.sh
+          sudo chmod 755 docker/entrypoint.sh
+          git stash
           git pull origin main
           docker compose down | true
           docker rmi ${{ secrets.DOCKER_USERNAME }}/php:latest
@@ -52,3 +53,4 @@ jobs:
           docker compose up -d
           dokcer composer exec api composer update
           docker compose exec api php artisan migrate
+          docker system prune -a -f

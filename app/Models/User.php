@@ -21,7 +21,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return []; 
+        return [];
     }
 
     /**
@@ -33,6 +33,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'fcm_token',
     ];
 
     /**
@@ -52,5 +53,6 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'favorite_teams' => 'array',
     ];
 }

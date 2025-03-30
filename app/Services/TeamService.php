@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Repositories\PersonRepository;
 use App\Repositories\TeamRepository;
 use App\Repositories\PlayerRepository;
@@ -81,5 +82,44 @@ class TeamService
     public function getTeamById(int $id)
     {
         return $this->teamRepository->findById($id);
+    }
+
+    public function addFavoriteTeam(int $teamId): bool
+    {
+        $user = User::where('id', auth()->user()->id)->first();
+        if (!$user) {
+            return false;
+        }
+        // dd($user);
+        $favoriteTeams = $user->favourite_teams;
+        if (!is_array($favoriteTeams)) {
+            $favoriteTeams = json_decode($favoriteTeams, true) ?? [];
+        }
+        // dd($favoriteTeams);
+        if (!in_array($teamId, $favoriteTeams)) {
+            $favoriteTeams[] = $teamId;
+            $user->favourite_teams = $favoriteTeams;
+            $user->save();
+        }
+        return true;
+    }
+
+    public function removeFavoriteTeam(int $teamId): bool
+    {
+        $user = User::where('id', auth()->user()->id)->first();
+        if (!$user) {
+            return false;
+        }
+        $favoriteTeams = $user->favourite_teams;
+        if (!is_array($favoriteTeams)) {
+            $favoriteTeams = json_decode($favoriteTeams, true) ?? [];
+        }
+        if (in_array($teamId, $favoriteTeams)) {
+            $key = array_search($teamId, $favoriteTeams);
+            unset($favoriteTeams[$key]);
+            $user->favourite_teams = $favoriteTeams;
+            $user->save();
+        }
+        return true;
     }
 }

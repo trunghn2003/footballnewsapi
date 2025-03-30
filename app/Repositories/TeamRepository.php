@@ -66,4 +66,6 @@ class TeamRepository
             throw new ModelNotFoundException($e->getMessage());
         }
     }
+
+    
 }

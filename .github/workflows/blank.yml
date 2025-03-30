@@ -50,4 +50,5 @@ jobs:
           docker rmi ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker pull ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker compose up -d
-          docker exec -it api bash -c "php artisan migrate"
+          dokcer composer exec api composer update
+          docker compose exec api php artisan migrate

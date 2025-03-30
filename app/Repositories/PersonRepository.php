@@ -60,4 +60,10 @@ class PersonRepository
     {
         return $this->person->find($id);
     }
+
+    public function update(int $id, array $data): bool
+    {
+        dd($data);
+        return $this->person->where('id', $id)->update($data);
+    }
 }

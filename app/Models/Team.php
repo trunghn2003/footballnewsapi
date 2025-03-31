@@ -42,7 +42,9 @@ class Team extends Model
 
     public function competitions()
     {
-        return $this->belongsToMany(Competition::class, 'competition_team');
+        return $this->belongsToMany(Competition::class, 'team_competition_season')
+                    ->withPivot('season_id')
+                    ->withTimestamps();
     }
 
     public function getAllFixtures()

@@ -45,4 +45,11 @@ class FixtureController extends Controller
         $fixtures = $this->fixtureService->getFixtures($filters, $perPage, $page);
         return $this->successResponse($fixtures);
     }
+
+    public function getFixtureCompetition(Request $request)
+    {
+        $filters = $request->only(['dateFrom', 'dateTo', 'competition']);
+        $fixtures = $this->fixtureService->getFixtureByCompetition($filters);
+        return $this->successResponse($fixtures);
+    }
 }

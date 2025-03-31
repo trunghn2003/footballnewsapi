@@ -89,10 +89,9 @@ class FixtureRepository
         }
     }
 
-    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1)
+    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1, $flag = false)
     {
         $query = $this->model->query();
-
         if (isset($filters['competition'])) {
             $query->where('competition_id', $filters['competition']);
         }
@@ -102,6 +101,7 @@ class FixtureRepository
         }
 
         if (isset($filters['dateFrom'])) {
+            // dd(1);
             $query->where('utc_date', '>=', $filters['dateFrom']);
         }
 
@@ -124,6 +124,9 @@ class FixtureRepository
             $query->where('home_team_id', $filters['teamId'])
                 ->orWhere('away_team_id', $filters['teamId']);
         }
+        if (!$flag)
+            $query->where('utc_date', '>', now());
+
 
         return $query
             ->with(['homeTeam', 'awayTeam', 'homeLineup.players.players', 'awayLineup.player.players'])

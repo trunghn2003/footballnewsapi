@@ -13,8 +13,8 @@ class FixtureDTO implements \JsonSerializable
 
     private ?CompetitionDTO $competition =null;
 
-    private ?TeamDTO $homeTeam;
-    private ?TeamDTO $awayTeam;
+    private ?TeamDTO $homeTeam = null;
+    private ?TeamDTO $awayTeam = null;
     private ?ScoreDTO $score;
     // private array $referees;
 
@@ -26,8 +26,8 @@ class FixtureDTO implements \JsonSerializable
         int $matchday,
         string $stage,
         ?string $group,
-        TeamDTO $homeTeam,
-        TeamDTO $awayTeam,
+        // TeamDTO $homeTeam,
+        // TeamDTO $awayTeam,
         ScoreDTO $score,
 
         // array $referees
@@ -38,8 +38,8 @@ class FixtureDTO implements \JsonSerializable
         $this->matchday = $matchday;
         $this->stage = $stage;
         $this->group = $group;
-        $this->homeTeam = $homeTeam;
-        $this->awayTeam = $awayTeam;
+        // $this->homeTeam = $homeTeam;
+        // $this->awayTeam = $awayTeam;
         $this->score = $score;
 
         // $this->referees = $referees;
@@ -110,6 +110,14 @@ class FixtureDTO implements \JsonSerializable
     public function setHomeLineup(?LineupDTO $homeLineup): void
     {
         $this->homeLineup = $homeLineup;
+    }
+    public function setHomeTeam(TeamDTO $homeTeam): void
+    {
+        $this->homeTeam = $homeTeam;
+    }
+    public function setAwayTeam(TeamDTO $awayTeam): void
+    {
+        $this->awayTeam = $awayTeam;
     }
 
 

@@ -67,5 +67,46 @@ class TeamRepository
         }
     }
 
-    
+    public function getAll($filters, $perPage, $page)
+    {
+        try {
+            $query = $this->model->query();
+
+            if (isset($filters['name'])) {
+                $query->where('name', 'like', '%' . $filters['name'] . '%');
+            }
+            if (isset($filters['short_name'])) {
+                $query->where('short_name', 'like', '%' . $filters['short_name'] . '%');
+            }
+            if (isset($filters['tla'])) {
+                $query->where('tla', 'like', '%' . $filters['tla'] . '%');
+            }
+            if (isset($filters['area_id'])) {
+                $query->where('area_id', '=', $filters['area_id']);
+            }
+            if (isset($filters['competition_id'])) {
+                $query->whereHas('competitions', function ($q) use ($filters) {
+                    $q->where('competitions.id', $filters['competition_id'])
+                      // Join với bảng seasons để lấy mùa giải hiện tại
+                      ->whereHas('seasons', function ($seasonQuery) {
+                          $seasonQuery->whereDate('start_date', '<=', now())
+                                    ->whereDate('end_date', '>=', now());
+                      })
+                      // Đảm bảo có record trong bảng pivot cho mùa giải hiện tại
+                      ->whereHas('teams', function ($teamQuery) {
+                          $teamQuery->whereHas('competitions.seasons', function ($pivotQuery) {
+                              $pivotQuery->whereDate('start_date', '<=', now())
+                                       ->whereDate('end_date', '>=', now());
+                          });
+                      });
+                });
+            }
+
+            return $query->paginate($perPage, ['*'], 'page', $page);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+        }
+    }
+
+
 }

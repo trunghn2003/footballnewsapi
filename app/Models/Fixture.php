@@ -80,17 +80,9 @@ class Fixture extends Model
     }
 
     public function awayLineup()
-
     {
-
         return $this->hasOne(Lineup::class, 'fixture_id')
 
             ->where('team_id', $this->away_team_id);
-
     }
-
-
-
-
-
 }

@@ -7,6 +7,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponseTrait;
+use Illuminate\Http\Request;
+
 use PHPUnit\Framework\MockObject\Api;
 
 class TeamController extends Controller
@@ -57,6 +59,17 @@ class TeamController extends Controller
             return $this->errorResponse('Failed to remove favorite team');
         }
         return $this->successResponse('Favorite team removed successfully');
+    }
+
+    public function getTeams(Request $request): JsonResponse
+    {
+        $filters = $request->only(['name', 'code', 'type', 'competition_id', 'area_id']);
+        $perPage = $request->input('perPage', 32);
+        $page = $request->input('page', 1);
+        $result = $this->teamService->getTeams($filters, $perPage, $page);
+
+        return $this->successResponse($result);
+
     }
 
 }

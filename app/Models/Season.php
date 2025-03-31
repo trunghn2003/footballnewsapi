@@ -7,8 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Season extends Model
 {
     protected $fillable = [
-        'id', 'competition_id', 'start_date', 'end_date',
-        'current_matchday', 'winner_team_id', 'name'
+        'id',
+        'competition_id',
+        'start_date',
+        'end_date',
+        'current_matchday',
+        'winner_team_id',
+        'name'
     ];
 
     public $incrementing = false;
@@ -31,9 +36,15 @@ class Season extends Model
     }
 
     public function fixtures()
-{
-    return $this->hasMany(Fixture::class);
-}
+    {
+        return $this->hasMany(Fixture::class);
+    }
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_competition_season')
+            ->withPivot('competition_id')
+            ->withTimestamps();
+    }
 
     // public function stages()
     // {

@@ -7,6 +7,7 @@ use App\Repositories\FixtureRepository;
 use App\Repositories\PersonRepository;
 use App\DTO\FixtureDTO;
 use App\Mapper\FixtureMapper;
+use App\Mapper\TeamMapper;
 use App\Models\Formation;
 use App\Models\LineupPlayer;
 use App\Repositories\LineUpPlayerRepository;
@@ -222,6 +223,8 @@ class FixtureService
 
         $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
         $fixtureDto = FixtureMapper::fromModel($fixture);
+        $fixtureDto->setHomeTeam(TeamMapper::fromModel($fixture->homeTeam));
+        $fixtureDto->setAwayTeam(TeamMapper::fromModel($fixture->awayTeam));
         $fixtureDto->setCompetition($competition);
         return [
             'fixture' => $fixtureDto ?? null,
@@ -273,11 +276,20 @@ class FixtureService
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
     {
         $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page);
-
+        if(isset($fixtures) && count($fixtures) > 0)
+        // dd($fixtures->items());
         return [
-            'data'  => array_map(function ($fixture) {
+            'fixtures'  => array_map(function ($fixture) {
                 $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                 $fixtureDto  = FixtureMapper::fromModel($fixture);
+                $homeTeam = $fixture->homeTeam;
+                if(isset($homeTeam)) {
+                    $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                }
+                $awayTeam = $fixture->awayTeam;
+                if(isset($awayTeam)) {
+                    $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                }
                 $fixtureDto->setCompetition($competition);
                 return $fixtureDto;
             }, $fixtures->items()),
@@ -285,6 +297,50 @@ class FixtureService
                 'current_page' => $fixtures->currentPage(),
                 'per_page'     => $fixtures->perPage(),
                 'total'        => $fixtures->total()
+            ]
+        ];
+         else return [
+            'fixtures'  => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page'     => 0,
+                'total'        => 0
+            ]
+        ];
+    }
+
+    public function getFixtureByCompetition($filters)
+    {
+        $fixtures = $this->fixtureRepository->getFixtures($filters, 50, 1,$flag = true);
+        if(isset($fixtures) && count($fixtures) > 0)
+
+        return [
+            'fixtures'  => array_map(function ($fixture) {
+                $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                $fixtureDto  = FixtureMapper::fromModel($fixture);
+                $homeTeam = $fixture->homeTeam;
+                if(isset($homeTeam)) {
+                    $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                }
+                $awayTeam = $fixture->awayTeam;
+                if(isset($awayTeam)) {
+                    $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                }
+                $fixtureDto->setCompetition($competition);
+                return $fixtureDto;
+            }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page'     => $fixtures->perPage(),
+                    'total'        => $fixtures->total()
+                ]
+        ];
+        return [
+            'fixtures'  => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page'     => 0,
+                'total'        => 0
             ]
         ];
     }

@@ -17,10 +17,10 @@ class FixtureMapper
             $fixture->stage,
             $fixture->group,
             // $fixture->last_updated->format('Y-m-d\TH:i:s\Z'),
-            TeamMapper::fromModel($fixture->homeTeam),
-            TeamMapper::fromModel($fixture->awayTeam),
+            // TeamMapper::fromModel($fixture->homeTeam),
+            // TeamMapper::fromModel($fixture->awayTeam),
             ScoreMapper::fromModel($fixture),
-            
+
 
         );
     }

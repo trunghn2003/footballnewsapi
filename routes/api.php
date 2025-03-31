@@ -34,9 +34,12 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('competitions/{id}', [CompetitionController::class, 'getCompetitionById']);
     Route::get('fixtures/{id}', [FixtureController::class, 'getFixtureById']);
     Route::get('fixtures', [FixtureController::class, 'getFixtures']);
+    Route::get('fixtures/competition/season', [FixtureController::class, 'getFixtureCompetition']);
 
     Route::post('teams/{teamId}/favorite', [TeamController::class, 'addFavoriteTeam']);
     Route::delete('teams/{teamId}/favorite', [TeamController::class, 'removeFavoriteTeam']);
+    Route::get('teams', [TeamController::class, 'getTeams']);
+
 });
 
 Route::get('/competitions/sync', [CompetitionController::class, 'sync']);

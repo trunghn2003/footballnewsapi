@@ -40,7 +40,12 @@ class Competition extends Model
             ->latest();
     }
 
-
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_competition_season')
+                    ->withPivot('season_id')
+                    ->withTimestamps();
+    }
 
     public function seasons()
     {
@@ -50,10 +55,5 @@ class Competition extends Model
     public function fixtures()
     {
         return $this->hasMany(Fixture::class);
-    }
-
-    public function teams()
-    {
-        return $this->belongsToMany(Team::class, 'competition_team');
     }
 }

@@ -61,6 +61,9 @@ class CompetitionRepository
             if (isset($filters['type'])) {
                 $query->where('type', 'like', '%' . $filters['type'] . '%');
             }
+            if (isset($filters['area_id'])) {
+                $query->where('area_id', '=', $filters['area_id']);
+            }
             $query = $query->paginate($perPage, ['*'], 'page', $page);
             return $query;
         } catch (\Exception $e) {

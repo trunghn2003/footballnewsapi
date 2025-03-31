@@ -33,6 +33,7 @@ class AuthService
 
     public function login(array $credentials)
     {
+        \Log::info('Login attempt with credentials: ', $credentials);
         if (!$token = JWTAuth::attempt($credentials)) {
             throw new LogicException('Invalid credentials');
         }

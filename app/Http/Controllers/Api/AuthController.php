@@ -37,6 +37,8 @@ class AuthController extends Controller {
             $token = $this->authService->login($request->validated());
             return $this->successResponse($token, 'Login successful');
         } catch (LogicException $e) {
+            \Log::error('Login error: ' . $e->getMessage(), [
+            ]);
             return $this->errorResponse($e->getMessage(), 401);
         }
     }

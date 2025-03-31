@@ -45,7 +45,7 @@ class CompetitionController extends Controller
      */
     public function getAllCompetitions(Request $request): JsonResponse
     {
-        $filters = $request->only(['name', 'code', 'type']);
+        $filters = $request->only(['name', 'code', 'type', 'area_id']);
         $perPage = $request->input('perPage', 10);
         $page = $request->input('page', 1);
         $result = $this->competitionService->getCompetitions($filters, $perPage, $page);

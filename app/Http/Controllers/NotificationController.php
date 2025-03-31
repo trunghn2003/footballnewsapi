@@ -11,7 +11,7 @@ class NotificationController extends Controller
     public function sendPushNotification(Request $request)
     {
         try {
-            $token = "dlbQZwZhy84p2bziZX8lSo:APA91bHmQB_0smAYlN0sNpxuiEHTSvEyikmqddk2gt197TOC3aJfoa2FzZOAp30zS_BmuKwTbjhM_oBVWxtXIbWATzuzAUpvG10tisFRqrWbqxLbD8Lc3ng";
+            $token = "cqCOAnAWGQohxcM2Y8nS1q:APA91bGbsxFBhhPGCyBI4hnnFA8QeaXZXoU8g3st8TDqgxqPqVA-b4C819Cf5ENT6QGARkq7cHYZKQ-tE0MekjziyHA9y_u4EtoCenAu4nsEtq1yVosNrn8";
             $title = 'Test';
             $body = 'Test body';
             $data = [

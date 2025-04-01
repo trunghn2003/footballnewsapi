@@ -85,4 +85,29 @@ class NewsService
             ]
         ];
     }
+
+    public function getNewsById($id)
+    {
+        try {
+            $news = $this->newsRepository->getNewsById($id);
+            $currentUserId = auth()->id();
+            
+            $comments = $news->comments()
+                ->with('user')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($comment) use ($currentUserId) {
+                    $comment->is_owner = $comment->user_id === $currentUserId;
+                    return $comment;
+                });
+
+            return [
+                'news' => $news,
+                'comments' => $comments
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error in NewsService getNewsById: ' . $e->getMessage());
+            throw $e;
+        }
+    }
 } 

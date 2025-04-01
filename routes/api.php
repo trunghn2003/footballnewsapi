@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FixtureController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\StandingController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -52,6 +53,12 @@ Route::middleware('jwt.auth')->group(function () {
     Route::put('/comments/{commentId}', [CommentController::class, 'updateComment']);
     Route::delete('/comments/{commentId}', [CommentController::class, 'deleteComment']);
     Route::get('/comments/{commentId}', [CommentController::class, 'getCommentById']);
+
+    // Standing routes
+    Route::post('/standings/sync', [StandingController::class, 'storeStandings']);
+    Route::get('/standings', [StandingController::class, 'getStandings']);
+    Route::get('/standings/matchday', [StandingController::class, 'getStandingsByMatchday']);
+    Route::get('/standings/type', [StandingController::class, 'getStandingsByType']);
 });
 
 Route::get('/competitions/sync', [CompetitionController::class, 'sync']);
@@ -59,3 +66,10 @@ Route::get('/areas/sync', [AreaController::class, 'sync']);
 Route::get('/teams/sync', [TeamController::class, 'sync']);
 Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
+
+// Standing routes
+Route::middleware('auth:api')->group(function () {
+    Route::post('/competitions/{competitionId}/standings', [StandingController::class, 'storeStandings']);
+    Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
+    Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
+});

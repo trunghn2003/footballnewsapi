@@ -78,7 +78,7 @@ class CompetitionRepository
             return $query;
         }
         catch (\Exception $e) {
-            throw ModelNotFoundException($e->getMessage());
+            throw new ModelNotFoundException($e->getMessage());
         }
     }
 }

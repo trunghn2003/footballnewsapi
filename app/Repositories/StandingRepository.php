@@ -81,12 +81,14 @@ class StandingRepository
         }
     }
 
-    public function getStandingsByCompetitionAndSeason($competitionId, $seasonId)
+    public function getStandingsByCompetitionAndSeason($competitionId, $seasonId, $matchday, $type)
     {
         return $this->model
-            ->with(['team', 'competition', 'season'])
+            ->with(['team'])
             ->where('competition_id', $competitionId)
             ->where('season_id', $seasonId)
+            ->where('matchday', $matchday)
+            ->where('type', $type)
             ->orderBy('matchday', 'desc')
             ->orderBy('type')
             ->orderBy('position')
@@ -116,4 +118,4 @@ class StandingRepository
             ->orderBy('position')
             ->get();
     }
-} 
+}

@@ -30,14 +30,15 @@ class StandingController extends Controller
     public function getStandings(Request $request)
     {
         try {
-            $competitionId = $request->query('competition_id');
-            $seasonId = $request->query('season_id');
+            $competitionId = $request->competition_id;
+            // $seasonId = $request->season_id;
 
-            if (!$competitionId || !$seasonId) {
-                return $this->errorResponse('Competition ID and Season ID are required');
+
+            if (!$competitionId) {
+                return $this->errorResponse('Competition ID is required');
             }
 
-            $standings = $this->standingService->getStandingsByCompetitionAndSeason($competitionId, $seasonId);
+            $standings = $this->standingService->getStandingsByCompetitionAndSeason($request);
             return $this->successResponse($standings);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
@@ -80,4 +81,4 @@ class StandingController extends Controller
             return $this->errorResponse($e->getMessage());
         }
     }
-} 
+}

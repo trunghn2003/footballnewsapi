@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NewsController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -26,3 +27,4 @@ Route::get('/test1', function () {
 use App\Http\Controllers\NotificationController;
 
 Route::get('send-notification', [NotificationController::class, 'SendPushNotification']);
+Route::get('/news/fetch/{id}', [NewsController::class,'scrapeArticles']);

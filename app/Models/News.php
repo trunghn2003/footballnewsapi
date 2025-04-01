@@ -12,7 +12,8 @@ class News extends Model
         'title',
         'content',
         'source',
-        'published_at'
+        'published_at',
+        'competition_id'
     ];
 
     protected $dates = ['published_at', 'deleted_at'];
@@ -26,5 +27,10 @@ class News extends Model
     public function teams()
     {
         return $this->belongsToMany(Team::class, 'news_teams');
+    }
+
+    public function competition()
+    {
+        return $this->belongsTo(Competition::class);
     }
 }

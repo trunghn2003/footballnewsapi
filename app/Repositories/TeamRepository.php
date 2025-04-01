@@ -107,6 +107,9 @@ class TeamRepository
             \Log::error($e->getMessage());
         }
     }
+    public function findAll(){
+        return $this->model->all();
+    }
 
 
 }

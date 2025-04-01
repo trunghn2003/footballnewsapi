@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CompetitionController;
 use App\Http\Controllers\Api\SeasonController;
 use App\Http\Controllers\Api\FixtureController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NewsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -40,6 +41,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::delete('teams/{teamId}/favorite', [TeamController::class, 'removeFavoriteTeam']);
     Route::get('teams', [TeamController::class, 'getTeams']);
 
+    Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
 });
 
 Route::get('/competitions/sync', [CompetitionController::class, 'sync']);

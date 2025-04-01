@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\NewsService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 
 class NewsController extends Controller
 {
+    use ApiResponseTrait;
     protected $newsService;
 
     public function __construct(NewsService $newsService)
@@ -30,6 +32,26 @@ class NewsController extends Controller
                 'message' => 'Error fetching or saving news articles',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function getAllNews(Request $request)
+    {
+        try {
+            $perPage = $request->input('per_page', 10);
+            $filters = [
+                'competition_id' => $request->input('competition_id'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'team_id' => $request->input('team_id'),
+                'team_name' => $request->input('team_name')
+            ];
+            
+            $news = $this->newsService->getLatestNews($perPage, $filters);
+            
+            return $this->successResponse($news);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage());
         }
     }
 }

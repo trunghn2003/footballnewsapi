@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\SeasonController;
 use App\Http\Controllers\Api\FixtureController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\CommentController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -42,6 +43,14 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('teams', [TeamController::class, 'getTeams']);
 
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
+    Route::get('/news', [NewsController::class, 'getAllNews']);
+
+    // Comment routes
+    Route::get('/news/{newsId}/comments', [CommentController::class, 'getCommentsByNews']);
+    Route::post('/comments', [CommentController::class, 'createComment']);
+    Route::put('/comments/{commentId}', [CommentController::class, 'updateComment']);
+    Route::delete('/comments/{commentId}', [CommentController::class, 'deleteComment']);
+    Route::get('/comments/{commentId}', [CommentController::class, 'getCommentById']);
 });
 
 Route::get('/competitions/sync', [CompetitionController::class, 'sync']);

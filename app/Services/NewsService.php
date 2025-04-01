@@ -72,4 +72,17 @@ class NewsService
             }
         }
     }
+
+    public function getLatestNews($perPage = 10, $filters = [])
+    {
+        $result = $this->newsRepository->getLatestNews($perPage, $filters);
+        return [
+            'news' => $result->items(),
+            'pagination' => [
+                'current_page' => $result->currentPage(),
+                'per_page'     => $result->perPage(),
+                'total'        => $result->total()
+            ]
+        ];
+    }
 } 

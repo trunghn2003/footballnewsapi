@@ -6,7 +6,7 @@ use App\Models\News;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class NewsRepository implements NewsRepositoryInterface
+class NewsRepository 
 {
     protected $model;
 
@@ -65,5 +65,37 @@ class NewsRepository implements NewsRepositoryInterface
         return $this->model->whereHas('teams', function ($query) use ($teamId) {
             $query->where('teams.id', $teamId);
         })->get();
+    }
+
+    public function getLatestNews($perPage = 10, $filters = [])
+    {
+        $query = $this->model->query();
+
+        if (isset($filters['competition_id'])) {
+            $query->where('competition_id', $filters['competition_id']);
+        }
+
+        if (isset($filters['date_from'])) {
+            $query->whereDate('published_at', '>=', $filters['date_from']);
+        }
+
+        if (isset($filters['date_to'])) {
+            $query->whereDate('published_at', '<=', $filters['date_to']);
+        }
+
+        if (isset($filters['team_id'])) {
+            $query->whereHas('teams', function ($q) use ($filters) {
+                $q->where('teams.id', $filters['team_id']);
+            });
+        }
+
+        if (isset($filters['team_name'])) {
+            $query->whereHas('teams', function ($q) use ($filters) {
+                $q->where('teams.name', 'like', '%' . $filters['team_name'] . '%');
+            });
+        }
+
+        return $query->orderBy('published_at', 'desc')
+                    ->paginate($perPage);
     }
 }

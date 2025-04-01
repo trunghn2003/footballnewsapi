@@ -3,46 +3,82 @@
 namespace App\Repositories;
 
 use App\Models\Comment;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CommentRepository
 {
-    protected $comment;
+    protected $model;
 
-    public function __construct(Comment $comment)
+    public function __construct(Comment $model)
     {
-        $this->comment = $comment;
+        $this->model = $model;
     }
 
-    public function getCommentsByNews($newsId)
+    public function create(array $data)
     {
-        return $this->comment->with(['user', 'replies'])
-            ->where('news_id', $newsId)
-            ->whereNull('parent_id')
-            ->get();
-    }
+        DB::beginTransaction();
+        try {
+            $comment = new Comment();
+            $comment->parent_id = $data['parent_id'];
+            $comment->content = $data['content'];
+            $comment->user_id = $data['user_id'];
+            $comment->news_id = $data['news_id'];
+            $comment->save();
 
-    public function getRepliesByComment($commentId)
-    {
-        return $this->comment->with('user')
-            ->where('parent_id', $commentId)
-            ->get();
-    }
-
-    public function createComment(array $data)
-    {
-        return $this->comment->create($data);
-    }
-
-    public function deleteComment($commentId)
-    {
-        try{
-            $comment = $this->comment->findOrFail($commentId);
-            return $comment->delete();
-
+            DB::commit();
+            return $comment;
         } catch (\Exception $e) {
-            throw new ModelNotFoundException($e->getMessage());
-            return false;
+            DB::rollBack();
+            Log::error('Error creating comment: ' . $e->getMessage());
+            throw $e;
         }
+    }
+
+    public function getCommentsByNews($newsId, $perPage = 10)
+    {
+        return $this->model
+            ->where('news_id', $newsId)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
+
+    public function update($commentId, array $data)
+    {
+        DB::beginTransaction();
+        try {
+            $comment = $this->model->findOrFail($commentId);
+            $comment->content = $data['content'];
+            $comment->save();
+
+            DB::commit();
+            return $comment;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating comment: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function delete($commentId)
+    {
+        DB::beginTransaction();
+        try {
+            $comment = $this->model->findOrFail($commentId);
+            $comment->delete();
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting comment: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getCommentById($commentId)
+    {
+        return $this->model->with('user')->findOrFail($commentId);
     }
 }

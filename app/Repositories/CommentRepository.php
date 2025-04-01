@@ -20,7 +20,7 @@ class CommentRepository
         DB::beginTransaction();
         try {
             $comment = new Comment();
-            $comment->parent_id = $data['parent_id'];
+            $comment->parent_id = $data['parent_id'] ?? null;
             $comment->content = $data['content'];
             $comment->user_id = $data['user_id'];
             $comment->news_id = $data['news_id'];

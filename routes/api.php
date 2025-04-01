@@ -44,6 +44,7 @@ Route::middleware('jwt.auth')->group(function () {
 
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
     Route::get('/news', [NewsController::class, 'getAllNews']);
+    Route::get('/news/{newsId}', [NewsController::class, 'getNewsById']);
 
     // Comment routes
     Route::get('/news/{newsId}/comments', [CommentController::class, 'getCommentsByNews']);

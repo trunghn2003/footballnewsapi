@@ -54,4 +54,19 @@ class NewsController extends Controller
             return $this->errorResponse($e->getMessage());
         }
     }
+
+    public function getNewsById($id)
+    {
+        try {
+            $news = $this->newsService->getNewsById($id);
+            
+            if (!$news) {
+                return $this->errorResponse('News not found', 404);
+            }
+            
+            return $this->successResponse($news);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
 }

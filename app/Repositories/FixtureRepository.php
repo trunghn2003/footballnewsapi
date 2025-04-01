@@ -95,6 +95,9 @@ class FixtureRepository
         if (isset($filters['competition'])) {
             $query->where('competition_id', $filters['competition']);
         }
+        if (isset($filters['competition_id'])) {
+            $query->where('competition_id', $filters['competition_id']);
+        }
 
         if (isset($filters['ids'])) {
             $query->whereIn('id', $filters['ids']);

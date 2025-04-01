@@ -38,7 +38,7 @@ class FixtureController extends Controller
 
     public function getFixtures(Request $request)
     {
-        $filters = $request->only(['competition', 'ids', 'dateFrom', 'dateTo', 'status', 'teamName', 'teamId']);
+        $filters = $request->only(['competition', 'ids', 'dateFrom', 'dateTo', 'status', 'teamName', 'teamId', 'competition_id']);
         $perPage = $request->input('perPage', 10);
         $page = $request->input('page', 1);
 

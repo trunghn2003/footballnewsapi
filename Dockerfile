@@ -50,8 +50,11 @@ RUN chmod -R 755 /var/www/bootstrap
 RUN usermod --uid 1000 www-data
 RUN groupmod --gid 1001 www-data
 
-# Set up crontab
-RUN echo "* * * * * www-data cd /var/www && php artisan schedule:run >> /var/log/cron.log 2>&1" > /etc/cron.d/laravel-cron
+COPY cron /etc/cron.d/cron
+RUN chmod 0644 /etc/cron.d/cron
+RUN crontab /etc/cron.d/cron
+# Create the log file to be able to run tail
+RUN touch /var/log/cron.log
 
 
 # Run the entrypoint file.

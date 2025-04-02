@@ -21,15 +21,7 @@ php artisan jwt:secret --no-interaction
 chmod -R 755 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
-echo "🕒 Cấu hình cron job..."
-mkdir -p /var/log/cron
-touch /var/log/cron/cron.log
-chown www-data:www-data /var/log/cron/cron.log
-
-echo "🚀 Khởi động cron service..."
-service cron start
-echo "* * * * * www-data cd /var/www && php artisan schedule:run >> /var/log/cron/cron.log 2>&1" | tee /etc/cron.d/laravel > /dev/null
-crontab /etc/cron.d/laravel
+cron -f
 
 echo "🌐 Khởi động Nginx và PHP-FPM..."
 service nginx start

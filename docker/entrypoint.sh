@@ -1,55 +1,40 @@
 #!/bin/bash
+set -e
 
-set -e # Exit immediately if a command exits with a non-zero status.
-
-# Install dependencies if they don't exist
 if [ ! -f "vendor/autoload.php" ]; then
+    echo "Cài đặt Composer dependencies..."
     composer install --no-progress --no-interaction --optimize-autoloader
 fi
 
-# Handle environment configuration
 if [ ! -f ".env" ]; then
-    echo "Creating env file for env $APP_ENV"
+    echo "🔄 Tạo file .env từ .env.example..."
     cp .env.example .env
+    php artisan key:generate
 else
-    echo "env file exists."
+    echo "✅ File .env đã tồn tại"
 fi
 
-php artisan optimize:clear
-php artisan jwt:secret
+echo "🛠️ Tối ưu framework..."
+php artisan optimize:clear > /dev/null 2>&1
+php artisan jwt:secret --no-interaction
 
-# Set proper permissions - AVOID 777
-chmod -R 755 storage
-chmod -R 755 bootstrap/cache
-# chmod -R 755 public/index.php # Not usually needed
-# chmod -R 755 public # Not usually needed.  Consider what needs write access.
+chmod -R 755 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
 
-# Start cron service properly
-mkdir -p /var/run
-chown www-data:www-data /var/run #Ensure proper ownership
+echo "🕒 Cấu hình cron job..."
+mkdir -p /var/log/cron
+touch /var/log/cron/cron.log
+chown www-data:www-data /var/log/cron/cron.log
 
-# This function starts cron and handles potential errors
-start_cron() {
-  #Try removing the pid file and starting cron
-  rm -f /var/run/crond.pid
-  cron -f
-}
+echo "🚀 Khởi động cron service..."
+service cron start
+echo "* * * * * www-data cd /var/www && php artisan schedule:run >> /var/log/cron/cron.log 2>&1" | tee /etc/cron.d/laravel > /dev/null
+crontab /etc/cron.d/laravel
 
-#Attempt to start cron, retry a few times if needed
-attempt=0
-while ! start_cron; do
-  if [ $attempt -ge 3 ]; then
-    echo "Failed to start cron after multiple attempts. Exiting."
-    exit 1
-  fi
-  attempt=$((attempt+1))
-  echo "Cron failed to start. Retrying in 1 second..."
-  sleep 1
-done
-
-#Start PHP-FPM and Nginx
+echo "🌐 Khởi động Nginx và PHP-FPM..."
+service nginx start
 php-fpm -D
-nginx -g "daemon off;"
 
-#Keep the container running
-# tail -f /dev/null
+# 8. GIỮ CONTAINER HOẠT ĐỘNG
+echo "🐋 Container đã sẵn sàng!"
+tail -f /var/log/cron/cron.log /var/log/nginx/error.log

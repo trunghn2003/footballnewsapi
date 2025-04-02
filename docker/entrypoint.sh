@@ -21,6 +21,7 @@ php artisan jwt:secret --no-interaction
 chmod -R 755 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
-cron -f &
-docker-php-entrypoint php-fpm
+cron -f & php-fpm -D
+nginx -g "daemon off;"
+echo "🚀 Bắt đầu chạy cronjob và nginx..."
 tail -f /var/log/cron/cron.log /var/log/nginx/error.log

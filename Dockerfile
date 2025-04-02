@@ -1,5 +1,5 @@
 # Used for prod build.
-FROM php:8.1-fpm as php
+FROM php:8.2-fpm as php
 
 # Set environment variables
 ENV PHP_OPCACHE_ENABLE=1
@@ -8,7 +8,7 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 ENV PHP_OPCACHE_REVALIDATE_FREQ=0
 
 # Install dependencies.
-RUN apt-get update && apt-get install -y unzip libpq-dev libcurl4-gnutls-dev nginx libonig-dev
+RUN apt-get update && apt-get install -y unzip libpq-dev libcurl4-gnutls-dev nginx libonig-dev cron
 
 # Install PHP extensions.
 RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath curl opcache mbstring
@@ -51,7 +51,8 @@ RUN usermod --uid 1000 www-data
 RUN groupmod --gid 1001 www-data
 
 # Set up crontab
-RUN echo "* * * * * cd /var/www && php artisan schedule:run" | crontab -
+RUN echo "* * * * * www-data cd /var/www && php artisan schedule:run >> /var/log/cron.log 2>&1" > /etc/cron.d/laravel-cron
+
 
 # Run the entrypoint file.
 ENTRYPOINT [ "docker/entrypoint.sh" ]

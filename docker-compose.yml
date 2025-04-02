@@ -17,13 +17,13 @@ services:
         ports:
             - 9000:8080
         depends_on:
-            - db
+            - db-mysql
 
-    db:
-        container_name: db
+    db-mysql:
+        container_name: db-mysql
         image: mysql:8.0
         ports:
-            -   3306:3306
+            -   3307:3307
         environment:
             - MYSQL_DATABASE=${DB_DATABASE}
             - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}

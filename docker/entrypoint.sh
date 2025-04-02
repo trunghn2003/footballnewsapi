@@ -17,5 +17,11 @@ chmod -R 777 bootstrap/cache
 chmod -R 777 public/index.php
 chmod -R 777 public
 
+# Start cron service properly
+mkdir -p /var/run
+touch /var/run/crond.pid
+chmod 0644 /var/run/crond.pid
+cron -f
+
 php-fpm -D
 nginx -g "daemon off;"

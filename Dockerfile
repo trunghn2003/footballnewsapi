@@ -50,5 +50,8 @@ RUN chmod -R 755 /var/www/bootstrap
 RUN usermod --uid 1000 www-data
 RUN groupmod --gid 1001 www-data
 
+# Set up crontab
+RUN echo "* * * * * cd /var/www && php artisan schedule:run" | crontab -
+
 # Run the entrypoint file.
 ENTRYPOINT [ "docker/entrypoint.sh" ]

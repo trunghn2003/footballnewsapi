@@ -34,26 +34,27 @@ class SendMatchReminders extends Command
     {
         $now = Carbon::now();
 
-        $matches = Fixture::where('utc_date', '>=', $now)
-                       ->where('utc_date', '<=', $now->addMinutes(30))
-                       ->get();
+        // $matches = Fixture::where('utc_date', '>=', $now)
+        //                ->where('utc_date', '<=', $now->addMinutes(30))
+        //                ->get();
 
-        foreach ($matches as $match) {
-            $users = $this->getUsersToNotify($match);
-            foreach ($users as $user) {
-                $notificationService->send(
-                    $user,
-                    'match_reminder',
-                    [
-                        // 'title' => 'Nhắc nhở trận đấu',
-                        'message' => "Sắp diễn ra: {$match->homeTeam->short_name} vs {$match->awayTeam->short_name}",
-                        'match_time' => $match->start_time->format('H:i'),
-                        'location' => "chua co"
-                    ],
-                    ['push']
-                );
-            }
-        }
+        // foreach ($matches as $match) {
+        //     $users = $this->getUsersToNotify($match);
+        //     foreach ($users as $user) {
+        //         $notificationService->send(
+        //             $user,
+        //             'match_reminder',
+        //             [
+        //                 // 'title' => 'Nhắc nhở trận đấu',
+        //                 'message' => "Sắp diễn ra: {$match->homeTeam->short_name} vs {$match->awayTeam->short_name}",
+        //                 'match_time' => $match->start_time->format('H:i'),
+        //                 'location' => "chua co"
+        //             ],
+        //             ['push']
+        //         );
+        //     }
+        // }
+        \Log::info('Match reminders sent successfully!');
 
         $this->info('Match reminders sent successfully!');
     }

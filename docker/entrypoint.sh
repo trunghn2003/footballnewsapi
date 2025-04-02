@@ -21,12 +21,6 @@ php artisan jwt:secret --no-interaction
 chmod -R 755 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
-cron -f
-
-echo "🌐 Khởi động Nginx và PHP-FPM..."
-service nginx start
-php-fpm -D
-
-# 8. GIỮ CONTAINER HOẠT ĐỘNG
-echo "🐋 Container đã sẵn sàng!"
+cron -f &
+docker-php-entrypoint php-fpm
 tail -f /var/log/cron/cron.log /var/log/nginx/error.log

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Competition;
 
 class CompetitionService
 {
@@ -25,9 +26,13 @@ class CompetitionService
 
 
 
-    public function __construct(CompetitionRepository $competitionRepository, AreaRepository $areaRepository, SeasonMapper $seasonMapper,
-    AreaMapper $areaMapper, CompetitionMapper $competitionMapper)
-    {
+    public function __construct(
+        CompetitionRepository $competitionRepository,
+        AreaRepository $areaRepository,
+        SeasonMapper $seasonMapper,
+        AreaMapper $areaMapper,
+        CompetitionMapper $competitionMapper
+    ) {
         $this->apiUrlFootball = env('API_FOOTBALL_URL');
         $this->apiToken = env('API_FOOTBALL_TOKEN');
         $this->competitionRepository = $competitionRepository;
@@ -90,7 +95,6 @@ class CompetitionService
                 'success' => true,
                 'stats' => $stats
             ];
-
         } catch (\Exception $e) {
             Log::error("Competition sync failed: {$e->getMessage()}");
             DB::rollBack();
@@ -116,7 +120,6 @@ class CompetitionService
             }
 
             return $response->json();
-
         } catch (\Exception $e) {
             throw ModelNotFoundException($e->getMessage());
             Log::error("Failed to get competition details: {$e->getMessage()}");
@@ -124,7 +127,8 @@ class CompetitionService
         }
     }
 
-    public function getCompetitions($filters, $perPage, $page) {
+    public function getCompetitions($filters, $perPage, $page)
+    {
         try {
             $competitions = $this->competitionRepository->getAll($filters, $perPage, $page);
             $result = [];
@@ -133,8 +137,8 @@ class CompetitionService
                 $areaDTO = $this->areaMapper->toDTO($area);
                 $season = $competition->currentSeason ?? null;
                 $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-                if(isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
-//                 dump($seaDTO);
+                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+                //                 dump($seaDTO);
                 $competitionDto = $this->competitionMapper->toDTO($competition);
                 $competitionDto->setArea($areaDTO);
                 $competitionDto->setSeason($seaDTO);
@@ -148,16 +152,13 @@ class CompetitionService
                 'competitions' => $result
             ];
             return $result;
-        }
-        catch(\Exception $e) {
+        } catch (\Exception $e) {
             \Log::error($e->getMessage());
             throw ($e);
-
-
         }
     }
 
-    public function getCompetitionById ($id)
+    public function getCompetitionById($id)
     {
         try {
             $competition = $this->competitionRepository->getById($id);
@@ -167,19 +168,47 @@ class CompetitionService
             $areaDTO = $this->areaMapper->toDTO($area);
             $season = $competition->currentSeason ?? null;
             $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-            if(isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+            if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
             $competitionDto = $this->competitionMapper->toDTO($competition);
             $competitionDto->setArea($areaDTO);
             $competitionDto->setSeason($seaDTO);
             return $competitionDto;
-        }
-        catch(\Exception $e) {
+        } catch (\Exception $e) {
             \Log::error($e->getMessage());
             throw ($e);
-
-
         }
     }
 
+    /**
+     * Get featured competitions
+     */
+    public function getFeaturedCompetitions()
+    {
+        try {
+            $competitions = $this->competitionRepository->getFeatured();
+            $result = [];
 
+            foreach ($competitions as $competition) {
+                $area = $competition->area;
+                $areaDTO = $this->areaMapper->toDTO($area);
+                $season = $competition->currentSeason ?? null;
+                $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
+                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+
+                $competitionDto = $this->competitionMapper->toDTO($competition);
+                $competitionDto->setArea($areaDTO);
+                $competitionDto->setSeason($seaDTO);
+
+                $result[] = $competitionDto;
+            }
+
+            return [
+                'competitions' => $result,
+                'total' => count($result)
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw ($e);
+        }
+    }
 }

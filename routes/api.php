@@ -44,7 +44,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('teams', [TeamController::class, 'getTeams']);
 
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
-    Route::get('/news', [NewsController::class, 'getAllNews']);
     Route::get('/news/{newsId}', [NewsController::class, 'getNewsById']);
 
     // Comment routes
@@ -73,3 +72,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
     Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
 });
+Route::get('/news', [NewsController::class, 'getAllNews']);
+Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);

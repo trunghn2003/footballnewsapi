@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use App\Models\Competition;
 
 class CompetitionController extends Controller
 {
@@ -51,14 +52,19 @@ class CompetitionController extends Controller
         $result = $this->competitionService->getCompetitions($filters, $perPage, $page);
 
         return $this->successResponse($result);
-
     }
     public function getCompetitionById($id): JsonResponse
     {
 
         return  $this->successResponse($this->competitionService->getCompetitionById($id));
-
     }
 
-
+    /**
+     * Get featured competitions
+     */
+    public function getFeatured(): JsonResponse
+    {
+        $result = $this->competitionService->getFeaturedCompetitions();
+        return $this->successResponse($result);
+    }
 }

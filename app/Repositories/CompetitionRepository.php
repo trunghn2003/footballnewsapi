@@ -16,7 +16,8 @@ class CompetitionRepository
      */
     private $model;
 
-    public function __construct(Competition $model){
+    public function __construct(Competition $model)
+    {
         $this->model = $model;
     }
     public function createOrUpdate(array $data): Competition
@@ -64,6 +65,8 @@ class CompetitionRepository
             if (isset($filters['area_id'])) {
                 $query->where('area_id', '=', $filters['area_id']);
             }
+            $query->orderBy('is_featured', 'desc');
+
             $query = $query->paginate($perPage, ['*'], 'page', $page);
             return $query;
         } catch (\Exception $e) {
@@ -76,9 +79,18 @@ class CompetitionRepository
         try {
             $query = $this->model->findOrFail($Id);
             return $query;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             throw new ModelNotFoundException($e->getMessage());
         }
+    }
+
+    /**
+     * Get featured competitions
+     */
+    public function getFeatured()
+    {
+        return $this->model->where('is_featured', true)
+            ->with(['area', 'currentSeason'])
+            ->get();
     }
 }

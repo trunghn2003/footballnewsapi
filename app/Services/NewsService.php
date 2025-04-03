@@ -93,8 +93,7 @@ class NewsService
             $teamName = strtolower($team->name);
             $teamShortname = strtolower($team->short_name);
             if (strpos($content, $teamName) !== false || strpos($content, $teamShortname) !== false) {
-                    $news->teams()->attach($team->id);
-
+                $news->teams()->attach($team->id);
             }
         }
     }

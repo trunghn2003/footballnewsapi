@@ -2,7 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Services\FixtureService;
+
+use App\Services\NewsService;
 use Illuminate\Bus\Queueable;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,27 +11,23 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SyncFixtureJob implements ShouldQueue
+class RawNewsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $fixtureService;
+
+    protected $newsService;
     /**
      * Create a new job instance.
-     * @param FixtureService $fixtureService
+     * @param NewsService $newsService
      */
-    public function __construct(FixtureService $fixtureService)
+    public function __construct(NewsService $newsService)
     {
-        $this->fixtureService = $fixtureService;
+        $this->newsService = $newsService;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
         //
-        $this->fixtureService->syncFixtures();
+        $this->newsService->rawNewsFromApi();
     }
 }

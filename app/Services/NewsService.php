@@ -8,12 +8,13 @@ use App\Repositories\TeamRepository;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+
 class NewsService
 {
     protected $newsRepository;
     protected $teamRepository;
     protected $apiKey;
-    protected $baseUrl = 'http://127.0.0.1:5000/api/scrape-articles';
+    protected $baseUrl = 'http://157.66.47.51:5000/api/scrape-articles';
 
     public function __construct(NewsRepository $newsRepository, TeamRepository $teamRepository)
     {
@@ -25,7 +26,7 @@ class NewsService
     {
         $response = Http::get($this->baseUrl . '/' . $competitionId);
         // dd($response);
-        try { 
+        try {
             if (!$response->successful()) {
                 throw new \Exception('Failed to fetch news: ' . $response->body());
             }
@@ -38,6 +39,26 @@ class NewsService
         }
     }
 
+    public function rawNewsFromApi()
+    {
+        $ids = [2001, 2002, 2014, 2015, 2021, 2019];
+        DB::beginTransaction();
+        try {
+            foreach ($ids as $id) {
+                $articles = $this->fetchNewsFromApi($id);
+                $this->storeNewsFromApi($articles, $id);
+                \Log::info('News fetched and stored for competition ID: ' . $id);
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error in rawNewsFromApi: ' . $e->getMessage());
+            throw $e;
+        }
+
+        // dd($response);
+    }
+
     public function storeNewsFromApi(array $newsArticles, $competitionId)
     {
         DB::beginTransaction();
@@ -45,7 +66,7 @@ class NewsService
             foreach ($newsArticles as $article) {
                 $article['competition_id'] = $competitionId;
                 $news = $this->newsRepository->create($article);
-                
+
                 // Check for team names in article content
                 $this->processTeamRelationships($news, $article);
             }
@@ -60,15 +81,20 @@ class NewsService
 
     protected function processTeamRelationships($news, $article)
     {
-        $content = strtolower($article['title'] . ' ' . $article['description']. ' ' .$article['content']);
-        
+        if (!$news) {
+            return; // Skip if news article was not created (duplicate title)
+        }
+
+        $content = strtolower($article['title'] . ' ' . $article['description'] . ' ' . $article['content']);
+
         $teams = $this->teamRepository->findAll();
-        
+
         foreach ($teams as $team) {
             $teamName = strtolower($team->name);
             $teamShortname = strtolower($team->short_name);
             if (strpos($content, $teamName) !== false || strpos($content, $teamShortname) !== false) {
-                $news->teams()->attach($team->id);
+                    $news->teams()->attach($team->id);
+
             }
         }
     }
@@ -91,7 +117,7 @@ class NewsService
         try {
             $news = $this->newsRepository->getNewsById($id);
             $currentUserId = auth()->id();
-            
+
             $comments = $news->comments()
                 ->with('user')
                 ->orderBy('created_at', 'desc')
@@ -110,4 +136,4 @@ class NewsService
             throw $e;
         }
     }
-} 
+}

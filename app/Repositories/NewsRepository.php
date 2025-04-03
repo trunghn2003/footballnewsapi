@@ -6,7 +6,7 @@ use App\Models\News;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class NewsRepository 
+class NewsRepository
 {
     protected $model;
 
@@ -17,6 +17,12 @@ class NewsRepository
 
     public function create(array $data)
     {
+
+        $existingNews = $this->model->where('title', $data['title'])->first();
+        if ($existingNews) {
+            return null; 
+        }
+
         DB::beginTransaction();
         try {
             $news = new News();
@@ -96,6 +102,6 @@ class NewsRepository
         }
 
         return $query->orderBy('published_at', 'desc')
-                    ->paginate($perPage);
+            ->paginate($perPage);
     }
 }

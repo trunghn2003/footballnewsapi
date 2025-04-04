@@ -27,6 +27,9 @@ WORKDIR /var/www
 # Copy files from current folder to container current folder (set in workdir).
 COPY --chown=www-data:www-data . .
 
+# Copy firebase service account file.
+RUN mkdir -p /var/www/public
+COPY --chown=www-data:www-data go.json /var/www/public/go.json
 # Create laravel caching folders.
 RUN mkdir -p /var/www/storage/framework
 RUN mkdir -p /var/www/storage/framework/cache

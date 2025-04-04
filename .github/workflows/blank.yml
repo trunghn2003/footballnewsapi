@@ -12,7 +12,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
+    - name: Create Firebase service account file
+      run: echo '${{ secrets.GO_JSON }}' > go.json
+    
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 

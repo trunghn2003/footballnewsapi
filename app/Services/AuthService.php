@@ -31,12 +31,17 @@ class AuthService
         }
     }
 
-    public function login(array $credentials)
+    public function login(array $credentials, $fcm_token)
     {
         \Log::info('Login attempt with credentials: ', $credentials);
         if (!$token = JWTAuth::attempt($credentials)) {
             throw new LogicException('Invalid credentials');
         }
+        $user = $this->getAuthenticatedUser();
+        if ($fcm_token) {
+            $user->fcm_token = $fcm_token;
+        }
+        $user->save();
 
         return [
             'access_token' => $token,

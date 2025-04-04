@@ -34,7 +34,8 @@ class AuthController extends Controller {
 
     public function login(LoginRequest $request) {
         try {
-            $token = $this->authService->login($request->validated());
+            $fcm_token = $request->fcm_token ?? null;
+            $token = $this->authService->login($request->validated(), $fcm_token);
             return $this->successResponse($token, 'Login successful');
         } catch (LogicException $e) {
             \Log::error('Login error: ' . $e->getMessage(), [

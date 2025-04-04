@@ -57,7 +57,7 @@ class AreaService
                         'code' => $areaData['code'] ?? null,
                         'flag' => $areaData['flag'] ?? null,
                     ]);
-
+                    \Log::info($area);
                     $wasRecentlyCreated = $area->wasRecentlyCreated;
                     $stats[$wasRecentlyCreated ? 'created' : 'updated']++;
                 } catch (\Exception $e) {

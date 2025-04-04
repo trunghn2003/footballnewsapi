@@ -60,8 +60,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/standings/type', [StandingController::class, 'getStandingsByType']);
 });
 
-Route::get('/competitions/sync', [CompetitionController::class, 'sync']);
-Route::get('/areas/sync', [AreaController::class, 'sync']);
+Route::post('/competitions/sync', [CompetitionController::class, 'sync']);
+Route::post('/areas/sync', [AreaController::class, 'sync']);
 Route::get('/teams/sync', [TeamController::class, 'sync']);
 Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);

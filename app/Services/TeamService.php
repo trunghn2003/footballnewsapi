@@ -36,6 +36,7 @@ class TeamService
      */
     public function syncTeamsAndPlayers(): bool
     {
+        set_time_limit(30000000);
         $names = [
                 'PL' => 2021,
                 'CL' => 2001,
@@ -69,18 +70,18 @@ class TeamService
                     // dd($currentSeason);
                     foreach ($data['teams'] as $teamData) {
                         $team = $this->teamRepository->updateOrCreateTeam($teamData);
-                        DB::table('team_competition_season')->updateOrInsert(
-                            [
-                                'team_id' => $team->id,
-                                'competition_id' => $competition->id,
-                                'season_id' => $currentSeason->id
-                            ],
-                            ['created_at' => now(), 'updated_at' => now()]
-                        );
+                        // DB::table('team_competition_season')->updateOrInsert(
+                        //     [
+                        //         'team_id' => $team->id,
+                        //         'competition_id' => $competition->id,
+                        //         'season_id' => $currentSeason->id
+                        //     ],
+                        //     ['created_at' => now(), 'updated_at' => now()]
+                        // );
                         \Log::info('Team: ' . $team->name . ' ' .$competition->id. ' '. $currentSeason->id . ' synced successfully.');
-                        // foreach ($teamData['squad'] as $playerData) {
-                        //     $this->personRepository->syncPerson($playerData, $team->id);
-                        // }
+                        foreach ($teamData['squad'] as $playerData) {
+                            $this->personRepository->syncPerson($playerData, $team->id);
+                        }
                     }
                 });
                 DB::commit();

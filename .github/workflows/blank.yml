@@ -51,8 +51,8 @@ jobs:
           docker rmi ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker pull ${{ secrets.DOCKER_USERNAME }}/php:latest
           docker compose up -d
-          docker compose exec api composer update
-          docker compose exec api php artisan migrate
+          # docker compose exec api composer update
+          # docker compose exec api php artisan migrate
           docker system prune -a -f
           docker compose up -d
 

@@ -41,6 +41,7 @@ class NewsService
 
     public function rawNewsFromApi()
     {
+        set_time_limit(3000000);
         $ids = [2001, 2002, 2014, 2015, 2021, 2019];
         DB::beginTransaction();
         try {

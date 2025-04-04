@@ -9,6 +9,7 @@
             container_name: api
             environment:
                 - APP_ENV=${APP_ENV}
+            restart: always
             env_file:
                 - .env
             working_dir: /var/www
@@ -27,6 +28,7 @@
             environment:
                 - MYSQL_DATABASE=${DB_DATABASE}
                 - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+            restart: always
             volumes:
                 - db-data:/var/lib/mysql
             command: --port=3307

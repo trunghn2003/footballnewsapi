@@ -12,9 +12,9 @@ class NotificationController extends Controller
     public function sendPushNotification(Request $request)
     {
         try {
-            $user = User::all();
+            $users = User::all();
             $tokens = [];
-            foreach ($user as $user) {
+            foreach ($users as $user) {
                 if ($user->fcm_token) {
                     $tokens[] = $user->fcm_token;
                 }

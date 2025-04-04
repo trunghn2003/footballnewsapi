@@ -32,3 +32,8 @@
             command: --port=3307
     volumes:
         db-data: ~
+
+    networks:
+    default:
+        external: true
+        name: footballnewsapi_default

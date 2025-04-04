@@ -34,6 +34,6 @@
         db-data: ~
 
     networks:
-    default:
-        external: true
-        name: footballnewsapi_default
+        default:
+            name: footballnewsapi_default
+            external: true

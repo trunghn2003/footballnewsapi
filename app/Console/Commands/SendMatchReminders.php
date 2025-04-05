@@ -32,29 +32,33 @@ class SendMatchReminders extends Command
      */
     public function handle(NotificationService $notificationService)
     {
-        $now = Carbon::now();
 
-        $matches = Fixture::where('utc_date', '>=', $now)
-                       ->where('utc_date', '<=', $now->addMinutes(30))
-                       ->get();
+        $nowUtc = Carbon::now('UTC');
+        $laterUtc = (clone $nowUtc)->addHours(2);
+
+        $matches = Fixture::where('utc_date', '>=', $nowUtc)
+                        ->where('utc_date', '<=', $laterUtc)
+                        ->get();
+        //  dd($matches);
 
         foreach ($matches as $match) {
             $users = $this->getUsersToNotify($match);
             foreach ($users as $user) {
+                $message = "Sap diễn ra: {$match->homeTeam->short_name} vs {$match->awayTeam->short_name}";
                 $notificationService->send(
                     $user,
                     'match_reminder',
                     [
                         // 'title' => 'Nhắc nhở trận đấu',
-                        'message' => "Sắp diễn ra: {$match->homeTeam->short_name} vs {$match->awayTeam->short_name}",
-                        'match_time' => $match->start_time->format('H:i'),
+                        'message' => $message,
+                        'match_time' => $match->uct_date,
                         'location' => "chua co"
                     ],
                     ['push']
                 );
             }
         }
-        \Log::info('Match reminders sent successfully!');
+        \Log::info('Match reminders sent successfully!' . Carbon::now() . 'team' . $match->homeTeam->short_name . ' vs ' . $match->awayTeam->short_name); ;
 
         $this->info('Match reminders sent successfully!');
     }
@@ -64,8 +68,8 @@ class SendMatchReminders extends Command
      */
     protected function getUsersToNotify(Fixture $match)
     {
-        return User::whereJsonContains('favorite_teams', $match->homeTeam->id)
-                  ->orWhereJsonContains('favorite_teams', $match->awayTeam->id)
+        return User::whereJsonContains('favourite_teams', $match->homeTeam->id)
+                  ->orWhereJsonContains('favourite_teams', $match->awayTeam->id)
                   ->get();
     }
 }

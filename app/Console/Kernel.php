@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-
+        $schedule->command('send:match-reminders')->everyOddHour();
         $schedule->command('sync:fixtures')->everyTwoHours();
         $schedule->command('sync:news')->everyThreeHours();
     }

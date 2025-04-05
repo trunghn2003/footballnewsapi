@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Notification;
 use App\Repositories\NotificationRepository;
+use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
@@ -12,7 +13,7 @@ class NotificationService
 {
 
     private $notificationRepository;
-
+    use PushNotification;
 
     public function __construct(NotificationRepository $notificationRepository)
     {
@@ -29,18 +30,14 @@ class NotificationService
      */
     public function send(User $user, string $type, array $data, array $channels = ['push']): bool
     {
-
+        // dd($user, $data);
         $notification = $this->createNotification($user, $type, $data);
+        // dd($user);
+                    if($user->fcm_token) {
+                    // dd($data);
+                    $this->sendNotification($user->fcm_token,$type,$data ,$data);
 
-
-        foreach ($channels as $channel) {
-            switch ($channel) {
-                case 'push':
-                    $this->sendPushNotification($user, $data);
-                    break;
-            }
-        }
-
+                    }
         return true;
     }
 
@@ -54,26 +51,12 @@ class NotificationService
             'type' => $type,
             'data' => $data,
             'status' => 'pending',
+            'message' => $data['message'] ?? null,
         ]);
     }
 
 
 
-    /**
-     * send push notification to user using Firebase.
-     */
-    protected function sendPushNotification(User $user, array $data): void
-    {
-       
-        if ($user->fcm_token) {
-            $message = CloudMessage::withTarget('token', $user->fcm_token)
-                ->withNotification(FirebaseNotification::create(
-                    $data['title'] ?? 'Thông báo mới',
-                    $data['message'] ?? 'Bạn có thông báo mới.'
-                ))
-                ->withData($data);
 
-            app('firebase.messaging')->send($message);
-        }
-    }
+
 }

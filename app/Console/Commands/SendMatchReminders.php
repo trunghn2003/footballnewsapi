@@ -4,10 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\Fixture;
 use App\Models\User;
-use App\Services\NotificationService;
+use App\Repositories\NotificationRepository;
+use App\Traits\PushNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Kreait\Firebase\Messaging\CloudMessage;
+use Mockery\Matcher\Not;
 
 class SendMatchReminders extends Command
 {
@@ -17,6 +19,7 @@ class SendMatchReminders extends Command
      * @var string
      */
     protected $signature = 'send:match-reminders';
+    protected $noficationRepository;
 
     /**
      * The console command description.
@@ -24,13 +27,15 @@ class SendMatchReminders extends Command
      * @var string
      */
     protected $description = 'Send reminders 30 minutes before matches start';
-
+    use PushNotification;
     /**
      * Execute the console command.
      *
      * @return int
      */
-    public function handle(NotificationService $notificationService)
+    public function handle(NotificationRepository $noficationRepository)
+    {
+        $this->noficationRepository = $noficationRepository;
     {
 
         $nowUtc = Carbon::now('UTC');
@@ -39,29 +44,42 @@ class SendMatchReminders extends Command
         $matches = Fixture::where('utc_date', '>=', $nowUtc)
                         ->where('utc_date', '<=', $laterUtc)
                         ->get();
-        //  dd($matches);
+        // $matches = Fixture::where('id', 498904)->get();
 
         foreach ($matches as $match) {
             $users = $this->getUsersToNotify($match);
+
             foreach ($users as $user) {
-                $message = "Sap diễn ra: {$match->homeTeam->short_name} vs {$match->awayTeam->short_name}";
-                $notificationService->send(
-                    $user,
-                    'match_reminder',
+                if (empty($user->fcm_token)) {
+                    continue;
+                }
+                $matchTime = Carbon::createFromFormat('Y-m-d H:i:s', $match->utc_date, 'UTC')
+                    ->setTimezone('Asia/Ho_Chi_Minh')
+                    ->format('H:i d-m-Y');
+                $message = "Sap diễn ra: {$match->homeTeam->short_name} vs
+                {$match->awayTeam->short_name} lúc {$matchTime}";
+                $title = "Nhắc nhở trận đấu trận đấu của {$match->homeTeam->short_name} vs {$match->awayTeam->short_name} lúc {$matchTime}";
+                $result = $this->sendNotification(
+                    $user->fcm_token,
+                    $title,
+                    $message,
                     [
-                        // 'title' => 'Nhắc nhở trận đấu',
+                        'title' => $title,
                         'message' => $message,
-                        'match_time' => $match->uct_date,
-                        'location' => "chua co"
-                    ],
-                    ['push']
+                        'match_time' => $matchTime,
+                        'type' => 'match_reminder',
+                        'user_id' => $user->id,
+                        // 'location' => "chua co"
+                    ]
                 );
+                // dd($result);
             }
         }
         \Log::info('Match reminders sent successfully!' . Carbon::now() . 'team' . $match->homeTeam->short_name . ' vs ' . $match->awayTeam->short_name); ;
 
         $this->info('Match reminders sent successfully!');
     }
+}
 
     /**
      * Get users to notify based on their favorite teams.

@@ -8,10 +8,13 @@ use App\Repositories\PersonRepository;
 use App\DTO\FixtureDTO;
 use App\Mapper\FixtureMapper;
 use App\Mapper\TeamMapper;
+use App\Models\Fixture;
 use App\Models\Formation;
 use App\Models\LineupPlayer;
+use App\Models\User;
 use App\Repositories\LineUpPlayerRepository;
 use App\Repositories\LineUpRepository;
+use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +30,7 @@ class FixtureService
     private LineUpPlayerRepository $lineUpPlayerRepository;
     private PersonRepository $personRepository;
     private LineupMapper $lineupMapper;
+    use PushNotification;
 
     public function __construct(
         FixtureRepository $fixtureRepository,
@@ -70,16 +74,23 @@ class FixtureService
                 }
 
                 $datas = $response->json()['matches'];
+                // dd($datas);
 
                 DB::beginTransaction();
 
                 if (isset($datas) && is_array($datas)) {
                     foreach ($datas as $data) {
                         if (isset($data['homeTeam']) && isset($data['awayTeam'])) {
-                            $this->fixtureRepository->createOrUpdate($data);
-
-                            $homeTeamId = $data['homeTeam']['id'];
-                            $awayTeamId = $data['awayTeam']['id'];
+                            $fixture =  $this->fixtureRepository->createOrUpdate($data);
+                            // dd($fixture);
+                            if ($fixture->wasRecentlyCreated) {
+                            } else if ($fixture->wasChanged()) {
+                                // Check if score has changed
+                                if ($fixture->wasChanged(['status'])) {
+                                    // dd(1);
+                                    $this->sendMatchScoreNotification($fixture);
+                                }
+                            }
                         }
                     }
                 }
@@ -276,30 +287,30 @@ class FixtureService
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
     {
         $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page);
-        if(isset($fixtures) && count($fixtures) > 0)
-        // dd($fixtures->items());
-        return [
-            'fixtures'  => array_map(function ($fixture) {
-                $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
-                $fixtureDto  = FixtureMapper::fromModel($fixture);
-                $homeTeam = $fixture->homeTeam;
-                if(isset($homeTeam)) {
-                    $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
-                }
-                $awayTeam = $fixture->awayTeam;
-                if(isset($awayTeam)) {
-                    $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
-                }
-                $fixtureDto->setCompetition($competition);
-                return $fixtureDto;
-            }, $fixtures->items()),
-            'pagination' => [
-                'current_page' => $fixtures->currentPage(),
-                'per_page'     => $fixtures->perPage(),
-                'total'        => $fixtures->total()
-            ]
-        ];
-         else return [
+        if (isset($fixtures) && count($fixtures) > 0)
+            // dd($fixtures->items());
+            return [
+                'fixtures'  => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto  = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page'     => $fixtures->perPage(),
+                    'total'        => $fixtures->total()
+                ]
+            ];
+        else return [
             'fixtures'  => [],
             'pagination' => [
                 'current_page' => 0,
@@ -311,30 +322,30 @@ class FixtureService
 
     public function getFixtureByCompetition($filters)
     {
-        $fixtures = $this->fixtureRepository->getFixtures($filters, 50, 1,$flag = true);
-        if(isset($fixtures) && count($fixtures) > 0)
+        $fixtures = $this->fixtureRepository->getFixtures($filters, 50, 1, $flag = true);
+        if (isset($fixtures) && count($fixtures) > 0)
 
-        return [
-            'fixtures'  => array_map(function ($fixture) {
-                $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
-                $fixtureDto  = FixtureMapper::fromModel($fixture);
-                $homeTeam = $fixture->homeTeam;
-                if(isset($homeTeam)) {
-                    $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
-                }
-                $awayTeam = $fixture->awayTeam;
-                if(isset($awayTeam)) {
-                    $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
-                }
-                $fixtureDto->setCompetition($competition);
-                return $fixtureDto;
-            }, $fixtures->items()),
+            return [
+                'fixtures'  => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto  = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
                 'pagination' => [
                     'current_page' => $fixtures->currentPage(),
                     'per_page'     => $fixtures->perPage(),
                     'total'        => $fixtures->total()
                 ]
-        ];
+            ];
         return [
             'fixtures'  => [],
             'pagination' => [
@@ -343,5 +354,67 @@ class FixtureService
                 'total'        => 0
             ]
         ];
+    }
+    protected function getUsersToNotify(Fixture $match)
+    {
+        return User::whereJsonContains('favourite_teams', $match->homeTeam->id)
+            ->orWhereJsonContains('favourite_teams', $match->awayTeam->id)
+            ->get();
+    }
+
+    /**
+     * Send match score notification to users
+     *
+     * @param Fixture $fixture
+     * @return void
+     */
+    protected function sendMatchScoreNotification(Fixture $fixture)
+    {
+        // Get users who have this match's teams in their favorites
+        $users = $this->getUsersToNotify($fixture);
+
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        $homeTeam = $fixture->homeTeam;
+        $awayTeam = $fixture->awayTeam;
+
+        if (!$homeTeam || !$awayTeam) {
+            return;
+        }
+
+        $homeScore = $fixture->full_time_home_score ?? 0;
+        $awayScore = $fixture->full_time_away_score ?? 0;
+
+        $title = "Kết quả trận đấu của " . $homeTeam->name . " và " . $awayTeam->name;
+        $body = "{$homeTeam->name} {$homeScore} - {$awayScore} {$awayTeam->name}";
+
+        foreach ($users as $user) {
+            if (empty($user->fcm_token)) {
+                continue;
+            }
+
+            $this->sendNotification(
+                $user->fcm_token,
+                $title,
+                $body,
+                [
+                    'user_id' => $user->id,
+                    'type' => 'match_score',
+                    'fixture_id' => $fixture->id,
+                    'home_team_id' => $homeTeam->id,
+                    'away_team_id' => $awayTeam->id,
+                    'home_team_name' => $homeTeam->name,
+                    'away_team_name' => $awayTeam->name,
+                    'home_score' => $homeScore,
+                    'away_score' => $awayScore,
+                    'competition_id' => $fixture->competition_id,
+                    'competition_name' => $fixture->competition->name ?? 'Unknown Competition'
+                ]
+            );
+        }
+
+        \Log::info("Match score notification sent for fixture ID: {$fixture->id}");
     }
 }

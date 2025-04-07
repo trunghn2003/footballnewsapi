@@ -110,4 +110,19 @@ class FixtureController extends Controller
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function syncv2(): JsonResponse
+    {
+        $result = $this->fixtureService->syncFixturesv2();
+        if (!$result['success']) {
+            return response()->json([
+                'message' => 'Fixture sync failed',
+
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        return response()->json([
+            'message' => 'Fixture sync successfully',
+
+        ], Response::HTTP_OK);
+    }
 }

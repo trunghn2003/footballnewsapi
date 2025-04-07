@@ -72,6 +72,7 @@ Route::post('/areas/sync', [AreaController::class, 'sync']);
 Route::get('/teams/sync', [TeamController::class, 'sync']);
 Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
+Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
 // Standing routes
 Route::middleware('auth:api')->group(function () {

@@ -14,6 +14,7 @@ use App\Models\LineupPlayer;
 use App\Models\User;
 use App\Repositories\LineUpPlayerRepository;
 use App\Repositories\LineUpRepository;
+use App\Repositories\SeasonRepository;
 use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -30,17 +31,20 @@ class FixtureService
     private LineUpPlayerRepository $lineUpPlayerRepository;
     private PersonRepository $personRepository;
     private LineupMapper $lineupMapper;
+    private SeasonRepository $seasonRepository;
     use PushNotification;
 
     public function __construct(
-        FixtureRepository $fixtureRepository,
-        CompetitionService $competitionService,
-        TeamService $teamService,
-        LineupRepository $lineupRepository,
+        FixtureRepository      $fixtureRepository,
+        CompetitionService     $competitionService,
+        TeamService            $teamService,
+        LineupRepository       $lineupRepository,
         LineUpPlayerRepository $lineUpPlayerRepository,
-        PersonRepository $personRepository,
-        LineupMapper $lineupMapper,
-    ) {
+        PersonRepository       $personRepository,
+        LineupMapper           $lineupMapper,
+        SeasonRepository       $seasonRepository
+    )
+    {
         $this->fixtureRepository = $fixtureRepository;
         $this->apiToken = env('API_FOOTBALL_TOKEN');
         $this->apiUrlFootball = env('API_FOOTBALL_URL');
@@ -50,6 +54,7 @@ class FixtureService
         $this->lineUpPlayerRepository = $lineUpPlayerRepository;
         $this->personRepository = $personRepository;
         $this->lineupMapper = $lineupMapper;
+        $this->seasonRepository = $seasonRepository;
     }
 
     public function syncFixtures()
@@ -81,7 +86,7 @@ class FixtureService
                 if (isset($datas) && is_array($datas)) {
                     foreach ($datas as $data) {
                         if (isset($data['homeTeam']) && isset($data['awayTeam'])) {
-                            $fixture =  $this->fixtureRepository->createOrUpdate($data);
+                            $fixture = $this->fixtureRepository->createOrUpdate($data);
                             // dd($fixture);
                             if ($fixture->wasRecentlyCreated) {
                             } else if ($fixture->wasChanged()) {
@@ -114,21 +119,21 @@ class FixtureService
     private function mapPositionToGroup($position)
     {
         $map = [
-            'Goalkeeper'         => 'G',
-            'Left-Back'          => 'D',
-            'Right-Back'         => 'D',
-            'Centre-Back'        => 'D',
-            'Defence'            => 'D',
-            'Central Midfield'   => 'M',
+            'Goalkeeper' => 'G',
+            'Left-Back' => 'D',
+            'Right-Back' => 'D',
+            'Centre-Back' => 'D',
+            'Defence' => 'D',
+            'Central Midfield' => 'M',
             'Attacking Midfield' => 'M',
             'Defensive Midfield' => 'M',
-            'Left Midfield'      => 'M',
-            'Right Midfield'     => 'M',
-            'Midfield'           => 'M',
-            'Left Winger'        => 'F',
-            'Right Winger'       => 'F',
-            'Centre-Forward'     => 'F',
-            'Offence'            => 'F'
+            'Left Midfield' => 'M',
+            'Right Midfield' => 'M',
+            'Midfield' => 'M',
+            'Left Winger' => 'F',
+            'Right Winger' => 'F',
+            'Centre-Forward' => 'F',
+            'Offence' => 'F'
         ];
 
         return $map[$position] ?? null;
@@ -141,8 +146,8 @@ class FixtureService
         $lineup = $this->lineupRepository->create([
 
             'fixture_id' => $fixture_id,
-            'team_id'    => $team_id,
-            'formation'  => $formation
+            'team_id' => $team_id,
+            'formation' => $formation
         ]);
 
         $remainingPlayers = collect($players)->shuffle();
@@ -169,12 +174,12 @@ class FixtureService
             }
 
             $this->lineUpPlayerRepository->create([
-                'lineup_id'    => $lineup->id,
-                'player_id'    => $selected->id,
-                'position'     => $pos['position'],
-                'grid_position'         => $pos['grid'],
+                'lineup_id' => $lineup->id,
+                'player_id' => $selected->id,
+                'position' => $pos['position'],
+                'grid_position' => $pos['grid'],
                 'shirt_number' => $selected->shirt_number ?? rand(1, 99),
-                'is_substitute'   => 0
+                'is_substitute' => 0
             ]);
             $starterCount++;
 
@@ -188,11 +193,11 @@ class FixtureService
 
 
             $this->lineUpPlayerRepository->create([
-                'lineup_id'     => $lineup->id,
-                'player_id'     => $substitute->id,
-                'position'      => null,
+                'lineup_id' => $lineup->id,
+                'player_id' => $substitute->id,
+                'position' => null,
                 'grid_position' => null,
-                'shirt_number'  => $substitute->shirt_number ?? rand(1, 99),
+                'shirt_number' => $substitute->shirt_number ?? rand(1, 99),
                 'is_substitute' => 1
             ]);
 
@@ -245,6 +250,7 @@ class FixtureService
 
         return $fixtureDto;
     }
+
     public function mapLineupToArray($lineup)
     {
         if (!$lineup) {
@@ -290,9 +296,9 @@ class FixtureService
         if (isset($fixtures) && count($fixtures) > 0)
             // dd($fixtures->items());
             return [
-                'fixtures'  => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
-                    $fixtureDto  = FixtureMapper::fromModel($fixture);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
                     if (isset($homeTeam)) {
                         $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
@@ -306,16 +312,16 @@ class FixtureService
                 }, $fixtures->items()),
                 'pagination' => [
                     'current_page' => $fixtures->currentPage(),
-                    'per_page'     => $fixtures->perPage(),
-                    'total'        => $fixtures->total()
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
                 ]
             ];
         else return [
-            'fixtures'  => [],
+            'fixtures' => [],
             'pagination' => [
                 'current_page' => 0,
-                'per_page'     => 0,
-                'total'        => 0
+                'per_page' => 0,
+                'total' => 0
             ]
         ];
     }
@@ -326,9 +332,9 @@ class FixtureService
         if (isset($fixtures) && count($fixtures) > 0)
 
             return [
-                'fixtures'  => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
-                    $fixtureDto  = FixtureMapper::fromModel($fixture);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
                     if (isset($homeTeam)) {
                         $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
@@ -342,16 +348,16 @@ class FixtureService
                 }, $fixtures->items()),
                 'pagination' => [
                     'current_page' => $fixtures->currentPage(),
-                    'per_page'     => $fixtures->perPage(),
-                    'total'        => $fixtures->total()
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
                 ]
             ];
         return [
-            'fixtures'  => [],
+            'fixtures' => [],
             'pagination' => [
                 'current_page' => 0,
-                'per_page'     => 0,
-                'total'        => 0
+                'per_page' => 0,
+                'total' => 0
             ]
         ];
     }
@@ -568,5 +574,67 @@ class FixtureService
                 'total' => 0
             ]
         ];
+    }
+
+    public function syncFixturesv2()
+    {
+        set_time_limit(3000000);
+        try {
+            $names = [
+                2 => 2001,
+                39 => 2021,
+                140 => 2014,
+                145 => 2019,
+                41 => 2015,
+                78 => 2002
+            ];
+            $years = [2021, 2022, 2023];
+            foreach ($names as $name => $id) {
+
+                foreach ($years as $year) {
+
+
+                    $response = Http::withHeaders([
+                        'x-rapidapi-host' => "v3.football.api-sports.io",
+                        "x-rapidapi-key" => "e66abc5b1f707df8c5d25612eed76fc3"
+                    ])->get("https://v3.football.api-sports.io/fixtures?league={$name}&season={$year}");
+
+                    if (!$response->successful()) {
+                        throw new \Exception("API request failed: {$response->status()}");
+                    }
+
+                    $datas = $response->json()['response'];
+                    // dd($datas);
+
+                    DB::beginTransaction();
+
+                    if (isset($datas) && is_array($datas)) {
+                        $competition = $this->competitionService->getCompetitionById($id);
+                        $season = $this->seasonRepository->getByCompetitionAndYear($id, $year);
+
+//                        dd($season);
+                        foreach ($datas as $data) {
+//                            dd($data);
+                                $fixture = $this->fixtureRepository->createOrUpdatev2($data, $season->id, $id);
+
+                        }
+                    }
+
+                    DB::commit();
+                }
+
+            }
+
+            return [
+                'success' => true
+            ];
+        } catch (\Exception $e) {
+            Log::error("Competition sync failed: {$e->getMessage()}");
+            DB::rollBack();
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 }

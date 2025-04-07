@@ -28,4 +28,11 @@ class SeasonRepository
             ]
         );
     }
+    public  function getByCompetitionAndYear($competitionId, $year)
+    {
+        return $this->season->where('competition_id', $competitionId)
+            ->whereYear('start_date', '=', $year)
+//            ->whereYear('end_date', '>=', $year)
+            ->first();
+    }
 }

@@ -11,10 +11,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class FixtureRepository
 {
     protected $model;
+    protected $teamRepository;
 
-    public function __construct(Fixture $fixture)
+    public function __construct(Fixture $fixture, TeamRepository $teamRepository)
     {
         $this->model = $fixture;
+        $this->teamRepository = $teamRepository;
     }
 
     public function createOrUpdate(array $data): Fixture
@@ -316,4 +318,175 @@ class FixtureRepository
             'stats' => $stats
         ];
     }
+
+    public function createOrUpdatev2(array $data, $season_id, $competition_id): Fixture
+    {
+        $full_time_home_score = null;
+        $full_time_away_score = null;
+        $half_time_home_score = null;
+        $half_time_away_score = null;
+        $extra_time_home_score = null;
+        $extra_time_away_score = null;
+        $penalties_home_score = null;
+        $penalties_away_score = null;
+        $winner = null;
+        $duration = null;
+
+        // Extract score data
+        if (isset($data['score'])) {
+            if (isset($data['score']['fulltime'])) {
+                $full_time_home_score = $data['score']['fulltime']['home'] ?? null;
+                $full_time_away_score = $data['score']['fulltime']['away'] ?? null;
+            }
+            if (isset($data['score']['halftime'])) {
+                $half_time_home_score = $data['score']['halftime']['home'] ?? null;
+                $half_time_away_score = $data['score']['halftime']['away'] ?? null;
+            }
+            if (isset($data['score']['extratime'])) {
+                $extra_time_home_score = $data['score']['extratime']['home'] ?? null;
+                $extra_time_away_score = $data['score']['extratime']['away'] ?? null;
+            }
+            if (isset($data['score']['penalty'])) {
+                $penalties_home_score = $data['score']['penalty']['home'] ?? null;
+                $penalties_away_score = $data['score']['penalty']['away'] ?? null;
+            }
+        }
+
+        // Determine winner
+        if (isset($data['teams']['home']['winner'])) {
+            if ($data['teams']['home']['winner'] === true) {
+                $winner = 'HOME_TEAM';
+            } elseif ($data['teams']['away']['winner'] === true) {
+                $winner = 'AWAY_TEAM';
+            } else {
+                $winner = 'DRAW';
+            }
+        }
+
+        // Extract the matchday from round (if available)
+        $matchday = null;
+        if (isset($data['league']['round']) && preg_match('/Regular Season - (\d+)/', $data['league']['round'], $matches)) {
+            $matchday = (int) $matches[1];
+        }
+
+        // Map the round/stage string to standardized stage values
+        $stage = $this->mapStage($data['league']['round'] ?? null);
+
+
+//        $season_id =$season_id;
+        $country = $data['league']['country'] ?? null;
+        if($data['league']['id'] == 41) {
+            $country = 'France';
+        }
+        $homeTeam = $this->teamRepository->findById($data['teams']['home']['id']);
+        // Create or update home team using the dedicated function
+        if(!$homeTeam)
+        $homeTeam = $this->teamRepository->updateOrCreateTeam([
+            'id' => $this->teamRepository->generateNewId(),
+            'name' => $data['teams']['home']['name'],
+            'logo' => $data['teams']['home']['logo'] ?? null,
+            'country' => $country,
+
+            'last_synced' => now(),
+            'area_id' => $data['area']['id'] ?? 2267,
+            'last_updated' => now()
+        ]);
+        $awayTeam = $this->teamRepository->findById($data['teams']['away']['id']);
+        if(!$awayTeam)
+        // Create or update away team using the dedicated function
+        $awayTeam = $this->teamRepository->updateOrCreateTeam([
+            'id' => $this->teamRepository->generateNewId(),
+            'name' => $data['teams']['away']['name'],
+            'logo' => $data['teams']['away']['logo'] ?? null,
+            'country' => $country,
+
+            'last_synced' => now(),
+            'area_id' => $data['area']['id'] ?? 2267,
+            'last_updated' => now()
+        ]);
+
+
+        return Fixture::updateOrCreate(
+            ['id' => $data['fixture']['id']],
+            [
+                'utc_date' => $data['fixture']['date'],
+                'status' => $data['fixture']['status']['short'],
+                'matchday' => $matchday,
+                'stage' => $stage,
+                'season_id' => $season_id,
+                'home_team_id' => $homeTeam->id,
+                'away_team_id' => $awayTeam->id,
+                'full_time_home_score' => $full_time_home_score,
+                'full_time_away_score' => $full_time_away_score,
+                'half_time_home_score' => $half_time_home_score,
+                'half_time_away_score' => $half_time_away_score,
+                'penalties_home_score' => $penalties_home_score,
+                'penalties_away_score' => $penalties_away_score,
+                'extra_time_home_score' => $extra_time_home_score,
+                'extra_time_away_score' => $extra_time_away_score,
+                'winner' => $winner,
+                'duration' => isset($data['fixture']['status']['elapsed']) ? 'REGULAR' : null,
+                'competition_id' => $competition_id,
+//                'referee' => $data['fixture']['referee'] ?? null,
+                'venue' => $data['fixture']['venue']['name'] ?? null,
+//                'venue_city' => $data['fixture']['venue']['city'] ?? null,
+                'last_updated' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Map API stage/round string to standardized stage values
+     *
+     * @param string|null $roundString
+     * @return string|null
+     */
+    private function mapStage(?string $roundString): ?string
+    {
+        if (!$roundString) {
+            return null;
+        }
+
+        $lowercaseRound = strtolower($roundString);
+
+        if (strpos($lowercaseRound, 'regular season') !== false) {
+            return 'REGULAR_SEASON';
+        }
+
+        if (strpos($lowercaseRound, 'league stage') !== false ||
+            strpos($lowercaseRound, 'group') !== false) {
+            return 'LEAGUE_STAGE';
+        }
+
+        if (strpos($lowercaseRound, 'playoff') !== false) {
+            return 'PLAYOFFS';
+        }
+
+        if (strpos($lowercaseRound, 'round of 16') !== false ||
+            strpos($lowercaseRound, 'last 16') !== false ||
+            strpos($lowercaseRound, '1/8') !== false) {
+            return 'LAST_16';
+        }
+
+        if (strpos($lowercaseRound, 'quarter') !== false ||
+            strpos($lowercaseRound, 'quarter-final') !== false ||
+            strpos($lowercaseRound, '1/4') !== false) {
+            return 'QUARTER_FINALS';
+        }
+
+        if (strpos($lowercaseRound, 'semi') !== false ||
+            strpos($lowercaseRound, 'semi-final') !== false ||
+            strpos($lowercaseRound, '1/2') !== false) {
+            return 'SEMI_FINALS';
+        }
+
+        if (strpos($lowercaseRound, 'final') !== false) {
+            return 'FINAL';
+        }
+
+        // If no match, return the original string
+        return $roundString;
+    }
+
+
 }

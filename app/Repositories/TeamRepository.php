@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Team;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 
 class TeamRepository
 {
@@ -27,14 +28,14 @@ class TeamRepository
                 ['id' => $data['id']],
                 [
                 'name' => $data['name'],
-                'short_name' => $data['shortName'],
-                'tla' => $data['tla'],
-                'crest' => $data['crest'],
-                'website' => $data['website'] ?? null,
-                'founded' => $data['founded'] ?? null,
-                'venue' => $data['venue'] ?? null,
+//                'short_name' => $data['shortName'],
+//                'tla' => $data['tla'],
+//                'crest' => $data['crest'],
+//                'website' => $data['website'] ?? null,
+//                'founded' => $data['founded'] ?? null,
+//                'venue' => $data['venue'] ?? null,
                 'last_synced' => now(),
-                'area_id' => $data['area']['id'],
+                'area_id' => 2267,
                 'last_updated' => now()
             ]
         );
@@ -110,6 +111,14 @@ class TeamRepository
     public function findAll(){
         return $this->model->all();
     }
+
+    public function generateNewId()
+    {
+        // Fetch the maximum ID and increment by 1
+        $maxId = DB::table('teams')->max('id');
+        return $maxId + 1;
+    }
+
 
 
 }

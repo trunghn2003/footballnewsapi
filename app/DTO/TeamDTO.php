@@ -9,6 +9,7 @@ class TeamDTO implements \JsonSerializable
     private string $shortName;
     private string $tla;
     private string $crest;
+    private ?array $headToHeadStats = null;
 
     public function __construct(
         int $id,
@@ -49,14 +50,30 @@ class TeamDTO implements \JsonSerializable
         return $this->crest;
     }
 
+    public function setHeadToHeadStats(array $stats): void
+    {
+        $this->headToHeadStats = $stats;
+    }
+
+    public function getHeadToHeadStats(): ?array
+    {
+        return $this->headToHeadStats;
+    }
+
     public function jsonSerialize(): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'shortName' => $this->shortName,
             'tla' => $this->tla,
             'crest' => $this->crest
         ];
+
+        if ($this->headToHeadStats !== null) {
+            $data['headToHeadStats'] = $this->headToHeadStats;
+        }
+
+        return $data;
     }
 }

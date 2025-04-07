@@ -38,7 +38,7 @@ class Fixture extends Model
 
     protected $casts = [
         'utc_date' => 'datetime',
-        'last_updated' => 'datetime'
+        'last_updated' => 'datetime',
     ];
 
     protected $dates = ['utc_date'];

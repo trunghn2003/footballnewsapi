@@ -355,6 +355,90 @@ class FixtureService
             ]
         ];
     }
+
+    public function getRecentFixturesByTeam(int $teamId, int $limit = 5): array
+    {
+        // dd(1);
+        $fixtures = $this->fixtureRepository->getFixturesRecent([
+            'teamId' => $teamId,
+            'status' => 'FINISHED'
+        ], $limit, 1);
+
+        if (!empty($fixtures->items())) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
+    public function getUpcomingFixturesByTeam(int $teamId, int $limit = 5): array
+    {
+        $fixtures = $this->fixtureRepository->getFixtures([
+            'teamId' => $teamId,
+            'status' => 'TIMED'
+        ], $limit, 1);
+
+        if (isset($fixtures) && count($fixtures) > 0) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
     protected function getUsersToNotify(Fixture $match)
     {
         return User::whereJsonContains('favourite_teams', $match->homeTeam->id)
@@ -416,5 +500,73 @@ class FixtureService
         }
 
         \Log::info("Match score notification sent for fixture ID: {$fixture->id}");
+    }
+
+    /**
+     * Lấy lịch sử đối đầu giữa hai đội bóng dựa trên ID trận đấu
+     *
+     * @param int $fixtureId ID của trận đấu
+     * @param int $limit Số lượng trận đấu muốn lấy
+     * @return array
+     */
+    public function getHeadToHeadFixturesByFixtureId(int $fixtureId, int $limit = 10): array
+    {
+        $result = $this->fixtureRepository->getHeadToHeadFixturesByFixtureId($fixtureId, $limit);
+        $fixtures = $result['fixtures'];
+        $stats = $result['stats'];
+
+        if ($fixtures->count() > 0) {
+            return [
+                'fixtures' => array_map(function ($fixture) use ($stats) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+
+                    // Lấy thông tin đội chủ nhà
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $homeTeamDto = TeamMapper::fromModel($homeTeam);
+
+                        // Thêm thống kê đối đầu cho đội chủ nhà
+                        $homeTeamId = $homeTeam->id;
+                        $homeTeamStats = $homeTeamId == $stats['team1']['id'] ? $stats['team1'] : $stats['team2'];
+                        $homeTeamDto->setHeadToHeadStats($homeTeamStats);
+
+                        $fixtureDto->setHomeTeam($homeTeamDto);
+                    }
+
+                    // Lấy thông tin đội khách
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $awayTeamDto = TeamMapper::fromModel($awayTeam);
+
+                        // Thêm thống kê đối đầu cho đội khách
+                        $awayTeamId = $awayTeam->id;
+                        $awayTeamStats = $awayTeamId == $stats['team1']['id'] ? $stats['team1'] : $stats['team2'];
+                        $awayTeamDto->setHeadToHeadStats($awayTeamStats);
+
+                        $fixtureDto->setAwayTeam($awayTeamDto);
+                    }
+
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'stats' => $stats,
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'stats' => $stats,
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
     }
 }

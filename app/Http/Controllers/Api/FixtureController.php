@@ -8,14 +8,17 @@ use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+
 class FixtureController extends Controller
 {
     use ApiResponseTrait;
     private FixtureService $fixtureService;
+
     public function __construct(FixtureService $fixtureService)
     {
         $this->fixtureService = $fixtureService;
     }
+
     public function sync(): JsonResponse
     {
         $result = $this->fixtureService->syncFixtures();
@@ -30,6 +33,7 @@ class FixtureController extends Controller
 
         ], Response::HTTP_OK);
     }
+
     public function getFixtureById(int $id)
     {
         $fixture = $this->fixtureService->getFixtureById($id);
@@ -51,5 +55,41 @@ class FixtureController extends Controller
         $filters = $request->only(['dateFrom', 'dateTo', 'competition']);
         $fixtures = $this->fixtureService->getFixtureByCompetition($filters);
         return $this->successResponse($fixtures);
+    }
+
+    /**
+     * Get recent fixtures for a team
+     *
+     * @param Request $request
+     * @param int $teamId
+     * @return JsonResponse
+     */
+    public function getRecentFixtures(Request $request, int $teamId): JsonResponse
+    {
+        try {
+            $limit = $request->input('limit', 5);
+            $result = $this->fixtureService->getRecentFixturesByTeam($teamId, $limit);
+            return $this->successResponse($result);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get upcoming fixtures for a team
+     *
+     * @param Request $request
+     * @param int $teamId
+     * @return JsonResponse
+     */
+    public function getUpcomingFixtures(Request $request, int $teamId): JsonResponse
+    {
+        try {
+            $limit = $request->input('limit', 5);
+            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $limit);
+            return $this->successResponse($result);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

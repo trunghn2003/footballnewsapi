@@ -39,6 +39,12 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('fixtures', [FixtureController::class, 'getFixtures']);
     Route::get('fixtures/competition/season', [FixtureController::class, 'getFixtureCompetition']);
 
+    // Fixture routes
+    Route::prefix('fixtures')->group(function () {
+        Route::get('team/{teamId}/recent', [FixtureController::class, 'getRecentFixtures']);
+        Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
+    });
+
     Route::post('teams/{teamId}/favorite', [TeamController::class, 'addFavoriteTeam']);
     Route::delete('teams/{teamId}/favorite', [TeamController::class, 'removeFavoriteTeam']);
     Route::get('teams', [TeamController::class, 'getTeams']);

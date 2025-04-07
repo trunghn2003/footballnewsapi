@@ -355,6 +355,90 @@ class FixtureService
             ]
         ];
     }
+
+    public function getRecentFixturesByTeam(int $teamId, int $limit = 5): array
+    {
+        // dd(1);
+        $fixtures = $this->fixtureRepository->getFixturesRecent([
+            'teamId' => $teamId,
+            'status' => 'FINISHED'
+        ], $limit, 1);
+
+        if (isset($fixtures) && count($fixtures) > 0) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
+    public function getUpcomingFixturesByTeam(int $teamId, int $limit = 5): array
+    {
+        $fixtures = $this->fixtureRepository->getFixtures([
+            'teamId' => $teamId,
+            'status' => 'TIMED'
+        ], $limit, 1);
+
+        if (isset($fixtures) && count($fixtures) > 0) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam((TeamMapper::fromModel($homeTeam)));
+                    }
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
+                    }
+                    $fixtureDto->setCompetition($competition);
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
     protected function getUsersToNotify(Fixture $match)
     {
         return User::whereJsonContains('favourite_teams', $match->homeTeam->id)

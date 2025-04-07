@@ -123,6 +123,7 @@ class FixtureRepository
                     $query->where('name', 'like', '%' . $filters['teamName'] . '%');
                 });
         }
+
         if (isset($filters['teamId'])) {
             $query->where('home_team_id', $filters['teamId'])
                 ->orWhere('away_team_id', $filters['teamId']);
@@ -136,4 +137,31 @@ class FixtureRepository
             ->orderBy('utc_date', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
     }
+
+    public function getFixturesRecent(array $filters = [], int $perPage = 10, int $page = 1)
+    {
+        $query = $this->model->newQuery();
+
+        if (isset($filters['teamId'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('home_team_id', $filters['teamId'])
+                    ->orWhere('away_team_id', $filters['teamId']);
+            });
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        $query->where('status', 'FINISHED')
+            ->where('utc_date', '<=', now());
+
+
+        $query->orderBy('utc_date', 'desc');
+
+        $query->with(['homeTeam', 'awayTeam', 'competition']);
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+    
 }

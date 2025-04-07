@@ -43,6 +43,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::prefix('fixtures')->group(function () {
         Route::get('team/{teamId}/recent', [FixtureController::class, 'getRecentFixtures']);
         Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
+        Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
     });
 
     Route::post('teams/{teamId}/favorite', [TeamController::class, 'addFavoriteTeam']);

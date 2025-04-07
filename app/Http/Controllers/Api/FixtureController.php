@@ -92,4 +92,22 @@ class FixtureController extends Controller
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Lấy lịch sử đối đầu giữa hai đội bóng dựa trên ID trận đấu
+     *
+     * @param Request $request
+     * @param int $fixtureId ID của trận đấu
+     * @return JsonResponse
+     */
+    public function getHeadToHeadFixturesByFixtureId(Request $request, int $fixtureId): JsonResponse
+    {
+        try {
+            $limit = $request->input('limit', 10);
+            $result = $this->fixtureService->getHeadToHeadFixturesByFixtureId($fixtureId, $limit);
+            return $this->successResponse($result);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

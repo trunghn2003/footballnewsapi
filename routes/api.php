@@ -69,6 +69,24 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/standings', [StandingController::class, 'getStandings']);
     Route::get('/standings/matchday', [StandingController::class, 'getStandingsByMatchday']);
     Route::get('/standings/type', [StandingController::class, 'getStandingsByType']);
+
+    // bet
+    Route::post('/betting/place-bet', [BettingController::class, 'placeBet']);
+    Route::get('/betting/history', [BettingController::class, 'getBettingHistory']);
+    Route::post('/betting/process-results/{fixtureId}', [BettingController::class, 'processBetResults']);
+
+    // balance
+    Route::post('/balance/deposit', [BalanceController::class, 'deposit']);
+    Route::post('/balance/withdraw', [BalanceController::class, 'withdraw']);
+    Route::get('/balance', [BalanceController::class, 'getBalance']);
+    Route::get('/balance/transactions', [BalanceController::class, 'getTransactionHistory']);
+
+    //standing
+    Route::post('/competitions/{competitionId}/standings', [StandingController::class, 'storeStandings']);
+    Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
+    Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
+
+
 });
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);
@@ -78,26 +96,7 @@ Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
 Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
-// Standing routes
-Route::middleware('auth:api')->group(function () {
-    Route::post('/competitions/{competitionId}/standings', [StandingController::class, 'storeStandings']);
-    Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
-    Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
-});
+
 Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
 
-// Betting routes
-Route::middleware('auth:api')->group(function () {
-    Route::post('/betting/place-bet', [BettingController::class, 'placeBet']);
-    Route::get('/betting/history', [BettingController::class, 'getBettingHistory']);
-    Route::post('/betting/process-results/{fixtureId}', [BettingController::class, 'processBetResults']);
-});
-
-// Quản lý số dư
-Route::middleware('auth:api')->group(function () {
-    Route::post('/balance/deposit', [BalanceController::class, 'deposit']);
-    Route::post('/balance/withdraw', [BalanceController::class, 'withdraw']);
-    Route::get('/balance', [BalanceController::class, 'getBalance']);
-    Route::get('/balance/transactions', [BalanceController::class, 'getTransactionHistory']);
-});

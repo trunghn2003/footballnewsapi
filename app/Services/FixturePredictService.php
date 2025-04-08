@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FixturePrediction;
 use Illuminate\Support\Facades\Log;
 
 class FixturePredictService
@@ -24,6 +25,21 @@ class FixturePredictService
     public function predictMatchOutcome(int $fixtureId): array
     {
         try {
+            $existingPrediction = FixturePrediction::where('fixture_id', $fixtureId)->first();
+            if ($existingPrediction) {
+                return [
+                    'success' => true,
+                    'prediction' => [
+                        'success' => true,
+                        'win_probability' => $existingPrediction->win_probability,
+                        'predicted_score' => $existingPrediction->predicted_score,
+                        'key_factors' => $existingPrediction->key_factors,
+                        'confidence_level' => $existingPrediction->confidence_level,
+                        'raw_response' => $existingPrediction->raw_response
+                    ],
+                    'analysis_data' => $existingPrediction->analysis_data
+                ];
+            }
             // Get head-to-head data
             $headToHeadData = $this->fixtureService->getHeadToHeadFixturesByFixtureId($fixtureId);
             
@@ -60,17 +76,35 @@ class FixturePredictService
 
             // Get prediction from Gemini
             $prediction = $this->geminiService->generateContent($prompt);
-
+            
             if (!$prediction['success']) {
                 return [
                     'success' => false,
                     'error' => $prediction['error'] ?? 'Failed to generate prediction'
                 ];
             }
+            
+            // Create and save the prediction
+            $fixturePrediction = new FixturePrediction();
+            $fixturePrediction->fixture_id = $fixtureId;
+            $fixturePrediction->win_probability = $prediction['win_probability'];
+            $fixturePrediction->predicted_score = $prediction['predicted_score'];
+            $fixturePrediction->key_factors = $prediction['key_factors'];
+            $fixturePrediction->confidence_level = $prediction['confidence_level'];
+            $fixturePrediction->raw_response = $prediction['raw_response'];
+            $fixturePrediction->analysis_data = $analysisData;
+            $fixturePrediction->save();
 
             return [
                 'success' => true,
-                'prediction' => $prediction,
+                'prediction' => [
+                    'success' => true,
+                    'win_probability' => $prediction['win_probability'],
+                    'predicted_score' => $prediction['predicted_score'],
+                    'key_factors' => $prediction['key_factors'],
+                    'confidence_level' => $prediction['confidence_level'],
+                    'raw_response' => $prediction['raw_response']
+                ],
                 'analysis_data' => $analysisData
             ];
 

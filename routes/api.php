@@ -50,9 +50,10 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('predict/{fixtureId}', [FixturePredictController::class, 'predictMatch']);
     });
 
-    Route::post('teams/{teamId}/favorite', [TeamController::class, 'addFavoriteTeam']);
-    Route::delete('teams/{teamId}/favorite', [TeamController::class, 'removeFavoriteTeam']);
+    Route::post('teams/favorite/{teamId}', [TeamController::class, 'addFavoriteTeam']);
+    Route::delete('teams/favorite/{teamId}', [TeamController::class, 'removeFavoriteTeam']);
     Route::get('teams', [TeamController::class, 'getTeams']);
+    Route::get('teams/{teamId}', [TeamController::class, 'getTeam']);
 
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
     Route::get('/news/{newsId}', [NewsController::class, 'getNewsById']);
@@ -91,7 +92,7 @@ Route::middleware('jwt.auth')->group(function () {
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);
 Route::post('/areas/sync', [AreaController::class, 'sync']);
-Route::get('/teams/sync', [TeamController::class, 'sync']);
+// Route::get('/teams/sync', [TeamController::class, 'sync']);
 Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
 Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
@@ -99,4 +100,3 @@ Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
 Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
-

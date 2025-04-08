@@ -72,4 +72,13 @@ class TeamController extends Controller
 
     }
 
+    public function getTeam(int $teamId): JsonResponse
+    {
+        $result = $this->teamService->getTeamById($teamId);
+        if (!$result) {
+            return $this->errorResponse('Team not found');
+        }
+        return $this->successResponse($result);
+    }
+
 }

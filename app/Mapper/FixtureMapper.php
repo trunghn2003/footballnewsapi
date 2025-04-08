@@ -13,7 +13,7 @@ class FixtureMapper
             $fixture->id,
             $fixture->utc_date->format('Y-m-d\TH:i:s\Z'),
             $fixture->status,
-            $fixture->matchday,
+            $fixture->matchday ?? 1,
             $fixture->stage,
             $fixture->group,
             // $fixture->last_updated->format('Y-m-d\TH:i:s\Z'),

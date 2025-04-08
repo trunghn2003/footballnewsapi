@@ -588,7 +588,7 @@ class FixtureService
                 41 => 2015,
                 78 => 2002
             ];
-            $years = [2021, 2022, 2023];
+            $years = [2022, 2023, 2021];
             foreach ($names as $name => $id) {
 
                 foreach ($years as $year) {
@@ -596,15 +596,15 @@ class FixtureService
 
                     $response = Http::withHeaders([
                         'x-rapidapi-host' => "v3.football.api-sports.io",
-                        "x-rapidapi-key" => "e66abc5b1f707df8c5d25612eed76fc3"
+                        "x-rapidapi-key" => "594e036ead58fc9a6ccf22f6ac50cd5f"
                     ])->get("https://v3.football.api-sports.io/fixtures?league={$name}&season={$year}");
-
+                    // dd($response->json());
                     if (!$response->successful()) {
                         throw new \Exception("API request failed: {$response->status()}");
                     }
 
                     $datas = $response->json()['response'];
-                    // dd($datas);
+                    // dd($response->json());
 
                     DB::beginTransaction();
 

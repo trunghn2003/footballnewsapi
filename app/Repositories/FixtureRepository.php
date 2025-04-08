@@ -319,8 +319,9 @@ class FixtureRepository
         ];
     }
 
-    public function createOrUpdatev2(array $data, $season_id, $competition_id): Fixture
+    public function createOrUpdatev2(array $data, $season_id, $competition_id)
     {
+        // dd($data);
         $full_time_home_score = null;
         $full_time_away_score = null;
         $half_time_home_score = null;
@@ -378,9 +379,10 @@ class FixtureRepository
         if($data['league']['id'] == 41) {
             $country = 'France';
         }
-        $homeTeam = $this->teamRepository->findById($data['teams']['home']['id']);
+        $homeTeam = $this->teamRepository->findByName($data['teams']['home']['name']);
         // Create or update home team using the dedicated function
-        if(!$homeTeam)
+        if(!$homeTeam){
+            return;
         $homeTeam = $this->teamRepository->updateOrCreateTeam([
             'id' => $this->teamRepository->generateNewId(),
             'name' => $data['teams']['home']['name'],
@@ -390,10 +392,13 @@ class FixtureRepository
             'last_synced' => now(),
             'area_id' => $data['area']['id'] ?? 2267,
             'last_updated' => now()
-        ]);
-        $awayTeam = $this->teamRepository->findById($data['teams']['away']['id']);
-        if(!$awayTeam)
-        // Create or update away team using the dedicated function
+            ]);
+            \Log::info('Home team created: ' . $data['teams']['home']['name']);
+        }
+        $awayTeam = $this->teamRepository->findByName($data['teams']['away']['name']);
+        if(!$awayTeam){ 
+            return;
+            // Create or update away team using the dedicated function
         $awayTeam = $this->teamRepository->updateOrCreateTeam([
             'id' => $this->teamRepository->generateNewId(),
             'name' => $data['teams']['away']['name'],
@@ -404,13 +409,15 @@ class FixtureRepository
             'area_id' => $data['area']['id'] ?? 2267,
             'last_updated' => now()
         ]);
+        \Log::info('Away team created: ' . $data['teams']['away']['name']);
+    }
 
 
-        return Fixture::updateOrCreate(
-            ['id' => $data['fixture']['id']],
+        $fixture = Fixture::updateOrCreate(
+            ['id' => $this->generateNewId()],
             [
                 'utc_date' => $data['fixture']['date'],
-                'status' => $data['fixture']['status']['short'],
+                'status' => 'FINISHED',
                 'matchday' => $matchday,
                 'stage' => $stage,
                 'season_id' => $season_id,
@@ -433,6 +440,8 @@ class FixtureRepository
                 'last_updated' => now(),
             ]
         );
+        \Log::info('Fixture created: ' . $fixture->id);
+        return $fixture;
     }
 
     /**
@@ -486,6 +495,12 @@ class FixtureRepository
 
         // If no match, return the original string
         return $roundString;
+    }
+
+    public function generateNewId()
+    {
+        $maxId = Fixture::max('id');
+        return $maxId + 1;
     }
 
 

@@ -119,6 +119,13 @@ class TeamRepository
         return $maxId + 1;
     }
 
+    public function findByName($name)
+    {
+        return $this->model->where('name', 'like', '%' . $name . '%')
+                ->orWhere('short_name', 'like', '%' . $name . '%')
+                ->first();
+    }
+
 
 
 }

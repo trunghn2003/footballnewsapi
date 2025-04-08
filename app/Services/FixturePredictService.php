@@ -24,6 +24,14 @@ class FixturePredictService
      */
     public function predictMatchOutcome(int $fixtureId): array
     {
+        $fixture = $this->fixtureService->getFixtureById($fixtureId);
+        if (!$fixture || $fixture['fixture']->getStatus() == 'FINISHED') {
+            return [
+                'success' => false,
+                'error' => 'Fixture already finished'
+            ];
+        }
+        
         try {
             $existingPrediction = FixturePrediction::where('fixture_id', $fixtureId)->first();
             if ($existingPrediction) {

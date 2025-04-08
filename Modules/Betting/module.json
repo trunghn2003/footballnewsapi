@@ -1,0 +1,11 @@
+{
+    "name": "Betting",
+    "alias": "betting",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

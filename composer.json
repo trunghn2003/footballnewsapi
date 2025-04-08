@@ -17,6 +17,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "mark-gerarts/auto-mapper-plus": "^1.4",
+        "nwidart/laravel-modules": "9.0",
         "tymon/jwt-auth": "^2.2"
     },
     "require-dev": {

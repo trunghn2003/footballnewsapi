@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\StandingController;
 use App\Http\Controllers\Api\FixturePredictController;
+use App\Http\Controllers\Api\BettingController;
+use App\Http\Controllers\Api\BalanceController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -84,3 +86,18 @@ Route::middleware('auth:api')->group(function () {
 });
 Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
+
+// Betting routes
+Route::middleware('auth:api')->group(function () {
+    Route::post('/betting/place-bet', [BettingController::class, 'placeBet']);
+    Route::get('/betting/history', [BettingController::class, 'getBettingHistory']);
+    Route::post('/betting/process-results/{fixtureId}', [BettingController::class, 'processBetResults']);
+});
+
+// Quản lý số dư
+Route::middleware('auth:api')->group(function () {
+    Route::post('/balance/deposit', [BalanceController::class, 'deposit']);
+    Route::post('/balance/withdraw', [BalanceController::class, 'withdraw']);
+    Route::get('/balance', [BalanceController::class, 'getBalance']);
+    Route::get('/balance/transactions', [BalanceController::class, 'getTransactionHistory']);
+});

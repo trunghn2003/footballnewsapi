@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\StandingController;
+use App\Http\Controllers\Api\FixturePredictController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -44,6 +45,7 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('team/{teamId}/recent', [FixtureController::class, 'getRecentFixtures']);
         Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
         Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
+        Route::get('predict/{fixtureId}', [FixturePredictController::class, 'predictMatch']);
     });
 
     Route::post('teams/{teamId}/favorite', [TeamController::class, 'addFavoriteTeam']);

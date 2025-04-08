@@ -34,4 +34,8 @@ return [
         'key_path' => public_path(env('FIREBASE_CREDENTIALS')),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
 ];

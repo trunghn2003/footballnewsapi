@@ -8,6 +8,7 @@
         "php": "^8.0.2",
         "doctrine/dbal": "^3.9",
         "fruitcake/laravel-cors": "^3.0",
+        "google-gemini-php/laravel": "^1.0",
         "google/apiclient": "*",
         "google/auth": "^1.46",
         "guzzlehttp/guzzle": "^7.2",
@@ -64,7 +65,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",

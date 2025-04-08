@@ -13,8 +13,8 @@ class FixtureDTO implements \JsonSerializable
 
     private ?CompetitionDTO $competition =null;
 
-    private ?TeamDTO $homeTeam = null;
-    private ?TeamDTO $awayTeam = null;
+    public ?TeamDTO $homeTeam = null;
+    public ?TeamDTO $awayTeam = null;
     private ?ScoreDTO $score;
     // private array $referees;
 

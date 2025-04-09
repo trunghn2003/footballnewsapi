@@ -75,6 +75,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/betting/place-bet', [BettingController::class, 'placeBet']);
     Route::get('/betting/history', [BettingController::class, 'getBettingHistory']);
     Route::post('/betting/process-results/{fixtureId}', [BettingController::class, 'processBetResults']);
+    Route::get('/betting/rankings', [BettingController::class, 'getPlayerRankings']);
 
     // balance
     Route::post('/balance/deposit', [BalanceController::class, 'deposit']);
@@ -86,8 +87,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/competitions/{competitionId}/standings', [StandingController::class, 'storeStandings']);
     Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
     Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
-
-
 });
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);

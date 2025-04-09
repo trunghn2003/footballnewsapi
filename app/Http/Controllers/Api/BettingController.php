@@ -62,7 +62,7 @@ class BettingController extends Controller
         try {
             $fixtureId = $request->input('fixture_id');
             $result = $this->bettingService->getUserBettingHistory($request->user(), $fixtureId);
-        
+
             if (!$result['success']) {
                 return $this->errorResponse(
                     $result['error'] ?? 'Failed to get betting history',
@@ -87,7 +87,7 @@ class BettingController extends Controller
     {
         try {
             $result = $this->bettingService->processBetResults($fixtureId);
-            
+
             if (!$result['success']) {
                 return $this->errorResponse(
                     $result['error'] ?? 'Failed to process bet results',
@@ -107,4 +107,15 @@ class BettingController extends Controller
             );
         }
     }
-} 
+
+    /**
+     * Get player rankings
+     *
+     * @return JsonResponse
+     */
+    public function getPlayerRankings(): JsonResponse
+    {
+        $result = $this->bettingService->getPlayerRankings();
+        return $this->successResponse($result['rankings']);
+    }
+}

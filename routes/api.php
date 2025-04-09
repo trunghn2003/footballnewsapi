@@ -76,8 +76,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/betting/history', [BettingController::class, 'getBettingHistory']);
     Route::post('/betting/process-results/{fixtureId}', [BettingController::class, 'processBetResults']);
     Route::get('/betting/rankings', [BettingController::class, 'getPlayerRankings']);
-
     // balance
+    Route::post('/balance/giveAllUserBalance', [BalanceController::class, 'giveAllUserBalance']);
     Route::post('/balance/deposit', [BalanceController::class, 'deposit']);
     Route::post('/balance/withdraw', [BalanceController::class, 'withdraw']);
     Route::get('/balance', [BalanceController::class, 'getBalance']);

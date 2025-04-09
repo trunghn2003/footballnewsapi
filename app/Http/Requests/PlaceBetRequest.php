@@ -36,7 +36,7 @@ class PlaceBetRequest extends FormRequest
                 'required',
                 'numeric',
                 'min:10000', // Tối thiểu 10,000đ
-                'max:10000000', // Tối đa 10,000,000đ
+                'max:10000000000', // Tối đa 10,000,000,000 đ
                 function ($attribute, $value, $fail) {
                     // Kiểm tra số dư
                     $balance = $this->balanceService->getBalance($this->user());
@@ -76,4 +76,4 @@ class PlaceBetRequest extends FormRequest
             'predicted_score.away.min' => 'Số bàn thắng của đội khách không thể âm.'
         ];
     }
-} 
+}

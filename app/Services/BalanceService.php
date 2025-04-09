@@ -225,4 +225,39 @@ class BalanceService
             'transactions' => $transactions
         ];
     }
-} 
+    public function giveAllUser($amount)
+    {
+        DB::beginTransaction();
+        try {
+
+            foreach (User::all() as $user) {
+                // Tạo giao dịch nạp tiền
+                $transaction = new Transaction();
+                $transaction->user_id = $user->id;
+                $transaction->type = 'DEPOSIT';
+                $transaction->amount = $amount;
+                $transaction->status = 'COMPLETED';
+                $transaction->reference = 'DEP' . Str::random(10);
+                $transaction->description = 'Nạp tiền vào tài khoản';
+                $transaction->save();
+
+                // Cập nhật số dư
+                $balance = UserBalance::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['balance' => 0]
+                );
+                $balance->balance += $amount;
+                $balance->save();
+            }
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+        return [
+            'success' => true,
+            'transaction' => $transaction,
+            'new_balance' => $balance->balance
+        ];
+    }
+}

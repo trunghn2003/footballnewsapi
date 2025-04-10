@@ -14,7 +14,7 @@ class NewsService
     protected $newsRepository;
     protected $teamRepository;
     protected $apiKey;
-    protected $baseUrl = 'http://157.66.47.51:5000/api/scrape-articles';
+    protected $baseUrl = 'https://quet.onrender.com/api/scrape-articles';
 
     public function __construct(NewsRepository $newsRepository, TeamRepository $teamRepository)
     {

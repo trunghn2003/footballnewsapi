@@ -316,6 +316,7 @@ class FixtureService
                         'shirt_number' => $player->shirt_number,
                         'is_substitute' => $player->is_substitute,
                         'grid' => $player->grid_position,
+                        'statistics' => $player->statistics,
                     ];
                 }),
             'sub' => $lineup->lineupPlayers->filter(function ($player) {
@@ -327,6 +328,7 @@ class FixtureService
                     'name' => $player->player->name,
                     'shirt_number' => $player->shirt_number,
                     'is_substitute' => $player->is_substitute,
+                    'statistics' => $player->statistics,
                 ];
             }),
         ];
@@ -943,6 +945,7 @@ class FixtureService
                                 'person_id' => $person->id,
                                 'team_id' => $fixture->home_team_id,
                             ]);
+                            // dd(($player['player']['statistics']));
 
                             // Create or update lineup player
                             $this->lineUpPlayerRepository->updateOrCreate(
@@ -955,9 +958,11 @@ class FixtureService
                                     'grid_position' => $positionNumber,
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => false,
+                                    'statistics' =>($player['statistics']),
                                     'last_updated' => now()
                                 ]
                             );
+
                         }
                     }
                 }
@@ -988,7 +993,8 @@ class FixtureService
                                     'nationality' => $player['player']['country']['name'] ?? null,
                                     'date_of_birth' => isset($player['player']['dateOfBirthTimestamp']) ?
                                         date('Y-m-d', $player['player']['dateOfBirthTimestamp']) : null,
-                                    'last_updated' => now()
+                                    'last_updated' => now(),
+
                                 ]);
                             }
 
@@ -1009,7 +1015,9 @@ class FixtureService
                                     'grid_position' => null,
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => true,
-                                    'last_updated' => now()
+                                    'last_updated' => now(),
+                                    'statistics' =>($player['statistics']) ?? null,
+
                                 ]
                             );
                         }
@@ -1072,7 +1080,9 @@ class FixtureService
                                     'grid_position' => $positionNumber,
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => false,
-                                    'last_updated' => now()
+                                    'last_updated' => now(),
+                                    'statistics' =>($player['statistics']) ?? null,
+
                                 ]
                             );
                         }
@@ -1126,7 +1136,9 @@ class FixtureService
                                     'grid_position' => null, // Substitutes don't have grid positions
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => true,
-                                    'last_updated' => now()
+                                    'last_updated' => now(),
+                                    'statistics' =>($player['statistics']) ?? null,
+
                                 ]
                             );
                         }

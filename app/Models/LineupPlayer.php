@@ -18,6 +18,10 @@ class LineupPlayer extends Model
         'shirt_number',
         'grid_position',
         'is_substitute',
+        'statistics'
+    ];
+    protected $casts = [
+        'statistics' => 'array',
     ];
 
     public function lineup()

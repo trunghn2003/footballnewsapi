@@ -19,6 +19,7 @@ use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Models\FixtureStatistic;
 
 class FixtureService
 {
@@ -32,6 +33,7 @@ class FixtureService
     private PersonRepository $personRepository;
     private LineupMapper $lineupMapper;
     private SeasonRepository $seasonRepository;
+    private LineUpRepository $lineUpRepository;
     use PushNotification;
 
     public function __construct(
@@ -42,9 +44,9 @@ class FixtureService
         LineUpPlayerRepository $lineUpPlayerRepository,
         PersonRepository       $personRepository,
         LineupMapper           $lineupMapper,
-        SeasonRepository       $seasonRepository
-    )
-    {
+        SeasonRepository       $seasonRepository,
+        LineUpRepository       $lineUpRepository
+    ) {
         $this->fixtureRepository = $fixtureRepository;
         $this->apiToken = env('API_FOOTBALL_TOKEN');
         $this->apiUrlFootball = env('API_FOOTBALL_URL');
@@ -55,6 +57,7 @@ class FixtureService
         $this->personRepository = $personRepository;
         $this->lineupMapper = $lineupMapper;
         $this->seasonRepository = $seasonRepository;
+        $this->lineUpRepository = $lineUpRepository;
     }
 
     public function syncFixtures()
@@ -218,37 +221,76 @@ class FixtureService
         return $lineup;
     }
 
-    public function getFixtureById(int $id)
+    /**
+     * Get fixture by ID with lineup information
+     *
+     * @param int $id
+     * @return array
+     */
+    public function getFixtureById(int $id): array
     {
+        // try {
         $fixture = $this->fixtureRepository->findById($id);
-        $formations = ['4-4-2', '4-3-3', '3-5-2'];
-
-        $lineups = $fixture->lineups;
-        //        dd($fixture->homeLineup);
-        // dump($lineups, );
-
-        // dump(,$awayLineup);
-        if (!isset($lineups) || count($lineups) == 0) {
-            // dd(1);
-            $this->createRandomLineup($fixture->id, $fixture->home_team_id, $fixture->homeTeam->players, $formations[rand(0, count($formations) - 1)]);
-            $this->createRandomLineup($fixture->id, $fixture->away_team_id, $fixture->awayTeam->players, $formations[rand(0, count($formations) - 1)]);
-        }
         if (!$fixture) {
-            return null;
+            return [
+                'success' => false,
+                'message' => 'Fixture not found'
+            ];
         }
 
-        $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
-        $fixtureDto = FixtureMapper::fromModel($fixture);
-        $fixtureDto->setHomeTeam(TeamMapper::fromModel($fixture->homeTeam));
-        $fixtureDto->setAwayTeam(TeamMapper::fromModel($fixture->awayTeam));
-        $fixtureDto->setCompetition($competition);
-        return [
-            'fixture' => $fixtureDto ?? null,
-            "home_lineup" => collect($this->mapLineupToArray($fixture->homeLineup)) ?? null,
-            "away_lineup" => collect($this->mapLineupToArray($fixture->awayLineup)) ?? null,
-        ];
+        // Get statistics
+        $statistics = $this->getFixtureStatistics($fixture->id);
 
-        return $fixtureDto;
+        // Map fixture to DTO
+        $fixtureDto = FixtureMapper::fromModel($fixture);
+
+        // Get competition and teams info
+        $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+        $fixtureDto->setCompetition($competition);
+
+        // Get home team information
+        $homeTeam = $fixture->homeTeam;
+        if (isset($homeTeam)) {
+            $fixtureDto->setHomeTeam(TeamMapper::fromModel($homeTeam));
+        }
+
+        // Get away team information
+        $awayTeam = $fixture->awayTeam;
+        if (isset($awayTeam)) {
+            $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+        }
+
+        // Check if lineups exist, if not fetch from API
+        if (!$fixture->homeLineup || !$fixture->awayLineup) {
+            $response = Http::withHeaders([
+                'x-rapidapi-host' => "sofascore.p.rapidapi.com",
+                "x-rapidapi-key" => '3ffcbe8639mshed1c7dc03a94db6p16d136jsn775d46322204'
+            ])->get("https://sofascore.p.rapidapi.com/matches/get-lineups?matchId={$fixture->id_fixture}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['confirmed'])) {
+                    $this->saveLineupFromApi($id, $data);
+                    // Refresh fixture to get updated lineups
+                    $fixture = $this->fixtureRepository->findById($id);
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'fixture' => $fixtureDto,
+            'statistics' => $statistics,
+            'home_lineup' => collect($this->mapLineupToArray($fixture->homeLineup)) ?? null,
+            'away_lineup' => collect($this->mapLineupToArray($fixture->awayLineup)) ?? null,
+        ];
+        // } catch (\Exception $e) {
+        //     Log::error("Error getting fixture by ID {$id}: " . $e->getMessage());
+        //     return [
+        //         'success' => false,
+        //         'message' => $e->getMessage()
+        //     ];
+        // }
     }
 
     public function mapLineupToArray($lineup)
@@ -259,11 +301,11 @@ class FixtureService
         return [
 
             'formation' => $lineup->formation,
-            'startXI' => $lineup->lineupPlayers->filter(function ($player) {
-                return $player->is_substitute == 0;
-            })
+            'startXI' => $lineup->lineupPlayers
+                ->filter(function ($player) {
+                    return $player->is_substitute == 0;
+                })
                 ->sortBy(function ($player) {
-
                     list($row, $col) = explode(':', $player->grid_position);
                     return $row * 100 + $col;
                 })->map(function ($player) {
@@ -505,7 +547,7 @@ class FixtureService
             );
         }
 
-        \Log::info("Match score notification sent for fixture ID: {$fixture->id}");
+        Log::info("Match score notification sent for fixture ID: {$fixture->id}");
     }
 
     /**
@@ -612,17 +654,15 @@ class FixtureService
                         $competition = $this->competitionService->getCompetitionById($id);
                         $season = $this->seasonRepository->getByCompetitionAndYear($id, $year);
 
-//                        dd($season);
+                        //                        dd($season);
                         foreach ($datas as $data) {
-//                            dd($data);
-                                $fixture = $this->fixtureRepository->createOrUpdatev2($data, $season->id, $id);
-
+                            //                            dd($data);
+                            $fixture = $this->fixtureRepository->createOrUpdatev2($data, $season->id, $id);
                         }
                     }
 
                     DB::commit();
                 }
-
             }
 
             return [
@@ -636,5 +676,483 @@ class FixtureService
                 'error' => $e->getMessage()
             ];
         }
+    }
+
+    public function fetchFixturev3()
+    {
+        set_time_limit(3000000);
+        $restructured = [
+            'EPL' => ['id' => 61627, 'season' => 17, 'competition_id' => 2021],
+            'Champions League' => ['id' => 61644, 'season' => 7, 'competition_id' => 2001],
+            'La Liga' => ['id' => 61643, 'season' => 8, 'competition_id' => 2014],
+            'Serie A' => ['id' => 63515, 'season' => 23, 'competition_id' => 2019],
+            'Bundesliga' => ['id' => 63516, 'season' => 35, 'competition_id' => 2002],
+            'Ligue 1' => ['id' => 61736, 'season' => 34, 'competition_id' => 2015]
+        ];
+        foreach ($restructured as $name => $data) {
+
+            $response = Http::withHeaders([
+                'x-rapidapi-host' => "sofascore.p.rapidapi.com",
+                "x-rapidapi-key" => "3ffcbe8639mshed1c7dc03a94db6p16d136jsn775d46322204"
+            ])->get("https://sofascore.p.rapidapi.com/tournaments/get-last-matches?tournamentId={$data['season']}&seasonId={$data['id']}&pageIndex=0");
+            Log::info("Response: {$response->status()} - Name: {$name} - Season ID: {$data['season']} - Competition ID: {$data['id']}");
+            $competition_id = $data['competition_id'];
+            // dd($response->json());
+            if (!$response->successful()) {
+                throw new \Exception("API request failed: {$response->status()}");
+            }
+
+            $datas = $response->json('events');
+            // dd($response->json());
+
+            DB::beginTransaction();
+
+            if (isset($datas) && is_array($datas)) {
+                foreach ($datas as $d) {
+                    // dd($d);
+                    // $d = $d['events'];
+                    $tla_home = $d['homeTeam']['nameCode'];
+                    $tla_away = $d['awayTeam']['nameCode'];
+                    $name_home = $d['homeTeam']['name'];
+                    $name_away = $d['awayTeam']['name'];
+                    $fixture = $this->fixtureRepository->findByTLAOrName($tla_home, $tla_away, $name_home, $name_away,  $competition_id);
+                    if (isset($fixture)) {
+                        Log::info("Fixture ID: {$fixture->id} - TLA Home: {$tla_home} - TLA Away: {$tla_away} - ID Fixture: {$d['id']}");
+
+                        $id_fixture = $d['id'];
+                        $fixture->id_fixture = $id_fixture;
+                        $fixture->save();
+                    }
+                    // Log::info("Fixture ID: {$fixture->id} - TLA Home: {$tla_home} - TLA Away: {$tla_away} - ID Fixture: {$id_fixture}");
+                    // }
+
+                }
+            }
+            sleep(5);
+
+            DB::commit();
+        }
+        return [
+            'success' => true
+        ];
+    }
+
+    /**
+     * Save fixture statistics if they don't exist
+     *
+     * @param int $fixtureId
+     * @param array $statistics
+     * @return void
+     */
+    public function saveFixtureStatistics(int $fixtureId, array $statistics): void
+    {
+        // Check if statistics already exist
+        $existingStats = FixtureStatistic::where('fixture_id', $fixtureId)->count();
+        if ($existingStats > 0) {
+            return;
+        }
+
+        $statisticsToSave = [];
+
+        // Process each period (ALL, 1ST, 2ND)
+        foreach ($statistics as $periodData) {
+            $period = $periodData['period'] ?? 'ALL';
+
+            // Process each group in the period
+            foreach ($periodData['groups'] as $group) {
+                $groupName = $group['groupName'] ?? 'General';
+
+                // Process each statistic item in the group
+                foreach ($group['statisticsItems'] as $item) {
+                    $statisticsToSave[] = [
+                        'fixture_id' => $fixtureId,
+                        'period' => $period,
+                        'group_name' => $groupName,
+                        'statistic_name' => $item['name'] ?? '',
+                        'key' => $item['key'] ?? '',
+                        'home' => $item['home'] ?? '0',
+                        'away' => $item['away'] ?? '0',
+                        'compare_code' => $item['compareCode'] ?? 0,
+                        'statistics_type' => $item['statisticsType'] ?? '',
+                        'value_type' => $item['valueType'] ?? '',
+                        'home_value' => $item['homeValue'] ?? 0,
+                        'away_value' => $item['awayValue'] ?? 0,
+                        'home_total' => $item['homeTotal'] ?? null,
+                        'away_total' => $item['awayTotal'] ?? null,
+                        'render_type' => $item['renderType'] ?? 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+        }
+
+        if (!empty($statisticsToSave)) {
+            try {
+                FixtureStatistic::insert($statisticsToSave);
+            } catch (\Exception $e) {
+                Log::error("Error saving fixture statistics: " . $e->getMessage());
+                Log::error("Statistics data: " . json_encode($statisticsToSave));
+            }
+        }
+    }
+
+    /**
+     * Get fixture statistics from API if they don't exist in database
+     *
+     * @param int $fixtureId
+     * @return array|null
+     */
+    public function getFixtureStatistics(int $fixtureId): ?array
+    {
+        // Check if statistics exist in database
+        $existingStats = FixtureStatistic::where('fixture_id', $fixtureId)->get();
+        if ($existingStats->isNotEmpty()) {
+            // Transform database data to match API structure
+            $statistics = [];
+            foreach ($existingStats as $stat) {
+                $period = $stat->period;
+                if (!isset($statistics[$period])) {
+                    $statistics[$period] = [
+                        'period' => $period,
+                        'groups' => []
+                    ];
+                }
+
+                $groupName = $stat->group_name;
+                if (!isset($statistics[$period]['groups'][$groupName])) {
+                    $statistics[$period]['groups'][$groupName] = [
+                        'groupName' => $groupName,
+                        'statisticsItems' => []
+                    ];
+                }
+
+                $statistics[$period]['groups'][$groupName]['statisticsItems'][] = [
+                    'name' => $stat->statistic_name,
+                    'home' => $stat->home,
+                    'away' => $stat->away,
+                    'compareCode' => $stat->compare_code,
+                    'statisticsType' => $stat->statistics_type,
+                    'valueType' => $stat->value_type,
+                    'homeValue' => $stat->home_value,
+                    'awayValue' => $stat->away_value,
+                    'homeTotal' => $stat->home_total,
+                    'awayTotal' => $stat->away_total,
+                    'renderType' => $stat->render_type,
+                    'key' => $stat->key
+                ];
+            }
+
+            // Convert to array format
+            $result = [];
+            foreach ($statistics as $period => $periodData) {
+                $periodData['groups'] = array_values($periodData['groups']);
+                $result[] = $periodData;
+            }
+            return $result;
+        }
+
+        // Get fixture to get id_fixture
+        $fixture = $this->fixtureRepository->findById($fixtureId);
+        if (!$fixture || !$fixture->id_fixture) {
+            Log::error("Fixture not found or id_fixture is missing for fixture ID: {$fixtureId}");
+            return null;
+        }
+
+        // If not found, fetch from API
+        try {
+            $response = Http::withHeaders([
+                'x-rapidapi-host' => "sofascore.p.rapidapi.com",
+                "x-rapidapi-key" => '3ffcbe8639mshed1c7dc03a94db6p16d136jsn775d46322204'
+            ])->get("https://sofascore.p.rapidapi.com/matches/get-statistics?matchId={$fixture->id_fixture}");
+
+            if (!$response->successful()) {
+                Log::error("Failed to fetch fixture statistics: {$response->status()}");
+                return null;
+            }
+
+            $data = $response->json();
+            if (empty($data['statistics'])) {
+                return null;
+            }
+
+            $statistics = $data['statistics'];
+
+            // Save statistics to database
+            $this->saveFixtureStatistics($fixtureId, $statistics);
+
+            return $statistics;
+        } catch (\Exception $e) {
+            Log::error("Error fetching fixture statistics: {$e->getMessage()}");
+            return null;
+        }
+    }
+
+
+    public function saveLineupFromApi($fixtureId, $lineupData)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Get fixture to get correct team IDs
+            $fixture = $this->fixtureRepository->findById($fixtureId);
+            if (!$fixture) {
+                throw new \Exception("Fixture not found");
+            }
+
+            // Save home team lineup
+            if (isset($lineupData['home'])) {
+                $homeLineup = $this->lineupRepository->create([
+                    'fixture_id' => $fixtureId,
+                    'team_id' => $fixture->home_team_id,
+                    'formation' => $lineupData['home']['formation'] ?? null
+                ]);
+
+                // Process home team starting XI
+                $positionCounters = [
+                    'G' => 0,
+                    'D' => 0,
+                    'M' => 0,
+                    'F' => 0
+                ];
+
+                foreach ($lineupData['home']['players'] as $player) {
+                    if (!$player['substitute']) {
+                        $positionType = $player['position'];
+                        if ($positionType) {
+                            $positionCounters[$positionType]++;
+                            $positionNumber = $this->getPositionNumber($positionType, $positionCounters[$positionType]);
+
+                            // Find or create person
+                            $person = $this->personRepository->findByName($player['player']['name']);
+                            if (!$person) {
+                                $id = $this->personRepository->genAutoId();
+                                $person = $this->personRepository->create([
+                                    'id' => $id,
+                                    'name' => $player['player']['name'],
+                                    'type' => 'player',
+                                    'nationality' => $player['player']['country']['name'] ?? null,
+                                    'date_of_birth' => isset($player['player']['dateOfBirthTimestamp']) ?
+                                        date('Y-m-d', $player['player']['dateOfBirthTimestamp']) : null,
+                                    'last_updated' => now()
+                                ]);
+                            }
+
+                            // Create or update person_team relationship
+                            $this->personRepository->createOrUpdatePersonTeam([
+                                'person_id' => $person->id,
+                                'team_id' => $fixture->home_team_id,
+                            ]);
+
+                            // Create or update lineup player
+                            $this->lineUpPlayerRepository->updateOrCreate(
+                                [
+                                    'lineup_id' => $homeLineup->id,
+                                    'player_id' => $person->id
+                                ],
+                                [
+                                    'position' => $person->position ?? null,
+                                    'grid_position' => $positionNumber,
+                                    'shirt_number' => $player['player']['jerseyNumber'],
+                                    'is_substitute' => false,
+                                    'last_updated' => now()
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                // Process home team substitutes
+                $positionCounters = [
+                    'G' => 0,
+                    'D' => 0,
+                    'M' => 0,
+                    'F' => 0
+                ];
+
+                foreach ($lineupData['home']['players'] as $player) {
+                    if ($player['substitute']) {
+                        $positionType = $player['position'];
+                        if ($positionType) {
+                            $positionCounters[$positionType]++;
+                            $positionNumber = $this->getPositionNumber($positionType, $positionCounters[$positionType]);
+
+                            // Find or create person
+                            $person = $this->personRepository->findByName($player['player']['name']);
+                            if (!$person) {
+                                $id = $this->personRepository->genAutoId();
+                                $person = $this->personRepository->create([
+                                    'id' => $id,
+                                    'name' => $player['player']['name'],
+                                    'type' => 'player',
+                                    'nationality' => $player['player']['country']['name'] ?? null,
+                                    'date_of_birth' => isset($player['player']['dateOfBirthTimestamp']) ?
+                                        date('Y-m-d', $player['player']['dateOfBirthTimestamp']) : null,
+                                    'last_updated' => now()
+                                ]);
+                            }
+
+                            // Create or update person_team relationship
+                            $this->personRepository->createOrUpdatePersonTeam([
+                                'person_id' => $person->id,
+                                'team_id' => $fixture->home_team_id,
+                            ]);
+
+                            // Create or update lineup player
+                            $this->lineUpPlayerRepository->updateOrCreate(
+                                [
+                                    'lineup_id' => $homeLineup->id,
+                                    'player_id' => $person->id
+                                ],
+                                [
+                                    'position' => $person->position ?? null,
+                                    'grid_position' => null,
+                                    'shirt_number' => $player['player']['jerseyNumber'],
+                                    'is_substitute' => true,
+                                    'last_updated' => now()
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Save away team lineup
+            if (isset($lineupData['away'])) {
+                $awayLineup = $this->lineupRepository->create([
+                    'fixture_id' => $fixtureId,
+                    'team_id' => $fixture->away_team_id,
+                    'formation' => $lineupData['away']['formation'] ?? null
+                ]);
+
+                // Process away team starting XI
+                $positionCounters = [
+                    'G' => 0,
+                    'D' => 0,
+                    'M' => 0,
+                    'F' => 0
+                ];
+
+                foreach ($lineupData['away']['players'] as $player) {
+                    if (!$player['substitute']) { // Fixed condition to only process starting XI players
+                        $positionType = $player['position'];
+                        if ($positionType) {
+                            $positionCounters[$positionType]++;
+                            $positionNumber = $this->getPositionNumber($positionType, $positionCounters[$positionType]);
+
+                            // Find or create person
+                            $person = $this->personRepository->findByName($player['player']['name']);
+                            if (!$person) {
+                                $id = $this->personRepository->genAutoId();
+                                $person = $this->personRepository->create([
+                                    'id' => $id,
+                                    'name' => $player['player']['name'],
+                                    'type' => 'player',
+                                    'nationality' => $player['player']['country']['name'] ?? null,
+                                    'date_of_birth' => isset($player['player']['dateOfBirthTimestamp']) ?
+                                        date('Y-m-d', $player['player']['dateOfBirthTimestamp']) : null,
+                                    'last_updated' => now()
+                                ]);
+                            }
+
+                            // Create or update person_team relationship
+                            $this->personRepository->createOrUpdatePersonTeam([
+                                'person_id' => $person->id,
+                                'team_id' => $fixture->away_team_id,
+                            ]);
+
+                            // Create or update lineup player
+                            $this->lineUpPlayerRepository->updateOrCreate(
+                                [
+                                    'lineup_id' => $awayLineup->id,
+                                    'player_id' => $person->id
+                                ],
+                                [
+                                    'position' => $person->position ?? null,
+                                    'grid_position' => $positionNumber,
+                                    'shirt_number' => $player['player']['jerseyNumber'],
+                                    'is_substitute' => false,
+                                    'last_updated' => now()
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                // Process away team substitutes
+                $positionCounters = [
+                    'G' => 0,
+                    'D' => 0,
+                    'M' => 0,
+                    'F' => 0
+                ];
+
+                foreach ($lineupData['away']['players'] as $player) {
+                    if ($player['substitute']) {
+                        $positionType = $player['position'];
+                        if ($positionType) {
+                            $positionCounters[$positionType]++;
+                            $positionNumber = $this->getPositionNumber($positionType, $positionCounters[$positionType]);
+
+                            // Find or create person
+                            $person = $this->personRepository->findByName($player['player']['name']);
+                            if (!$person) {
+                                $id = $this->personRepository->genAutoId();
+                                $person = $this->personRepository->create([
+                                    'id' => $id,
+                                    'name' => $player['player']['name'],
+                                    'type' => 'player',
+                                    'nationality' => $player['player']['country']['name'] ?? null,
+                                    'date_of_birth' => isset($player['player']['dateOfBirthTimestamp']) ?
+                                        date('Y-m-d', $player['player']['dateOfBirthTimestamp']) : null,
+                                    'last_updated' => now()
+                                ]);
+                            }
+
+                            // Create or update person_team relationship
+                            $this->personRepository->createOrUpdatePersonTeam([
+                                'person_id' => $person->id,
+                                'team_id' => $fixture->away_team_id,
+                            ]);
+
+                            // Create or update lineup player
+                            $this->lineUpPlayerRepository->updateOrCreate(
+                                [
+                                    'lineup_id' => $awayLineup->id,
+                                    'player_id' => $person->id
+                                ],
+                                [
+                                    'position' => $person->position ?? null,
+                                    'grid_position' => null, // Substitutes don't have grid positions
+                                    'shirt_number' => $player['player']['jerseyNumber'],
+                                    'is_substitute' => true,
+                                    'last_updated' => now()
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error saving lineup from API for fixture {$fixtureId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+
+    private function getPositionNumber($positionType, $counter)
+    {
+        $baseNumber = [
+            'G' => 1,
+            'D' => 2,
+            'M' => 3,
+            'F' => 4
+        ];
+
+        return $baseNumber[$positionType] . ':' . $counter;
     }
 }

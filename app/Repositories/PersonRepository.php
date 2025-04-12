@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Person;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PersonRepository
 {
@@ -36,24 +38,24 @@ class PersonRepository
                 return Person::updateOrCreate(
                     ['id' => $data['id']],
                     [
-                    'name' => $data['name'],
-                    'nationality' => $data['nationality'] ?? null,
-                'last_synced' => now(),
-                'last_updated' => now(),
-                'role' => 'REFEREE'
-            ]
-        );
-        } catch (\Exception $e) {
-            return New Person();
-        }
+                        'name' => $data['name'],
+                        'nationality' => $data['nationality'] ?? null,
+                        'last_synced' => now(),
+                        'last_updated' => now(),
+                        'role' => 'REFEREE'
+                    ]
+                );
+            } catch (\Exception $e) {
+                return new Person();
+            }
         }
     }
 
     public  function getPersonByTeamId($teamId)
     {
         return $this->person->where('team_id', $teamId)
-        ->where('role', 'PLAYER')
-        ->get();
+            ->where('role', 'PLAYER')
+            ->get();
     }
 
     public function findById($id)
@@ -63,7 +65,42 @@ class PersonRepository
 
     public function update(int $id, array $data): bool
     {
-        dd($data);
-        return $this->person->where('id', $id)->update($data);
+        try {
+            return $this->person->where('id', $id)->update($data);
+        } catch (\Exception $e) {
+            Log::error('Error updating person: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function findByName($name)
+    {
+        return $this->person->where('name', 'like', '%' . $name . '%')->first();
+    }
+
+    public function create(array $data)
+    {
+        return $this->person->create($data);
+    }
+
+    public function createOrUpdatePersonTeam(array $data)
+    {
+        return DB::table('person_team')->updateOrInsert(
+            [
+                'person_id' => $data['person_id'],
+                'team_id' => $data['team_id']
+            ],
+            [
+                'position' => $data['position'] ?? null,
+                'shirt_number' => $data['shirt_number'] ?? null,
+                'role' => $data['role'] ?? 'PLAYER',
+                'updated_at' => now()
+            ]
+        );
+    }
+
+    public function genAutoId()
+    {
+        return $this->person->max('id') + 1;
     }
 }

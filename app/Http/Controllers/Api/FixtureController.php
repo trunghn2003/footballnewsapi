@@ -125,4 +125,14 @@ class FixtureController extends Controller
 
         ], Response::HTTP_OK);
     }
+
+    public function syncv3()
+    {
+        $result =  $this->fixtureService->fetchFixturev3();
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        return $this->successResponse($result, Response::HTTP_OK);
+
+    }
 }

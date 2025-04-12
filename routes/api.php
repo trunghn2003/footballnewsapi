@@ -99,3 +99,5 @@ Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
 Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
+
+Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);

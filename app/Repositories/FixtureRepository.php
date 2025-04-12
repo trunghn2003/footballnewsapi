@@ -131,8 +131,8 @@ class FixtureRepository
             $query->where('home_team_id', $filters['teamId'])
                 ->orWhere('away_team_id', $filters['teamId']);
         }
-        if (!$flag)
-            $query->where('utc_date', '>', now());
+        // if (!$flag)
+        //     $query->where('utc_date', '>', now());
 
 
         return $query
@@ -254,7 +254,7 @@ class FixtureRepository
             $awayScore = $fixture->full_time_away_score ?? 0;
 
 
-             $stats['team1']['total_matches']++;
+            $stats['team1']['total_matches']++;
             $stats['team2']['total_matches']++;
 
             // Cập nhật thống kê dựa trên kết quả trận đấu
@@ -374,43 +374,43 @@ class FixtureRepository
         $stage = $this->mapStage($data['league']['round'] ?? null);
 
 
-//        $season_id =$season_id;
+        //        $season_id =$season_id;
         $country = $data['league']['country'] ?? null;
-        if($data['league']['id'] == 41) {
+        if ($data['league']['id'] == 41) {
             $country = 'France';
         }
         $homeTeam = $this->teamRepository->findByName($data['teams']['home']['name']);
         // Create or update home team using the dedicated function
-        if(!$homeTeam){
+        if (!$homeTeam) {
             return;
-        $homeTeam = $this->teamRepository->updateOrCreateTeam([
-            'id' => $this->teamRepository->generateNewId(),
-            'name' => $data['teams']['home']['name'],
-            'logo' => $data['teams']['home']['logo'] ?? null,
-            'country' => $country,
+            $homeTeam = $this->teamRepository->updateOrCreateTeam([
+                'id' => $this->teamRepository->generateNewId(),
+                'name' => $data['teams']['home']['name'],
+                'logo' => $data['teams']['home']['logo'] ?? null,
+                'country' => $country,
 
-            'last_synced' => now(),
-            'area_id' => $data['area']['id'] ?? 2267,
-            'last_updated' => now()
+                'last_synced' => now(),
+                'area_id' => $data['area']['id'] ?? 2267,
+                'last_updated' => now()
             ]);
             \Log::info('Home team created: ' . $data['teams']['home']['name']);
         }
         $awayTeam = $this->teamRepository->findByName($data['teams']['away']['name']);
-        if(!$awayTeam){ 
+        if (!$awayTeam) {
             return;
             // Create or update away team using the dedicated function
-        $awayTeam = $this->teamRepository->updateOrCreateTeam([
-            'id' => $this->teamRepository->generateNewId(),
-            'name' => $data['teams']['away']['name'],
-            'logo' => $data['teams']['away']['logo'] ?? null,
-            'country' => $country,
+            $awayTeam = $this->teamRepository->updateOrCreateTeam([
+                'id' => $this->teamRepository->generateNewId(),
+                'name' => $data['teams']['away']['name'],
+                'logo' => $data['teams']['away']['logo'] ?? null,
+                'country' => $country,
 
-            'last_synced' => now(),
-            'area_id' => $data['area']['id'] ?? 2267,
-            'last_updated' => now()
-        ]);
-        \Log::info('Away team created: ' . $data['teams']['away']['name']);
-    }
+                'last_synced' => now(),
+                'area_id' => $data['area']['id'] ?? 2267,
+                'last_updated' => now()
+            ]);
+            \Log::info('Away team created: ' . $data['teams']['away']['name']);
+        }
 
 
         $fixture = Fixture::updateOrCreate(
@@ -434,9 +434,9 @@ class FixtureRepository
                 'winner' => $winner,
                 'duration' => isset($data['fixture']['status']['elapsed']) ? 'REGULAR' : null,
                 'competition_id' => $competition_id,
-//                'referee' => $data['fixture']['referee'] ?? null,
+                //                'referee' => $data['fixture']['referee'] ?? null,
                 'venue' => $data['fixture']['venue']['name'] ?? null,
-//                'venue_city' => $data['fixture']['venue']['city'] ?? null,
+                //                'venue_city' => $data['fixture']['venue']['city'] ?? null,
                 'last_updated' => now(),
             ]
         );
@@ -462,8 +462,10 @@ class FixtureRepository
             return 'REGULAR_SEASON';
         }
 
-        if (strpos($lowercaseRound, 'league stage') !== false ||
-            strpos($lowercaseRound, 'group') !== false) {
+        if (
+            strpos($lowercaseRound, 'league stage') !== false ||
+            strpos($lowercaseRound, 'group') !== false
+        ) {
             return 'LEAGUE_STAGE';
         }
 
@@ -471,21 +473,27 @@ class FixtureRepository
             return 'PLAYOFFS';
         }
 
-        if (strpos($lowercaseRound, 'round of 16') !== false ||
+        if (
+            strpos($lowercaseRound, 'round of 16') !== false ||
             strpos($lowercaseRound, 'last 16') !== false ||
-            strpos($lowercaseRound, '1/8') !== false) {
+            strpos($lowercaseRound, '1/8') !== false
+        ) {
             return 'LAST_16';
         }
 
-        if (strpos($lowercaseRound, 'quarter') !== false ||
+        if (
+            strpos($lowercaseRound, 'quarter') !== false ||
             strpos($lowercaseRound, 'quarter-final') !== false ||
-            strpos($lowercaseRound, '1/4') !== false) {
+            strpos($lowercaseRound, '1/4') !== false
+        ) {
             return 'QUARTER_FINALS';
         }
 
-        if (strpos($lowercaseRound, 'semi') !== false ||
+        if (
+            strpos($lowercaseRound, 'semi') !== false ||
             strpos($lowercaseRound, 'semi-final') !== false ||
-            strpos($lowercaseRound, '1/2') !== false) {
+            strpos($lowercaseRound, '1/2') !== false
+        ) {
             return 'SEMI_FINALS';
         }
 
@@ -503,5 +511,51 @@ class FixtureRepository
         return $maxId + 1;
     }
 
+    public function findByTla($tlaHome, $tlaAway, $competitionId)
+    {
+        $query = $this->model->newQuery();
+        $query->where('competition_id', $competitionId)
+            ->where(function ($q) use ($tlaHome, $tlaAway) {
+                $q->whereHas('homeTeam', function ($query) use ($tlaHome) {
+                    $query->where('tla', $tlaHome);
+                });
+                $q->WhereHas('awayTeam', function ($query) use ($tlaAway) {
+                        $query->where('tla', $tlaAway);
+                    });
+            });
+            $query->where('status', 'FINISHED')
+            ->where('utc_date', '<=', now());
 
+        return $query->orderBy('utc_date', 'desc')
+            // ->with(['homeTeam', 'awayTeam'])
+            ->first();
+    }
+
+    public function findByTLAOrName($tlaHome, $tlaAway, $name_home, $away_name,$competitionId)
+    {
+        $query = $this->model->newQuery();
+        $query->where('competition_id', $competitionId)
+            ->where(function ($q) use ($tlaHome, $tlaAway, $name_home, $away_name) {
+                $q->whereHas('homeTeam', function ($query) use ($tlaHome, $name_home) {
+                    $query->where('tla', $tlaHome, $name_home)
+                        ->orWhere('name', 'like', '%' . $tlaHome . '%')
+                        ->orWhere('name', 'like', '%' . $name_home . '%')
+                        ->orWhere('short_name', 'like', '%' . $name_home . '%');
+                });
+                $q->WhereHas('awayTeam', function ($query) use ($tlaAway, $away_name) {
+                        $query->where('tla', $tlaAway, $away_name)
+                            ->orWhere('name', 'like', '%' . $tlaAway . '%')
+                            ->orWhere('name', 'like', '%' . $away_name . '%')
+                            ->orWhere('short_name', 'like', '%' . $away_name . '%');
+                        $query->where('tla', $tlaAway);
+
+                    });
+            });
+            $query->where('status', 'FINISHED')
+            ->where('utc_date', '<=', now());
+
+        return $query->orderBy('utc_date', 'desc')
+            // ->with(['homeTeam', 'awayTeam'])
+            ->first();
+    }
 }

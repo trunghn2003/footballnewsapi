@@ -14,4 +14,8 @@ class LineUpPlayerRepository
     {
         return $this->model->create($data);
     }
+    public function updateOrCreate(array $attributes, array $values)
+    {
+        return $this->model->updateOrCreate($attributes, $values);
+    }
 }

@@ -261,28 +261,12 @@ class FixtureService
         }
 
         // Check if lineups exist, if not fetch from API
-        if (!$fixture->homeLineup || !$fixture->awayLineup) {
-            $response = Http::withHeaders([
-                'x-rapidapi-host' => "sofascore.p.rapidapi.com",
-                "x-rapidapi-key" => '3ffcbe8639mshed1c7dc03a94db6p16d136jsn775d46322204'
-            ])->get("https://sofascore.p.rapidapi.com/matches/get-lineups?matchId={$fixture->id_fixture}");
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['confirmed'])) {
-                    $this->saveLineupFromApi($id, $data);
-                    // Refresh fixture to get updated lineups
-                    $fixture = $this->fixtureRepository->findById($id);
-                }
-            }
-        }
 
         return [
             'success' => true,
             'fixture' => $fixtureDto,
             'statistics' => $statistics,
-            'home_lineup' => collect($this->mapLineupToArray($fixture->homeLineup)) ?? null,
-            'away_lineup' => collect($this->mapLineupToArray($fixture->awayLineup)) ?? null,
         ];
         // } catch (\Exception $e) {
         //     Log::error("Error getting fixture by ID {$id}: " . $e->getMessage());
@@ -808,6 +792,19 @@ class FixtureService
     public function getFixtureStatistics(int $fixtureId): ?array
     {
         // Check if statistics exist in database
+        $fixture = $this->fixtureRepository->findById($fixtureId);
+        if (!$fixture) {
+            Log::error("Fixture not found for ID: {$fixtureId}");
+            return null;
+        }
+        if (!$fixture->id_fixture) {
+            Log::error("Fixture ID is missing for fixture ID: {$fixtureId}");
+            return null;
+        }
+        if ($fixture->status != 'FINISHED') {
+            Log::info("Fixture ID: {$fixtureId} is not finished. Status: {$fixture->status}");
+            return null;
+        }
         $existingStats = FixtureStatistic::where('fixture_id', $fixtureId)->get();
         if ($existingStats->isNotEmpty()) {
             // Transform database data to match API structure
@@ -958,11 +955,10 @@ class FixtureService
                                     'grid_position' => $positionNumber,
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => false,
-                                    'statistics' =>($player['statistics']),
+                                    'statistics' => ($player['statistics']),
                                     'last_updated' => now()
                                 ]
                             );
-
                         }
                     }
                 }
@@ -1016,7 +1012,7 @@ class FixtureService
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => true,
                                     'last_updated' => now(),
-                                    'statistics' =>($player['statistics']) ?? null,
+                                    'statistics' => ($player['statistics']) ?? null,
 
                                 ]
                             );
@@ -1081,7 +1077,7 @@ class FixtureService
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => false,
                                     'last_updated' => now(),
-                                    'statistics' =>($player['statistics']) ?? null,
+                                    'statistics' => ($player['statistics']) ?? null,
 
                                 ]
                             );
@@ -1137,7 +1133,7 @@ class FixtureService
                                     'shirt_number' => $player['player']['jerseyNumber'],
                                     'is_substitute' => true,
                                     'last_updated' => now(),
-                                    'statistics' =>($player['statistics']) ?? null,
+                                    'statistics' => ($player['statistics']) ?? null,
 
                                 ]
                             );
@@ -1166,5 +1162,41 @@ class FixtureService
         ];
 
         return $baseNumber[$positionType] . ':' . $counter;
+    }
+
+    public function getLineUpByFixtureId($fixtureId)
+    {
+
+        $fixture = $this->fixtureRepository->findById($fixtureId);
+        if (!$fixture) {
+            return null;
+        }
+        if($fixture->status != 'FINISHED'){
+            return null;
+        }
+        if (!$fixture->homeLineup || !$fixture->awayLineup) {
+            $response = Http::withHeaders([
+                'x-rapidapi-host' => "sofascore.p.rapidapi.com",
+                "x-rapidapi-key" => '3ffcbe8639mshed1c7dc03a94db6p16d136jsn775d46322204'
+            ])->get("https://sofascore.p.rapidapi.com/matches/get-lineups?matchId={$fixture->id_fixture}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['confirmed'])) {
+                    $this->saveLineupFromApi($fixtureId, $data);
+
+                    $fixture = $this->fixtureRepository->findById($fixtureId);
+                }
+            }
+        }
+        if ($fixture->homeLineup && $fixture->awayLineup) {
+
+            return [
+                'home_lineup' => collect($this->mapLineupToArray($fixture->homeLineup)) ?? null,
+                'away_lineup' => collect($this->mapLineupToArray($fixture->awayLineup)) ?? null,
+            ];
+        } else {
+            return null;
+        }
     }
 }

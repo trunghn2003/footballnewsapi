@@ -48,6 +48,7 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
         Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
         Route::get('predict/{fixtureId}', [FixturePredictController::class, 'predictMatch']);
+        Route::get('lineup/{fixtureId}', [FixtureController::class, 'getLineupByFixtureId']);
     });
 
     Route::post('teams/favorite/{teamId}', [TeamController::class, 'addFavoriteTeam']);

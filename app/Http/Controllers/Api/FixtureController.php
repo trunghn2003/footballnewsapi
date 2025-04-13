@@ -40,6 +40,12 @@ class FixtureController extends Controller
         return $this->successResponse($fixture);
     }
 
+    public function getLineupByFixtureId(int $id)
+    {
+        $fixture = $this->fixtureService->getLineupByFixtureId($id);
+        return $this->successResponse($fixture);
+    }
+
     public function getFixtures(Request $request)
     {
         $filters = $request->only(['competition', 'ids', 'dateFrom', 'dateTo', 'status', 'teamName', 'teamId', 'competition_id']);

@@ -432,12 +432,18 @@ class FixtureService
         ];
     }
 
-    public function getUpcomingFixturesByTeam(int $teamId, int $limit = 5): array
+    public function getUpcomingFixturesByTeam(int $teamId, $filter): array
     {
+        // dd($teamId);
         $fixtures = $this->fixtureRepository->getFixtures([
             'teamId' => $teamId,
-            'status' => 'TIMED'
-        ], $limit, 1);
+            'status' => 'SCHEDULED',
+            'competition' => $filter['competition'] ?? null,
+            'dateFrom' => $filter['dateFrom'] ?? null,
+            'dateTo' => $filter['dateTo'] ?? null,
+            'teamName' => $filter['teamName'] ?? null,
+            'competition_id' => $filter['competition_id'] ?? null
+        ], $filter['limit'] ?? 5 , 1);
 
         if (isset($fixtures) && count($fixtures) > 0) {
             return [

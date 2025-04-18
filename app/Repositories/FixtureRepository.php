@@ -92,22 +92,27 @@ class FixtureRepository
         }
     }
 
+
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1, $flag = false)
     {
         $query = $this->model->query();
+
+        // Áp dụng bộ lọc competition
         if (isset($filters['competition'])) {
             $query->where('competition_id', $filters['competition']);
         }
+
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
         }
 
+        // Lọc theo danh sách ID
         if (isset($filters['ids'])) {
             $query->whereIn('id', $filters['ids']);
         }
 
+        // Lọc theo khoảng thời gian
         if (isset($filters['dateFrom'])) {
-            // dd(1);
             $query->where('utc_date', '>=', $filters['dateFrom']);
         }
 
@@ -115,29 +120,44 @@ class FixtureRepository
             $query->where('utc_date', '<=', $filters['dateTo']);
         }
 
+        // Lọc theo trạng thái
         if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+            if($filters['status'] == 'SCHEDULED')
+            {
+                $query->where('status', '!=', 'FINISHED');
+            }
+            else
+            {
+                $query->where('status', $filters['status']);
+            }
+            // $query->where('status', $filters['status']);
         }
+
+        // Lọc theo tên đội bóng
         if (isset($filters['teamName'])) {
-            $query->whereHas('homeTeam', function ($query) use ($filters) {
-                $query->where('name', 'like', '%' . $filters['teamName'] . '%');
-            })
+            $query->where(function($q) use ($filters) {
+                $q->whereHas('homeTeam', function ($query) use ($filters) {
+                    $query->where('name', 'like', '%' . $filters['teamName'] . '%');
+                })
                 ->orWhereHas('awayTeam', function ($query) use ($filters) {
                     $query->where('name', 'like', '%' . $filters['teamName'] . '%');
                 });
+            });
         }
 
+        // Lọc theo ID đội bóng
         if (isset($filters['teamId'])) {
-            $query->where('home_team_id', $filters['teamId'])
-                ->orWhere('away_team_id', $filters['teamId']);
+            $query->where(function($q) use ($filters) {
+                $q->where('home_team_id', $filters['teamId'])
+                  ->orWhere('away_team_id', $filters['teamId']);
+            });
         }
-        // if (!$flag)
-        //     $query->where('utc_date', '>', now());
 
+        $query->orderBy('utc_date', 'asc');
 
+        // Lấy kết quả với các mối quan hệ và sắp xếp
         return $query
             ->with(['homeTeam', 'awayTeam', 'homeLineup.players.players', 'awayLineup.player.players'])
-            ->orderBy('utc_date', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
     }
 

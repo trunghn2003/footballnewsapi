@@ -91,8 +91,9 @@ class FixtureController extends Controller
     public function getUpcomingFixtures(Request $request, int $teamId): JsonResponse
     {
         try {
-            $limit = $request->input('limit', 5);
-            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $limit);
+            $filter = $request->only(['competition', 'dateFrom', 'dateTo', 'status',
+                'teamName', 'teamId', 'competition_id', 'limit']);
+            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $filter);
             return $this->successResponse($result);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);

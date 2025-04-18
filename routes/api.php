@@ -52,7 +52,8 @@ Route::middleware('jwt.auth')->group(function () {
     });
 
     Route::post('teams/favorite/{teamId}', [TeamController::class, 'addFavoriteTeam']);
-    Route::delete('teams/favorite/{teamId}', [TeamController::class, 'removeFavoriteTeam']);
+    Route::delete('teams/teams/{teamId}', [TeamController::class, 'removeFavoriteTeam']);
+    Route::get('teams/favorite', [TeamController::class, 'getFavoriteTeams']);
     Route::get('teams', [TeamController::class, 'getTeams']);
     Route::get('teams/{teamId}', [TeamController::class, 'getTeam']);
 

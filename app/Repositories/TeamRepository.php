@@ -125,6 +125,18 @@ class TeamRepository
                 ->orWhere('short_name', 'like', '%' . $name . '%')
                 ->first();
     }
+    public function getFavoriteTeams()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return null;
+        }
+        $favoriteTeams = $user->favourite_teams;
+        if (!is_array($favoriteTeams)) {
+            $favoriteTeams = json_decode($favoriteTeams, true) ?? [];
+        }
+        return $this->model->whereIn('id', $favoriteTeams)->get();
+    }
 
 
 

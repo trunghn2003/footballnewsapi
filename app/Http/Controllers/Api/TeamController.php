@@ -81,4 +81,14 @@ class TeamController extends Controller
         return $this->successResponse($result);
     }
 
+    public function getFavoriteTeams(): JsonResponse
+    {
+        // dd(1);
+        $result = $this->teamService->getFavoriteTeams();
+        if (!$result) {
+            return $this->errorResponse('No favorite teams found');
+        }
+        return $this->successResponse($result);
+    }
+
 }

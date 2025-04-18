@@ -158,4 +158,26 @@ class TeamService
             ],
         ];
     }
+
+    public function getFavoriteTeams(): array
+    {
+        $user = User::where('id', auth()->user()->id)->first();
+        if (!$user) {
+            return [];
+        }
+        $favoriteTeams = $user->favourite_teams;
+        if (!is_array($favoriteTeams)) {
+            $favoriteTeams = json_decode($favoriteTeams, true) ?? [];
+        }
+        $result =  $this->teamRepository->getFavoriteTeams($favoriteTeams);
+        if (!isset($result) || $result->isEmpty()) {
+            return [
+                'teams' => [],
+
+            ];
+        }
+        return [
+            'teams' => $result ,
+        ];
+    }
 }

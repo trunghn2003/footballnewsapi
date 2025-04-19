@@ -107,6 +107,8 @@ class FixtureRepository
         }
         if(isset($filters['recently']) && $filters['recently'] == 1)
         {
+            // dd(1);
+            if(!isset($filters['competition_id']))
             $query->where('status', 'FINISHED')
                 ->where('utc_date', '<=', now())
                 ->orderBy('utc_date', 'desc');

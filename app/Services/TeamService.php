@@ -7,24 +7,30 @@ use App\Models\User;
 use App\Repositories\CompetitionRepository;
 use App\Repositories\PersonRepository;
 use App\Repositories\TeamRepository;
-use App\Repositories\PlayerRepository;
+use App\Repositories\LineUpPlayerRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 class TeamService
 {
     private $teamRepository;
     private $personRepository;
     private $competitionRepository;
+    private $lineUpPlayerRepository;
     private string $apiUrl;
     private string $apiToken;
+
     public function __construct(
         TeamRepository $teamRepository,
         CompetitionRepository $competitionRepository,
-        PersonRepository $personRepository
+        PersonRepository $personRepository,
+        LineUpPlayerRepository $lineUpPlayerRepository
     ) {
         $this->teamRepository = $teamRepository;
         $this->competitionRepository = $competitionRepository;
         $this->personRepository = $personRepository;
+        $this->lineUpPlayerRepository = $lineUpPlayerRepository;
         $this->apiUrl = env('API_FOOTBALL_URL');
         $this->apiToken = env('API_FOOTBALL_TOKEN');
     }
@@ -78,7 +84,7 @@ class TeamService
                         //     ],
                         //     ['created_at' => now(), 'updated_at' => now()]
                         // );
-                        \Log::info('Team: ' . $team->name . ' ' .$competition->id. ' '. $currentSeason->id . ' synced successfully.');
+                        Log::info('Team: ' . $team->name . ' ' .$competition->id. ' '. $currentSeason->id . ' synced successfully.');
                         foreach ($teamData['squad'] as $playerData) {
                             $this->personRepository->syncPerson($playerData, $team->id);
                         }
@@ -89,7 +95,7 @@ class TeamService
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('League  sync failed: ' . $e->getMessage());
+            Log::error('League sync failed: ' . $e->getMessage());
             DB::rollBack();
             return false;
         }
@@ -97,7 +103,52 @@ class TeamService
 
     public function getTeamById(int $id)
     {
-        return $this->teamRepository->findById($id);
+        $result = $this->teamRepository->findById($id);
+        $players = $result->players()->get();
+
+        // Lấy ID của tất cả cầu thủ
+        $playerIds = $players->pluck('id')->toArray();
+
+        // Sử dụng LineUpPlayerRepository để lấy thông tin số áo
+        $lineupInfo = $this->lineUpPlayerRepository->getLatestPlayersInfo($playerIds);
+        $lineupInfoMap = $lineupInfo->keyBy('player_id');
+
+        // Thêm thông tin số áo và vị trí vào đối tượng cầu thủ
+        $playersWithShirtNumber = $players->map(function($player) use ($lineupInfoMap) {
+            $playerData = $player->toArray();
+
+            if ($lineupInfoMap->has($player->id)) {
+                $info = $lineupInfoMap->get($player->id);
+                $playerData['shirt_number'] = $info->shirt_number;
+                $playerData['position'] = $info->position;
+            } else {
+                $playerData['shirt_number'] = null;
+                $playerData['position'] = null;
+            }
+
+            return $playerData;
+        });
+
+        // Sắp xếp cầu thủ theo số áo
+        $sortedPlayers = $playersWithShirtNumber->sort(function ($a, $b) {
+            if ($a['shirt_number'] === null && $b['shirt_number'] === null) {
+                return 0;
+            }
+            if ($a['shirt_number'] === null) {
+                return 1;  // Đưa cầu thủ không có số áo xuống cuối
+            }
+            if ($b['shirt_number'] === null) {
+                return -1; // Đưa cầu thủ không có số áo xuống cuối
+            }
+
+            // So sánh số áo
+            return $a['shirt_number'] <=> $b['shirt_number'];
+        })->values();  // values() để reset lại các key sau khi sắp xếp
+
+        return [
+            'team' => $result,
+            'players' => $sortedPlayers,
+        ];
     }
 
     public function addFavoriteTeam(int $teamId): bool

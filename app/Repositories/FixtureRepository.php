@@ -105,6 +105,12 @@ class FixtureRepository
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
         }
+        if(isset($filters['recently']) && $filters['recently'] == 1)
+        {
+            $query->where('status', 'FINISHED')
+                ->where('utc_date', '<=', now())
+                ->orderBy('utc_date', 'desc');
+        }
 
         // Lọc theo danh sách ID
         if (isset($filters['ids'])) {

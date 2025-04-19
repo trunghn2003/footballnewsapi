@@ -320,7 +320,8 @@ class FixtureService
 
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
     {
-        $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page);
+        $filters['recently'] = 1;
+        $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page, 1);
         if (isset($fixtures) && count($fixtures) > 0)
             // dd($fixtures->items());
             return [

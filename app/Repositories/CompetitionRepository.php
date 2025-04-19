@@ -45,6 +45,11 @@ class CompetitionRepository
     {
         return Competition::where('id', $Id)->first();
     }
+    public function getByIds(array $ids)
+    {
+        // dd($ids);
+        return Competition::whereIn('id', $ids)->get();
+    }
 
 
 

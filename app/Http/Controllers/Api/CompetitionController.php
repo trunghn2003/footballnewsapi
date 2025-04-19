@@ -67,4 +67,45 @@ class CompetitionController extends Controller
         $result = $this->competitionService->getFeaturedCompetitions();
         return $this->successResponse($result);
     }
+
+    /**
+     * add competition to favourite
+     */
+    public function addToFavourite($id): JsonResponse
+    {
+        $result = $this->competitionService->addToFavourite($id);
+        if($result) {
+            return $this->successResponse($result);
+        } else {
+            return $this->errorResponse('Competition not found', Response::HTTP_NOT_FOUND);
+        }
+
+
+    }
+
+    /**
+     * remove competition from favourite
+     */
+    public function removeFromFavourite($id): JsonResponse
+    {
+        $result = $this->competitionService->removeFromFavourite($id);
+        if($result) {
+            return $this->successResponse($result);
+        } else {
+            return $this->errorResponse('Competition not found', Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    /**
+     * get favourite competitions
+     */
+    public function getFavouriteCompetitions(): JsonResponse
+    {
+        $result = $this->competitionService->getFavouriteCompetitions();
+        if($result) {
+            return $this->successResponse($result);
+        } else {
+            return $this->errorResponse('No favourite competitions found', Response::HTTP_NOT_FOUND);
+        }
+    }
 }

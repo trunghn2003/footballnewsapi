@@ -211,4 +211,88 @@ class CompetitionService
             throw ($e);
         }
     }
+    public function addToFavourite($id)
+    {
+        try {
+            $competition = $this->competitionRepository->getById($id);
+            if (!$competition) {
+                throw new \Exception("Competition not found");
+            }
+            $user = auth()->user();
+            $favouriteCompetitions = $user->favourite_competitions ?? [];
+            if (!is_array($favouriteCompetitions)) {
+                $favouriteCompetitions = json_decode($favouriteCompetitions, true) ?? [];
+            }
+            // dd($favouriteCompetitions);
+            if (!in_array($competition->id, $favouriteCompetitions)) {
+                $favouriteCompetitions[] = $competition->id;
+                $user->favourite_competitions = $favouriteCompetitions;
+                $user->save();
+            }
+            return [
+                'success' => true,
+                'message' => 'Competition added to favourites'
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw ($e);
+        }
+    }
+    public function getFavouriteCompetitions()
+    {
+        try {
+            $user = auth()->user();
+            $favouriteCompetitions = $user->favourite_competitions ?? [];
+            if (!is_array($favouriteCompetitions)) {
+                $favouriteCompetitions = json_decode($favouriteCompetitions, true) ?? [];
+            }
+
+            // dd($favouriteCompetitions);
+            $competitions = $this->competitionRepository->getByIds($favouriteCompetitions);
+            $result = [];
+            foreach ($competitions as $competition) {
+                $area = $competition->area;
+                $areaDTO = $this->areaMapper->toDTO($area);
+                $season = $competition->currentSeason ?? null;
+                $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
+                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+
+                $competitionDto = $this->competitionMapper->toDTO($competition);
+                $competitionDto->setArea($areaDTO);
+                $competitionDto->setSeason($seaDTO);
+
+                $result[] = $competitionDto;
+            }
+            return [
+                'competitions' => $result,
+                'total' => count($result)
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw ($e);
+        }
+    }
+
+    public function removeFromFavourite($id)
+    {
+        try {
+            $user = auth()->user();
+            $favouriteCompetitions = $user->favourite_competitions ?? [];
+            if (!is_array($favouriteCompetitions)) {
+                $favouriteCompetitions = json_decode($favouriteCompetitions, true) ?? [];
+            }
+             if (($key = array_search($id, $favouriteCompetitions)) !== false) {
+                unset($favouriteCompetitions[$key]);
+                $user->favourite_competitions = array_values($favouriteCompetitions);
+                $user->save();
+            }
+            return [
+                'success' => true,
+                'message' => 'Competition removed from favourites'
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            throw ($e);
+        }
+    }
 }

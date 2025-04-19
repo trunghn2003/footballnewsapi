@@ -320,7 +320,8 @@ class FixtureService
 
     public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
     {
-        $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page);
+        $filters['recently'] = 1;
+        $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page, 1);
         if (isset($fixtures) && count($fixtures) > 0)
             // dd($fixtures->items());
             return [
@@ -432,12 +433,15 @@ class FixtureService
         ];
     }
 
-    public function getUpcomingFixturesByTeam(int $teamId, int $limit = 5): array
+    public function getUpcomingFixturesByTeam($data): array
     {
+        $teamId = $data['team_id'];
+        $limit = $data['limit'] ?? 5;
         $fixtures = $this->fixtureRepository->getFixtures([
             'teamId' => $teamId,
-            'status' => 'TIMED'
-        ], $limit, 1);
+            'status' => 'TIMED',
+            'competition_id' => $data['competition_id']
+        ], $limit, false);
 
         if (isset($fixtures) && count($fixtures) > 0) {
             return [

@@ -98,9 +98,8 @@ class FixtureRepository
         if (isset($filters['competition'])) {
             $query->where('competition_id', $filters['competition']);
         }
-        if (isset($filters['competition_id'])) {
-            $query->where('competition_id', $filters['competition_id']);
-        }
+
+
 
         if (isset($filters['ids'])) {
             $query->whereIn('id', $filters['ids']);
@@ -131,9 +130,22 @@ class FixtureRepository
             $query->where('home_team_id', $filters['teamId'])
                 ->orWhere('away_team_id', $filters['teamId']);
         }
-        // if (!$flag)
-        //     $query->where('utc_date', '>', now());
+        if (isset($filters['competition_id'])) {
+            // dd(1);
+            // dd($filters['competition_id']);
+            $query->where('competition_id', (int)$filters['competition_id']);
+        }
 
+        if (!$flag)
+        {
+            $query->where('utc_date', '>', now());
+        }
+        if(isset($filters['recently'])  && ($filters['recently']) == 1){
+            // dd(1);
+            $query->where('status', 'FINISHED')
+                ->where('utc_date', '<=', now());
+            $query->orderBy('utc_date', 'desc');
+        }
 
         return $query
             ->with(['homeTeam', 'awayTeam', 'homeLineup.players.players', 'awayLineup.player.players'])

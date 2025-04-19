@@ -92,7 +92,11 @@ class FixtureController extends Controller
     {
         try {
             $limit = $request->input('limit', 5);
-            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $limit);
+            $competitionId = $request->input('competition_id');
+            $data['competition_id'] = $competitionId;
+            $data['team_id'] = $teamId;
+            $data['limit'] = $limit;
+            $result = $this->fixtureService->getUpcomingFixturesByTeam($data);
             return $this->successResponse($result);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);

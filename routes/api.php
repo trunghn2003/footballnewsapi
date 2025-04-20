@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\StandingController;
 use App\Http\Controllers\Api\FixturePredictController;
 use App\Http\Controllers\Api\BettingController;
 use App\Http\Controllers\Api\BalanceController;
+use App\Http\Controllers\Api\SearchController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -37,7 +38,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/areas/{id}', [AreaController::class, 'getAreaById']);
     Route::get('/areas', [AreaController::class, 'index']);
     Route::get('competitions', [CompetitionController::class, 'getAllCompetitions']);
-    Route::get('competitions/{id}', [CompetitionController::class, 'getCompetitionById']);
     Route::get('/favorite/competitions', [CompetitionController::class, 'getFavouriteCompetitions']);
     Route::post('/competitions/favorite/{competitionId}', [CompetitionController::class, 'addToFavourite']);
     Route::delete('/competitions/favorite/{competitionId}', [CompetitionController::class, 'removeFromFavourite']);
@@ -48,6 +48,7 @@ Route::middleware('jwt.auth')->group(function () {
 
     // Fixture routes
     Route::prefix('fixtures')->group(function () {
+        Route::get('byRound/{competitionId}', [FixtureController::class, 'getFixturePerRound']);
         Route::get('team/{teamId}/recent', [FixtureController::class, 'getRecentFixtures']);
         Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
         Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
@@ -107,3 +108,5 @@ Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
 
 Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);
+
+Route::get('/search', [SearchController::class, 'search']);

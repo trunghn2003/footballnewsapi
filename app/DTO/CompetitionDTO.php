@@ -34,8 +34,8 @@ class CompetitionDTO implements \JsonSerializable
      */
     private ?string $emblem;
 
-    private ?AreaDTO $area;
-    private ?SeasonDTO $season;
+    private ?AreaDTO $area = null;
+    private ?SeasonDTO $season = null;
 
     /**
      * @param int $id

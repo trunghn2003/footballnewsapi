@@ -38,6 +38,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/areas/{id}', [AreaController::class, 'getAreaById']);
     Route::get('/areas', [AreaController::class, 'index']);
     Route::get('competitions', [CompetitionController::class, 'getAllCompetitions']);
+    Route::get('competitions/{id}', [CompetitionController::class, 'getCompetitionById']);
+
     Route::get('/favorite/competitions', [CompetitionController::class, 'getFavouriteCompetitions']);
     Route::post('/competitions/favorite/{competitionId}', [CompetitionController::class, 'addToFavourite']);
     Route::delete('/competitions/favorite/{competitionId}', [CompetitionController::class, 'removeFromFavourite']);

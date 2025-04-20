@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,6 @@ Route::get('/test1', function () {
 })->name('test');
 
 
-use App\Http\Controllers\NotificationController;
+// use App\Http\Controllers\Api\NotificationController;
 
 Route::get('send-notification', [NotificationController::class, 'SendPushNotification']);

@@ -15,6 +15,8 @@ trait PushNotification
 {
     public function sendNotification($token, $title, $body, $data = [])
     {
+            // dd($title, $body, $data);
+
         $fcmurl = "https://fcm.googleapis.com/v1/projects/footbackapi/messages:send";
 
         // Convert all data values to strings for FCM
@@ -31,12 +33,14 @@ trait PushNotification
             'data' => $stringData,
             "token" => $token
         ];
+        // dump($notification);
 
         try {
             $response  = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->getAccessToken(),
                 'Content-Type' => 'application/json',
             ])->post($fcmurl, ['message' => $notification]);
+            dd($response->json());
 
             // Only create notification if user_id exists in data
             if (isset($data['user_id'])) {
@@ -49,6 +53,7 @@ trait PushNotification
                     'is_read' => 0,
                 ]);
             }
+            // dd($response->json());
 
             return $response->json();
         } catch (Exception $e) {

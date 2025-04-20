@@ -17,7 +17,7 @@ class NotificationRepository
     public function getNotificationsByUser($userId, $limit = 10)
     {
         return $this->model->where('notifiable_id', $userId)
-            ->where('notifiable_type', 'App\Models\User')
+            // ->where('notifiable_type', 'App\Models\User')
             ->orderBy('created_at', 'desc')
             ->paginate($limit);
     }

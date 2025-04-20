@@ -48,12 +48,14 @@ class NotificationService
     {
         return $this->notificationRepository->createNotification([
             'user_id' => $user->id,
+            'title' => $data['title'] ?? null,
             'type' => $type,
             'data' => $data,
             'status' => 'pending',
             'message' => $data['message'] ?? null,
         ]);
     }
+
 
 
 

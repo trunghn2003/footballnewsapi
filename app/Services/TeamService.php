@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mapper\CompetitionMapper;
 use App\Models\Competition;
 use App\Models\User;
 use App\Repositories\CompetitionRepository;
@@ -20,12 +21,15 @@ class TeamService
     private $lineUpPlayerRepository;
     private string $apiUrl;
     private string $apiToken;
+    private CompetitionMapper $competitionMapper;
+
 
     public function __construct(
         TeamRepository $teamRepository,
         CompetitionRepository $competitionRepository,
         PersonRepository $personRepository,
-        LineUpPlayerRepository $lineUpPlayerRepository
+        LineUpPlayerRepository $lineUpPlayerRepository,
+        CompetitionMapper $competitionMapper
     ) {
         $this->teamRepository = $teamRepository;
         $this->competitionRepository = $competitionRepository;
@@ -33,6 +37,7 @@ class TeamService
         $this->lineUpPlayerRepository = $lineUpPlayerRepository;
         $this->apiUrl = env('API_FOOTBALL_URL');
         $this->apiToken = env('API_FOOTBALL_TOKEN');
+        $this->competitionMapper = $competitionMapper;
     }
 
      /**
@@ -104,6 +109,12 @@ class TeamService
     public function getTeamById(int $id)
     {
         $result = $this->teamRepository->findById($id);
+        $competition = $result->competitions()->get();
+        $competionDtos = [];
+        foreach ($competition as $item) {
+                    $competionDtos[] = $this->competitionMapper->toDTO($item);
+
+        }
         $players = $result->players()->get();
 
         // Lấy ID của tất cả cầu thủ
@@ -148,6 +159,7 @@ class TeamService
         return [
             'team' => $result,
             'players' => $sortedPlayers,
+            'competitions' => $competionDtos,
         ];
     }
 

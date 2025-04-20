@@ -88,6 +88,7 @@ class SendMatchReminders extends Command
                 ]
             );
         }
+        dd($result);
 
         $this->info('Match reminders sent successfully!');
     }

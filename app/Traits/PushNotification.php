@@ -40,7 +40,7 @@ trait PushNotification
                 'Authorization' => 'Bearer ' . $this->getAccessToken(),
                 'Content-Type' => 'application/json',
             ])->post($fcmurl, ['message' => $notification]);
-            dd($response->json());
+            // dd($response->json());
 
             // Only create notification if user_id exists in data
             if (isset($data['user_id'])) {

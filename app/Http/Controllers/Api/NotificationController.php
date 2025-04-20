@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Request;
@@ -12,6 +13,7 @@ class NotificationController extends Controller
     public function sendPushNotification(Request $request)
     {
         $user = User::find(14);
+        // dd(1);
         $title = "Match Reminder";
         $message = "Your match is starting soon!";
         $matchTime = "2023-10-01 15:00:00"; // Example match time
@@ -33,6 +35,7 @@ class NotificationController extends Controller
                     'logo' => $match->homeTeam->crest ?? null,
                 ]
             );
+            // dd(1);
            return response()->json([
                 'message' => 'Notification sent successfully',
                 'result' => $result,

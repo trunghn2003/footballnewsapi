@@ -105,6 +105,11 @@ Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
 Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
+Route::middleware('auth:api')->group(function () {
+    Route::get('/profile', [AuthController::class, 'me']);
+    Route::post('/profile/update', [AuthController::class, 'updateProfile']);
+    Route::delete('/profile/avatar', [AuthController::class, 'deleteAvatar']);
+});
 
 Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);

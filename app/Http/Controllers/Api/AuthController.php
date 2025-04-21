@@ -13,8 +13,9 @@ use LogicException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
-
-
+use App\Http\Requests\Auth\ProfileRequest;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 class AuthController extends Controller {
     protected $authService;
     use ApiResponseTrait;
@@ -38,7 +39,7 @@ class AuthController extends Controller {
             $token = $this->authService->login($request->validated(), $fcm_token);
             return $this->successResponse($token, 'Login successful');
         } catch (LogicException $e) {
-            \Log::error('Login error: ' . $e->getMessage(), [
+            Log::error('Login error: ' . $e->getMessage(), [
             ]);
             return $this->errorResponse($e->getMessage(), 401);
         }
@@ -51,6 +52,48 @@ class AuthController extends Controller {
 
     public function me() {
         $user = $this->authService->getAuthenticatedUser();
+        if ($user->avatar) {
+            $user->avatar = config('app.url') . '/storage/' . $user->avatar;
+        }
         return $this->successResponse($user);
+    }
+
+    public function updateProfile(ProfileRequest $request) {
+        try {
+            $user = auth()->user();
+            $data = $request->validated();
+
+            if ($request->hasFile('avatar')) {
+
+                if ($user->avatar) {
+                    Storage::delete($user->avatar);
+                }
+                $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            }
+
+            $user->update($data);
+
+            // Add full URL to avatar
+            if ($user->avatar) {
+                $user->avatar = config('app.url') . '/storage/' . $user->avatar;
+            }
+
+            return $this->successResponse($user, 'Profile updated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
+
+    public function deleteAvatar() {
+        try {
+            $user = auth()->user();
+            if ($user->avatar) {
+                Storage::delete($user->avatar);
+                $user->update(['avatar' => null]);
+            }
+            return $this->successResponse(null, 'Avatar deleted successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
     }
 }

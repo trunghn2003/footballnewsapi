@@ -35,7 +35,6 @@ class NotificationController extends Controller
                     'logo' => $match->homeTeam->crest ?? null,
                 ]
             );
-            // dd(1);
            return response()->json([
                 'message' => 'Notification sent successfully',
                 'result' => $result,

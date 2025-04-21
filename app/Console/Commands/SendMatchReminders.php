@@ -37,16 +37,16 @@ class SendMatchReminders extends Command
     public function handle(NotificationRepository $noficationRepository)
     {
         $this->noficationRepository = $noficationRepository;
-    {
 
         $nowUtc = Carbon::now('UTC');
-        $laterUtc = (clone $nowUtc)->addHours(2000);
+        $nextUtc = (clone $nowUtc)->addHour(1);
 
-        // $matches = Fixture::where('utc_date', '>=', $nowUtc)
-        //                 ->where('utc_date', '<=', $laterUtc)
-        //                 ->get();
-        // $matches = Fixture::where('id', 498904)->get();
-        $matches = Fixture::where('id' ,">", 1)->limit(3)->get();
+        // Get all upcoming matches within 1 hour
+        $matches = Fixture::with(['homeTeam', 'awayTeam'])
+            ->where('utc_date', '>=', $nowUtc)
+            ->where('utc_date', '<=', $nextUtc)
+            ->orderBy('utc_date', 'asc')
+            ->get();
 
         foreach ($matches as $match) {
             if (!$match || !$match->homeTeam || !$match->awayTeam) {
@@ -58,41 +58,57 @@ class SendMatchReminders extends Command
                 continue;
             }
 
-            $user = User::findorFail(14);
+            $homeTeamId = $match->homeTeam->id;
+            $awayTeamId = $match->awayTeam->id;
 
-            if (empty($user->fcm_token)) {
-                continue;
+            // Tìm tất cả users yêu thích 1 trong 2 đội
+            $users = User::whereJsonContains('favourite_teams', $homeTeamId)
+                ->orWhereJsonContains('favourite_teams', $awayTeamId)
+                ->get();
+
+            foreach ($users as $user) {
+                if (empty($user->fcm_token)) {
+                    continue;
+                }
+
+                $matchTime = Carbon::createFromFormat('Y-m-d H:i:s', $match->utc_date, 'UTC')
+                    ->setTimezone('Asia/Ho_Chi_Minh')
+                    ->format('H:i d-m-Y');
+
+                $homeTeamName = $match->homeTeam->short_name ?? 'Unknown Team';
+                $awayTeamName = $match->awayTeam->short_name ?? 'Unknown Team';
+
+                $title = "Nhắc nhở trận đấu của {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
+                $message = "Sắp diễn ra: {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
+
+                $logo = null;
+                $favouriteTeams = json_decode($user->favourite_teams ?? '[]', true);
+                if (in_array($homeTeamId, $favouriteTeams)) {
+                    $logo = $match->homeTeam->crest;
+                } elseif (in_array($awayTeamId, $favouriteTeams)) {
+                    $logo = $match->awayTeam->crest;
+                }
+
+                $this->sendNotification(
+                    $user->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'title' => $title,
+                        'message' => $message,
+                        'match_time' => $matchTime,
+                        'type' => 'match_reminder',
+                        'user_id' => $user->id,
+                        'logo' => $logo ?? null,
+                        'screen' => "/(drawer)/fixture/" . $match->id,
+                    ]
+                );
             }
-
-            $matchTime = Carbon::createFromFormat('Y-m-d H:i:s', $match->utc_date, 'UTC')
-                ->setTimezone('Asia/Ho_Chi_Minh')
-                ->format('H:i d-m-Y');
-
-            $homeTeamName = $match->homeTeam->short_name ?? 'Unknown Team';
-            $awayTeamName = $match->awayTeam->short_name ?? 'Unknown Team';
-
-            $message = "Sap diễn ra: {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
-            $title = "Nhắc nhở trận đấu trận đấu của {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
-
-            $result = $this->sendNotification(
-                $user->fcm_token,
-                $title,
-                $message,
-                [
-                    'title' => $title,
-                    'message' => $message,
-                    'match_time' => $matchTime,
-                    'type' => 'match_reminder',
-                    'user_id' => $user->id,
-                    'logo' => $match->homeTeam->crest ?? null,
-                ]
-            );
         }
-        dd($result);
 
         $this->info('Match reminders sent successfully!');
     }
-}
+
 
     /**
      * Get users to notify based on their favorite teams.

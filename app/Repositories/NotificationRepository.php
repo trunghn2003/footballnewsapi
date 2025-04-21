@@ -27,6 +27,7 @@ class NotificationRepository
         try {
             $notification = $this->model->findOrFail($notificationId);
             $notification->is_read = 1;
+            // dd($notification);
             // $notification->read_at = now();
             $notification->save();
             return true;

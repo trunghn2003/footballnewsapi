@@ -56,28 +56,36 @@ class NotificationService
         ]);
     }
 
-    public function getNotificationsByUserId($perPage = 10)
-    {
-        $result =  $this->notificationRepository->getNotificationsByUser($perPage);
-        $notifications = $result->getCollection()->map(function ($notification) {
-            return [
-                'id' => $notification->id,
-                'title' => $notification->title,
-                'message' => $notification->message,
-                'type' => $notification->type,
-                'created_at' => $notification->created_at,
-                'read_at' => $notification->read_at,
-                'data' => ($notification->data)
-            ];
-        });
+   public function getNotificationsByUserId($perPage = 10)
+{
+    // Fetch notifications from repository (assumed to return a paginated query)
+    $result = $this->notificationRepository->getNotificationsByUser($perPage);
+
+    // Transform and group notifications
+    $notifications = $result->getCollection()->map(function ($notification) {
         return [
-            'notifications' => $notifications,
-            'total' => $result->total(),
-            'current_page' => $result->currentPage(),
-            'last_page' => $result->lastPage(),
-            'per_page' => $result->perPage(),
+            'id' => $notification->id,
+            'title' => $notification->title,
+            'message' => $notification->message,
+            'type' => $notification->type,
+            'created_at' => $notification->created_at,
+            'data' => $notification->data,
+            'is_read' => (bool) $notification->is_read
         ];
-    }
+    })->sortByDesc('created_at') // Sort by newest first
+      ->groupBy('is_read'); // Group by read/unread
+
+    return [
+        'notifications' => [
+            'unread' => $notifications[false] ?? collect([]), // Unread notifications
+            'read' => $notifications[true] ?? collect([]),    // Read notifications
+        ],
+        'total' => $result->total(),
+        'current_page' => $result->currentPage(),
+        'last_page' => $result->lastPage(),
+        'per_page' => $result->perPage(),
+    ];
+}
     public function markAsRead($notificationId)
     {
         return $this->notificationRepository->markAsRead($notificationId);

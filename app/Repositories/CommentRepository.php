@@ -3,12 +3,14 @@
 namespace App\Repositories;
 
 use App\Models\Comment;
+use App\Traits\PushNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CommentRepository
 {
     protected $model;
+    use PushNotification;
 
     public function __construct(Comment $model)
     {
@@ -18,14 +20,34 @@ class CommentRepository
     public function create(array $data)
     {
         DB::beginTransaction();
-        try {
-            $comment = new Comment();
+        try {            $comment = new Comment();
             // dd($data);
             $comment->parent_id = $data['parent_id'] ?? null;
             $comment->content = $data['content'];
             $comment->user_id = $data['user_id'];
             $comment->news_id = $data['news_id'];
-            $comment->save();
+            $comment->save();            // Send push notification if this is a reply
+            if ($comment->parent_id) {
+                $parentComment = $this->model->with('user')->find($comment->parent_id);
+                if ($parentComment && $parentComment->user_id !== $data['user_id'] && $parentComment->user->fcm_token) {
+                    $title =  auth()->user()->name.  "đã trả lời bình luận của bạn";
+                    $message = $comment->content;
+
+                    $this->sendNotification(
+                        $parentComment->user->fcm_token,
+                        $title,
+                        $message,
+                        [
+                            'type' => 'comment_reply',
+                            'comment_id' => $comment->id,
+                            'news_id' => $comment->news_id,
+                            'replier_name' => auth()->user()->name,
+                            'content' => $comment->content,
+                            'screen' => "NewsView/?id=" . $comment->news_id
+                        ]
+                    );
+                }
+            }
 
             DB::commit();
             return $comment;

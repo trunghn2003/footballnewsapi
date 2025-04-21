@@ -56,6 +56,33 @@ class NotificationService
         ]);
     }
 
+    public function getNotificationsByUserId($perPage = 10)
+    {
+        $result =  $this->notificationRepository->getNotificationsByUser($perPage);
+        $notifications = $result->getCollection()->map(function ($notification) {
+            return [
+                'id' => $notification->id,
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'type' => $notification->type,
+                'created_at' => $notification->created_at,
+                'read_at' => $notification->read_at,
+                'data' => ($notification->data)
+            ];
+        });
+        return [
+            'notifications' => $notifications,
+            'total' => $result->total(),
+            'current_page' => $result->currentPage(),
+            'last_page' => $result->lastPage(),
+            'per_page' => $result->perPage(),
+        ];
+    }
+    public function markAsRead($notificationId)
+    {
+        return $this->notificationRepository->markAsRead($notificationId);
+    }
+
 
 
 

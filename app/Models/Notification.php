@@ -21,6 +21,7 @@ class Notification extends Model
         'read_at',
         'scheduled_at',
         'message',
+        'title',
     ];
 
 

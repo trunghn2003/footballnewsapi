@@ -4,12 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\NotificationService;
+use App\Traits\ApiResponseTrait;
 use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Request;
 
 class NotificationController extends Controller
 {
-    use PushNotification;
+    use PushNotification, ApiResponseTrait;
+    protected $notificactionService;
+
+    public function __construct(NotificationService $notificactionService)
+    {
+        $this->notificactionService = $notificactionService;
+    }
     public function sendPushNotification(Request $request)
     {
         $user = User::find(14);
@@ -39,5 +47,17 @@ class NotificationController extends Controller
                 'message' => 'Notification sent successfully',
                 'result' => $result,
             ]);
+    }
+
+    public function getNotifications()
+    {
+        $result = $this->notificactionService->getNotificationsByUserId(10);
+        return $this->successResponse($result, 'Notifications retrieved successfully');
+    }
+
+    public function markAsRead($id)
+    {
+        $result = $this->notificactionService->markAsRead($id);
+        return $this->successResponse($result, 'Notification marked as read successfully');
     }
 }

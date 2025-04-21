@@ -14,9 +14,9 @@ class NotificationRepository
         $this->model = $model;
     }
 
-    public function getNotificationsByUser($userId, $limit = 10)
+    public function getNotificationsByUser( $limit = 10)
     {
-        return $this->model->where('notifiable_id', $userId)
+        return $this->model->where('user_id', auth()->user()->id)
             // ->where('notifiable_type', 'App\Models\User')
             ->orderBy('created_at', 'desc')
             ->paginate($limit);
@@ -26,7 +26,9 @@ class NotificationRepository
     {
         try {
             $notification = $this->model->findOrFail($notificationId);
-            $notification->markAsRead();
+            $notification->is_read = 1;
+            // $notification->read_at = now();
+            $notification->save();
             return true;
         } catch (\Exception $e) {
             throw new ModelNotFoundException($e->getMessage());
@@ -45,7 +47,7 @@ class NotificationRepository
     }
     public function getUnreadCount($userId)
     {
-        return $this->model->where('notifiable_id', $userId)
+        return $this->model->where('id', $userId)
             ->where('notifiable_type', 'App\Models\User')
             ->whereNull('read_at')
             ->count();

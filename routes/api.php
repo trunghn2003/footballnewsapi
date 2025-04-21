@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\StandingController;
 use App\Http\Controllers\Api\FixturePredictController;
 use App\Http\Controllers\Api\BettingController;
 use App\Http\Controllers\Api\BalanceController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SearchController;
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +97,10 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/competitions/{competitionId}/standings', [StandingController::class, 'storeStandings']);
     Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
     Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
+
+
+    Route::get('notifications', [NotificationController::class, 'getNotifications']);
+    Route::post('notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead']);
 });
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);

@@ -32,7 +32,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/areas/{id}', [AreaController::class, 'getAreaById']);
@@ -105,7 +105,7 @@ Route::get('/seasons/sync', [SeasonController::class, 'sync']);
 Route::post('/fixtures/sync', [FixtureController::class, 'sync']);
 Route::post('/fixtures/syncv2', [FixtureController::class, 'syncv2']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware('jwt.auth')->group(function () {
     Route::get('/profile', [AuthController::class, 'me']);
     Route::post('/profile/update', [AuthController::class, 'updateProfile']);
     Route::delete('/profile/avatar', [AuthController::class, 'deleteAvatar']);

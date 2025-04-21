@@ -52,7 +52,16 @@ class AuthService
 
     public function logout()
     {
-        auth()->logout();
+        try {
+            $token = JWTAuth::getToken();
+            if ($token) {
+                JWTAuth::invalidate($token);
+            }
+            auth()->logout();
+            return true;
+        } catch (Exception $e) {
+            throw new LogicException('Logout failed');
+        }
     }
 
     public function getAuthenticatedUser()

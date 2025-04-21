@@ -46,8 +46,12 @@ class AuthController extends Controller {
     }
 
     public function logout() {
-        $this->authService->logout();
-        return $this->successResponse(null, 'Successfully logged out');
+        try {
+            $this->authService->logout();
+            return $this->successResponse(null, 'Successfully logged out');
+        } catch (LogicException $e) {
+            return $this->errorResponse($e->getMessage(), 401);
+        }
     }
 
     public function me() {

@@ -94,8 +94,7 @@ class FixtureService
                             if ($fixture->wasRecentlyCreated) {
                             } else if ($fixture->wasChanged()) {
                                 // Check if score has changed
-                                if ($fixture->wasChanged(['status'])) {
-                                    // dd(1);
+                                if ($fixture->wasChanged(['status'])  && $fixture->status == 'FINISHED') {
                                     $this->sendMatchScoreNotification($fixture);
                                 }
                             }
@@ -535,7 +534,9 @@ class FixtureService
                     'home_score' => $homeScore,
                     'away_score' => $awayScore,
                     'competition_id' => $fixture->competition_id,
-                    'competition_name' => $fixture->competition->name ?? 'Unknown Competition'
+                    'competition_name' => $fixture->competition->name ?? 'Unknown Competition',
+                    'screen' => "/(drawer)/fixture/" . $fixture->id,
+
                 ]
             );
         }

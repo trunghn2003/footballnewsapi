@@ -27,14 +27,40 @@ class CommentService
     public function getCommentsByNews($newsId, $perPage = 10)
     {
         try {
-            $result = $this->commentRepository->getCommentsByNews($newsId, $perPage);
+            $result = $this->commentRepository->getCommentsByNews($newsId);
+            $comments = $result->get()->map(function ($comment) {
+                $data = [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'avatar' => $comment->user->avatar
+                    ],
+                    'replies' => []
+                ];
+
+                if ($comment->replies) {
+                    $data['replies'] = $comment->replies->map(function ($reply) {
+                        return [
+                            'id' => $reply->id,
+                            'content' => $reply->content,
+                            'created_at' => $reply->created_at,
+                            'user' => [
+                                'id' => $reply->user->id,
+                                'name' => $reply->user->name,
+                                'avatar' => $reply->user->avatar
+                            ]
+                        ];
+                    });
+                }
+
+                return $data;
+            });
+
             return [
-                'comments' => $result->items(),
-                'pagination' => [
-                    'current_page' => $result->currentPage(),
-                    'per_page'     => $result->perPage(),
-                    'total'        => $result->total()
-                ]
+                'comments' => $comments
             ];
         } catch (\Exception $e) {
             Log::error('Error in CommentService getCommentsByNews: ' . $e->getMessage());
@@ -71,4 +97,4 @@ class CommentService
             throw $e;
         }
     }
-} 
+}

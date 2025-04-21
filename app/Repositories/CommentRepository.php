@@ -20,6 +20,7 @@ class CommentRepository
         DB::beginTransaction();
         try {
             $comment = new Comment();
+            // dd($data);
             $comment->parent_id = $data['parent_id'] ?? null;
             $comment->content = $data['content'];
             $comment->user_id = $data['user_id'];
@@ -33,15 +34,13 @@ class CommentRepository
             Log::error('Error creating comment: ' . $e->getMessage());
             throw $e;
         }
-    }
-
-    public function getCommentsByNews($newsId, $perPage = 10)
+    }    public function getCommentsByNews($newsId)
     {
         return $this->model
             ->where('news_id', $newsId)
-            ->with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->where('parent_id', null) // Get only parent comments
+            ->with(['user', 'replies.user']) // Load replies and their users
+            ->orderBy('created_at', 'desc');
     }
 
     public function update($commentId, array $data)

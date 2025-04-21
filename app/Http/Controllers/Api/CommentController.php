@@ -33,7 +33,8 @@ class CommentController extends Controller
         try {
             $data = $request->validate([
                 'content' => 'required|string',
-                'news_id' => 'required|exists:news,id'
+                'news_id' => 'required|exists:news,id',
+                'parent_id' => 'nullable'
             ]);
 
             $data['user_id'] = auth()->id();
@@ -77,4 +78,4 @@ class CommentController extends Controller
             return $this->errorResponse($e->getMessage());
         }
     }
-} 
+}

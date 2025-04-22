@@ -99,8 +99,14 @@ class FixturePredictService
             $fixturePrediction = new FixturePrediction();
             $fixturePrediction->fixture_id = $fixtureId;
             $fixturePrediction->win_probability = $prediction['win_probability'];
-            $fixturePrediction->predicted_score = $translator->translate($prediction['predicted_score']);
-            $fixturePrediction->key_factors = $prediction['key_factors'];
+            $fixturePrediction->predicted_score =($prediction['predicted_score']);
+            $string = "";
+            foreach ($prediction['key_factors'] as $key => $value) {
+                $string .= $value . "\n";
+            }
+            // dd($translator->translate($string));
+            $string = $translator->translate($string);
+            $fixturePrediction->key_factors =  $string;
             $fixturePrediction->confidence_level = $prediction['confidence_level'];
             $fixturePrediction->raw_response = $prediction['raw_response'];
             $fixturePrediction->analysis_data = $analysisData;
@@ -112,7 +118,7 @@ class FixturePredictService
                     'success' => true,
                     'win_probability' => $prediction['win_probability'],
                     'predicted_score' => $prediction['predicted_score'],
-                    'key_factors' => $prediction['key_factors'],
+                    'key_factors' => $string,
                     'confidence_level' => $prediction['confidence_level'],
                     'raw_response' => $prediction['raw_response']
                 ],

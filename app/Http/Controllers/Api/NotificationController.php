@@ -8,16 +8,18 @@ use App\Services\NotificationService;
 use App\Traits\ApiResponseTrait;
 use App\Traits\PushNotification;
 use Illuminate\Support\Facades\Request;
+use App\Http\Requests\UpdateNotificationPreferencesRequest;
 
 class NotificationController extends Controller
 {
     use PushNotification, ApiResponseTrait;
-    protected $notificactionService;
+    protected $notificationService;
 
-    public function __construct(NotificationService $notificactionService)
+    public function __construct(NotificationService $notificationService)
     {
-        $this->notificactionService = $notificactionService;
+        $this->notificationService = $notificationService;
     }
+
     public function sendPushNotification(Request $request)
     {
         $user = User::find(14);
@@ -51,13 +53,47 @@ class NotificationController extends Controller
 
     public function getNotifications()
     {
-        $result = $this->notificactionService->getNotificationsByUserId(10);
+        $result = $this->notificationService->getNotificationsByUserId(10);
         return $this->successResponse($result, 'Notifications retrieved successfully');
     }
 
     public function markAsRead($id)
     {
-        $result = $this->notificactionService->markAsRead($id);
+        $result = $this->notificationService->markAsRead($id);
         return $this->successResponse($result, 'Notification marked as read successfully');
+    }
+
+    public function updatePreferences(UpdateNotificationPreferencesRequest $request)
+    {
+        try {
+            $preferences = $this->notificationService->updateNotificationPreferences(
+                auth()->id(),
+                $request->validated()
+            );
+
+            return $this->successResponse($preferences, 'Notification preferences updated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to update notification preferences', 500);
+        }
+    }
+
+    public function getPreferences()
+    {
+        try {
+            $user = auth()->user();
+            $preferences = json_decode($user->notification_pref, true) ?? [
+                'favourite_teams' => [],
+                'favourite_competitions' => [],
+                'settings' => [
+                    'team_news' => true,
+                    'match_reminders' => true,
+                    'competition_news' => true
+                ]
+            ];
+
+            return $this->successResponse($preferences);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to get notification preferences', 500);
+        }
     }
 }

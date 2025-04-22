@@ -39,7 +39,7 @@ class SendMatchReminders extends Command
         $this->noficationRepository = $noficationRepository;
 
         $nowUtc = Carbon::now('UTC');
-        $nextUtc = (clone $nowUtc)->addHour(1);
+        $nextUtc = (clone $nowUtc)->addHour(168);
 
         // Get all upcoming matches within 1 hour
         $matches = Fixture::with(['homeTeam', 'awayTeam'])

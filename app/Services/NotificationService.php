@@ -30,14 +30,27 @@ class NotificationService
      */
     public function send(User $user, string $type, array $data, array $channels = ['push']): bool
     {
-        // dd($user, $data);
-        $notification = $this->createNotification($user, $type, $data);
-        // dd($user);
-                    if($user->fcm_token) {
-                    // dd($data);
-                    $this->sendNotification($user->fcm_token,$type,$data ,$data);
+        // Check notification preferences before sending
+        if (isset($data['entity_id']) && !$this->shouldNotifyUser($user->id, $type, $data['entity_id'])) {
+            return false;
+        }
 
-                    }
+        // Create notification record
+        $notification = $this->createNotification($user, $type, $data);
+
+        // Send push notification if FCM token exists
+        if (in_array('push', $channels) && $user->fcm_token) {
+            $this->sendNotification(
+                $user->fcm_token,
+                $data['title'] ?? $type,
+                $data['message'] ?? '',
+                array_merge($data, [
+                    'type' => $type,
+                    'notification_id' => $notification->id
+                ])
+            );
+        }
+
         return true;
     }
 
@@ -91,9 +104,48 @@ class NotificationService
         return $this->notificationRepository->markAsRead($notificationId);
     }
 
+    public function updateNotificationPreferences($userId, array $preferences)
+    {
+        $user = User::findOrFail($userId);
 
+        $notificationPref = [            'settings' => [
+                'team_news' => (bool)($preferences['team_news'] ?? true),
+                'match_reminders' => (bool)($preferences['match_reminders'] ?? true),
+                'competition_news' => (bool)($preferences['competition_news'] ?? true),
+                'match_score' => (bool)($preferences['match_score'] ?? true)
+            ]
+        ];
 
+        $user->notification_pref = json_encode($notificationPref);
+        $user->save();
 
+        return $notificationPref;
+    }
 
+    public function shouldNotifyUser($userId, $type, $entityId)
+    {
+        $user = User::find($userId);
+        if (!$user || !$user->notification_pref) {
+            return false;
+        }
 
+        $prefs = json_decode($user->notification_pref, true);        switch ($type) {
+            case 'team_news':
+                return isset($prefs['settings']['team_news'])
+                    && $prefs['settings']['team_news'];
+
+            case 'match_reminder':
+                return isset($prefs['settings']['match_reminders'])
+                    && $prefs['settings']['match_reminders'];            case 'competition_news':
+                return isset($prefs['settings']['competition_news'])
+                    && $prefs['settings']['competition_news'];
+
+            case 'match_score':
+                return isset($prefs['settings']['match_score'])
+                    && $prefs['settings']['match_score'];
+
+            default:
+                return false;
+        }
+    }
 }

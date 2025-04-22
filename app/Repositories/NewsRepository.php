@@ -20,7 +20,7 @@ class NewsRepository
 
         $existingNews = $this->model->where('title', $data['title'])->first();
         if ($existingNews) {
-            return null; 
+            return $existingNews;
         }
 
         DB::beginTransaction();

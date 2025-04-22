@@ -98,9 +98,12 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/competitions/{competitionId}/standings', [StandingController::class, 'getStandings']);
     Route::get('/competitions/{competitionId}/standings/{type}', [StandingController::class, 'getStandingsByType']);
 
-
     Route::get('notifications', [NotificationController::class, 'getNotifications']);
     Route::post('notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead']);
+
+    // Notification preferences routes
+    Route::get('notifications/preferences', [NotificationController::class, 'getPreferences']);
+    Route::post('notifications/preferences', [NotificationController::class, 'updatePreferences']);
 });
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);

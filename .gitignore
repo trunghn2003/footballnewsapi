@@ -19,3 +19,4 @@ yarn-error.log
 /storage/logs/*
 storage/debugbar/*
 storage/footbackapi-firebase-adminsdk-fbsvc-abfb029416.json
+public/go.json

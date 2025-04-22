@@ -12,10 +12,41 @@ use Illuminate\Support\Facades\Log;
 // use GPBMetadata\Google\Api\Http;
 
 trait PushNotification
-{
-    public function sendNotification($token, $title, $body, $data = [])
+{    public function sendNotification($token, $title, $body, $data = [])
     {
-            // dd($title, $body, $data);
+        // Check notification preferences if user_id is provided
+        if (isset($data['user_id'])) {
+            $user = \App\Models\User::find($data['user_id']);
+            // dd(($user));
+            if ($user && $user->notification_pref) {
+                $prefs = json_decode($user->notification_pref, true);
+                $type = $data['type'] ?? 'default';
+                // dd($type);
+                // Check notification type settings
+                switch ($type) {
+                    case 'match_score':
+                        if (!($prefs['settings']['match_score'] ?? true)) {
+                            return false;
+                        }
+                        break;
+                    case 'team_news':
+                        if (!($prefs['settings']['team_news'] ?? true)) {
+                            return false;
+                        }
+                        break;
+                    case 'match_reminder':
+                        if (!($prefs['settings']['match_reminders'] ?? true)) {
+                            return false;
+                        }
+                        break;
+                    case 'competition_news':
+                        if (!($prefs['settings']['competition_news'] ?? true)) {
+                            return false;
+                        }
+                        break;
+                }
+            }
+        }
 
         $fcmurl = "https://fcm.googleapis.com/v1/projects/footbackapi/messages:send";
 

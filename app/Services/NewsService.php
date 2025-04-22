@@ -4,13 +4,17 @@ namespace App\Services;
 
 use App\Repositories\NewsRepository;
 use App\Models\Team;
+use App\Models\User;
 use App\Repositories\TeamRepository;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Traits\PushNotification;
 
 class NewsService
 {
+    use PushNotification;
+
     protected $newsRepository;
     protected $teamRepository;
     protected $apiKey;
@@ -48,7 +52,7 @@ class NewsService
             foreach ($ids as $id) {
                 $articles = $this->fetchNewsFromApi($id);
                 $this->storeNewsFromApi($articles, $id);
-                \Log::info('News fetched and stored for competition ID: ' . $id);
+
             }
             DB::commit();
         } catch (\Exception $e) {
@@ -58,9 +62,7 @@ class NewsService
         }
 
         // dd($response);
-    }
-
-    public function storeNewsFromApi(array $newsArticles, $competitionId)
+    }    public function storeNewsFromApi(array $newsArticles, $competitionId)
     {
         DB::beginTransaction();
         try {
@@ -70,6 +72,9 @@ class NewsService
 
                 // Check for team names in article content
                 $this->processTeamRelationships($news, $article);
+
+                // Send notifications to users interested in this competition
+                $this->notifyInterestedUsers($news, $competitionId);
             }
             DB::commit();
             return true;
@@ -95,6 +100,53 @@ class NewsService
             $teamShortname = strtolower($team->short_name);
             if (strpos($content, $teamName) !== false || strpos($content, $teamShortname) !== false) {
                 $news->teams()->attach($team->id);
+            }
+        }
+    }
+
+    protected function notifyInterestedUsers($news, $competitionId)
+    {
+        // Get users who should be notified about this news
+        $users = User::whereNotNull('fcm_token')->get();
+
+        foreach ($users as $user) {
+            $prefs = json_decode($user->notification_pref, true);
+            if (!$prefs) continue;
+
+            $shouldNotify = false;
+            $notificationType = '';
+            $title = '';
+
+            // Check if user has enabled competition news and this is about their favorite competition
+            if (isset($prefs['settings']['competition_news']) && isset($news)
+                && $prefs['settings']['competition_news']) {
+                $notificationType = 'competition_news';
+                $title = 'Tin tức giải đấu mới';
+                $shouldNotify = true;
+            }
+                // dd($news);
+
+            // Check if news contains any of user's favorite teams
+            if (isset($prefs['settings']['team_news']) && isset($news)
+                && $prefs['settings']['team_news']
+                && $news->teams()->count() > 0) {
+                $notificationType = 'team_news';
+                $title = 'Tin tức đội bóng mới';
+                $shouldNotify = true;
+            }
+
+            if ($shouldNotify) {
+                $this->sendNotification(
+                    $user->fcm_token,
+                    $title,
+                    $news->title,
+                    [
+                        'type' => $notificationType,
+                        'news_id' => $news->id,
+                        'screen' => "NewsView/?id=" . $news->id,
+                        'user_id' => $user->id
+                    ]
+                );
             }
         }
     }

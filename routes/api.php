@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\BettingController;
 use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\LiveMatchController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -125,3 +127,5 @@ Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured
 Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);
 
 Route::get('/search', [SearchController::class, 'search']);
+
+Route::get('matches/live', [LiveMatchController::class, 'getLiveMatches']);

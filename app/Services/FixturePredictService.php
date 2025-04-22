@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FixturePrediction;
 use Illuminate\Support\Facades\Log;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class FixturePredictService
 {
@@ -18,7 +19,7 @@ class FixturePredictService
 
     /**
      * Predict match outcome based on historical data
-     * 
+     *
      * @param int $fixtureId The ID of the upcoming fixture to predict
      * @return array Prediction results including win probability and analysis
      */
@@ -31,7 +32,7 @@ class FixturePredictService
                 'error' => 'Fixture already finished'
             ];
         }
-        
+
         try {
             $existingPrediction = FixturePrediction::where('fixture_id', $fixtureId)->first();
             if ($existingPrediction) {
@@ -50,7 +51,7 @@ class FixturePredictService
             }
             // Get head-to-head data
             $headToHeadData = $this->fixtureService->getHeadToHeadFixturesByFixtureId($fixtureId);
-            
+
             // Get current fixture details
             $currentFixture = $this->fixtureService->getFixtureById($fixtureId);
             if (!$currentFixture || !isset($currentFixture['fixture'])) {
@@ -61,7 +62,7 @@ class FixturePredictService
             }
 
             $fixture = $currentFixture['fixture'];
-            
+
             // Get recent fixtures for both teams
             $homeTeamRecentFixtures = $this->fixtureService->getRecentFixturesByTeam($fixture->getHomeTeam()->getId());
             $awayTeamRecentFixtures = $this->fixtureService->getRecentFixturesByTeam($fixture->getAwayTeam()->getId());
@@ -84,19 +85,21 @@ class FixturePredictService
 
             // Get prediction from Gemini
             $prediction = $this->geminiService->generateContent($prompt);
-            
+
             if (!$prediction['success']) {
                 return [
                     'success' => false,
                     'error' => $prediction['error'] ?? 'Failed to generate prediction'
                 ];
             }
-            
+             $translator = new GoogleTranslate();
+            $translator->setSource('en')->setTarget('vi');
+
             // Create and save the prediction
             $fixturePrediction = new FixturePrediction();
             $fixturePrediction->fixture_id = $fixtureId;
             $fixturePrediction->win_probability = $prediction['win_probability'];
-            $fixturePrediction->predicted_score = $prediction['predicted_score'];
+            $fixturePrediction->predicted_score = $translator->translate($prediction['predicted_score']);
             $fixturePrediction->key_factors = $prediction['key_factors'];
             $fixturePrediction->confidence_level = $prediction['confidence_level'];
             $fixturePrediction->raw_response = $prediction['raw_response'];
@@ -152,13 +155,13 @@ class FixturePredictService
     private function createAnalysisPrompt(array $data): string
     {
         $prompt = "You are a football match prediction expert. Analyze this upcoming match and provide a detailed prediction based on the following data:\n\n";
-        
+
         // Add match context
         $prompt .= "Upcoming Match:\n";
         $prompt .= "{$data['upcoming_match']['home_team']} vs {$data['upcoming_match']['away_team']}\n";
         $prompt .= "Competition: {$data['upcoming_match']['competition']}\n";
         $prompt .= "Date: {$data['upcoming_match']['date']}\n\n";
-        
+
         // Add head-to-head stats
         $prompt .= "Head-to-Head Statistics:\n";
         $prompt .= "Total matches played: {$data['head_to_head']['team1']['total_matches']}\n";
@@ -196,4 +199,4 @@ class FixturePredictService
 
         return $prompt;
     }
-} 
+}

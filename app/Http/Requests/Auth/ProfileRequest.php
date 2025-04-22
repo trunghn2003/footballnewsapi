@@ -19,6 +19,7 @@ class ProfileRequest extends FormRequest
             'birth_date' => 'nullable|date',
             'avatar' => 'nullable|image|max:2048',
             'bio' => 'nullable|string|max:1000',
+            'name' => 'nullable|string|max:255',
         ];
     }
 }

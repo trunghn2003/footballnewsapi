@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Traits\PushNotification;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class NewsService
 {
@@ -62,12 +63,23 @@ class NewsService
         }
 
         // dd($response);
-    }    public function storeNewsFromApi(array $newsArticles, $competitionId)
+    }
+   public function storeNewsFromApi(array $newsArticles, $competitionId)
     {
         DB::beginTransaction();
         try {
+            $translator = new GoogleTranslate();
+            $translator->setSource('en')->setTarget('vi');
+
             foreach ($newsArticles as $article) {
+                // Dịch tiêu đề và nội dung sang tiếng Việt
+                $article['title'] = $translator->translate($article['title'] ?? '');
+                $article['content'] = $translator->translate($article['content'] ?? '');
+               
+
                 $article['competition_id'] = $competitionId;
+
+                // Lưu bài viết vào cơ sở dữ liệu
                 $news = $this->newsRepository->create($article);
 
                 // Check for team names in article content
@@ -76,6 +88,7 @@ class NewsService
                 // Send notifications to users interested in this competition
                 $this->notifyInterestedUsers($news, $competitionId);
             }
+
             DB::commit();
             return true;
         } catch (\Exception $e) {

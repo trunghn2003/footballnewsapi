@@ -21,9 +21,9 @@ class StandingRepository
         try {
             // Xóa dữ liệu cũ của competition, season và matchday này
             $this->model->where('competition_id', $competitionId)
-                       ->where('season_id', $seasonId)
-                       ->where('matchday', $matchday)
-                       ->delete();
+                ->where('season_id', $seasonId)
+                ->where('matchday', $matchday)
+                ->delete();
 
             foreach ($standingsData as $standing) {
                 foreach ($standing['table'] as $teamStanding) {
@@ -62,9 +62,9 @@ class StandingRepository
     {
         try {
             return $this->model->where('competition_id', $competitionId)
-                              ->where('season_id', $seasonId)
-                              ->where('matchday', $matchday)
-                              ->delete();
+                ->where('season_id', $seasonId)
+                ->where('matchday', $matchday)
+                ->delete();
         } catch (\Exception $e) {
             Log::error('Error deleting standings by matchday: ' . $e->getMessage());
             throw $e;
@@ -81,7 +81,7 @@ class StandingRepository
         }
     }
 
-    public function getStandingsByCompetitionAndSeason($competitionId, $seasonId, $matchday, $type)
+    public function getStandingsByCompetitionAndSeason($competitionId, $seasonId, $matchday, $type, $teamID = null)
     {
         return $this->model
             ->with(['team'])
@@ -89,6 +89,9 @@ class StandingRepository
             ->where('season_id', $seasonId)
             ->where('matchday', $matchday)
             ->where('type', $type)
+            ->when(!is_null($teamID), function ($query) use ($teamID) {
+                return $query->where('team_id', $teamID);
+            })
             ->orderBy('matchday', 'desc')
             ->orderBy('type')
             ->orderBy('position')

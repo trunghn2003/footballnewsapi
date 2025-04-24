@@ -100,7 +100,7 @@ class SendMatchReminders extends Command
                         'type' => 'match_reminder',
                         'user_id' => $user->id,
                         'logo' => $logo ?? null,
-                        'screen' => "/(drawer)/fixture/" . $match->id,
+                        'screen' => "/(drawer)/fixture/prediction/" . $match->id,
                     ]
                 );
             }

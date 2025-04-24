@@ -75,7 +75,7 @@ class NewsService
                 // Dịch tiêu đề và nội dung sang tiếng Việt
                 $article['title'] = $translator->translate($article['title'] ?? '');
                 $article['content'] = $translator->translate($article['content'] ?? '');
-               
+
 
                 $article['competition_id'] = $competitionId;
 
@@ -147,6 +147,14 @@ class NewsService
                 $title = 'Tin tức đội bóng mới';
                 $shouldNotify = true;
             }
+            try {
+
+                $logo = $news->teams()->first() ? $news->teams()->first()->crest : $news->competition->emblem;
+            }
+            catch (\Exception $e) {
+                Log::error('Error fetching team logo: ' . $e->getMessage());
+                $logo = null;
+            }
 
             if ($shouldNotify) {
                 $this->sendNotification(
@@ -157,7 +165,8 @@ class NewsService
                         'type' => $notificationType,
                         'news_id' => $news->id,
                         'screen' => "NewsView/?id=" . $news->id,
-                        'user_id' => $user->id
+                        'user_id' => $user->id,
+                        'logo' => $logo
                     ]
                 );
             }

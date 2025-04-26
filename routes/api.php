@@ -70,6 +70,12 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
     Route::get('/news/{newsId}', [NewsController::class, 'getNewsById']);
 
+    Route::post('news/{id}/save', [NewsController::class, 'saveNews']);
+    Route::delete('news/{id}/save', [NewsController::class, 'unsaveNews']);
+    Route::get('news/saved/get', [NewsController::class, 'getSavedNews']);
+Route::get('/news', [NewsController::class, 'getAllNews']);
+
+
     // Comment routes
     Route::get('/news/{newsId}/comments', [CommentController::class, 'getCommentsByNews']);
     Route::post('/comments', [CommentController::class, 'createComment']);
@@ -121,7 +127,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::delete('/profile/avatar', [AuthController::class, 'deleteAvatar']);
 });
 
-Route::get('/news', [NewsController::class, 'getAllNews']);
 Route::get('/featured/competitions', [CompetitionController::class, 'getFeatured']);
 
 Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);

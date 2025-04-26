@@ -59,4 +59,10 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'favorite_teams' => 'array',
     ];
+
+    public function savedNews()
+    {
+        return $this->belongsToMany(News::class, 'saved_news')
+                    ->withTimestamps();
+    }
 }

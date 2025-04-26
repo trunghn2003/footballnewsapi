@@ -201,21 +201,75 @@ class NewsService
             throw $e;
         }
     }
+        public function saveNews($newsId, $userId)
+    {
+        try {
+            $news = $this->newsRepository->getNewsById($newsId);
+            $user = User::findOrFail($userId);
+
+
+            if (!$user->savedNews()->where('news_id', $newsId)->exists()) {
+                $user->savedNews()->attach($newsId);
+                return ['message' => 'Đã lưu bài viết thành công'];
+            }
+
+            return ['message' => 'Bài viết đã được lưu trước đó'];
+        } catch (\Exception $e) {
+            Log::error('Error saving news: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function unsaveNews($newsId, $userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            $user->savedNews()->detach($newsId);
+            return ['message' => 'Đã bỏ lưu bài viết'];
+        } catch (\Exception $e) {
+            Log::error('Error unsaving news: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getSavedNews($userId, $perPage = 10, $page = 1)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            $savedNews = $user->savedNews()
+                ->orderBy('saved_news.created_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            return [
+                'news' => $savedNews->items(),
+                'pagination' => [
+                    'current_page' => $savedNews->currentPage(),
+                    'per_page' => $savedNews->perPage(),
+                    'total' => $savedNews->total()
+                ]
+            ];
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Error getting saved news: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
 
     public function getLatestNews($perPage = 10, $page = 1, $filters = [])
     {
         $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
+        $currentUserId = auth()->id();
 
-        // Convert paginator to array while preserving pagination metadata
+
         $paginationInfo = [
             'current_page' => $result->currentPage(),
             'per_page'     => $result->perPage(),
             'total'        => $result->total()
         ];
 
-        // Map the news items
         $newsItems = $result->items();
-        $mappedNews = array_map(function ($news) {
+        $mappedNews = array_map(function ($news)  {
             return [
                 'id' => $news->id,
                 'title' => $news->title,
@@ -225,6 +279,7 @@ class NewsService
                 'competition_id' => $news->competition_id,
                 'thumbnail' => $news->thumbnail,
                 'comments' => $news->comments_count ?? count($news->comments),
+                'is_saved' =>  $news->savedByUsers()->where('user_id', auth()->id())->exists() ?? false ,
             ];
         }, $newsItems);
 

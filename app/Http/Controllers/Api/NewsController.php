@@ -71,4 +71,25 @@ class NewsController extends Controller
             return $this->errorResponse($e->getMessage());
         }
     }
+    public function saveNews($id)
+    {
+        $result =  $this->newsService->saveNews($id, auth()->id());
+        return $this->successResponse($result);
+    }
+
+    public function unsaveNews($id)
+    {
+        $result =  $this->newsService->unsaveNews($id, auth()->id());
+        return $this->successResponse($result);
+    }
+
+    public function getSavedNews(Request $request)
+    {
+        $result =  $this->newsService->getSavedNews(
+            auth()->id(),
+            $request->input('per_page', 10),
+            $request->input('page', 1)
+        );
+        return $this->successResponse($result);
+    }
 }

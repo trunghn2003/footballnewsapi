@@ -33,4 +33,10 @@ class News extends Model
     {
         return $this->belongsTo(Competition::class);
     }
+
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_news')
+                    ->withTimestamps();
+    }
 }

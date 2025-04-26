@@ -175,29 +175,7 @@ class NewsService
         }
     }
 
-    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
-    {
-        $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
-        return [
-            'news' => array_map(function ($news) {
-                return [
-                    'id' => $news->id,
-                    'title' => $news->title,
-                    'source' => $news->source,
-                    'content' => $news->content,
-                    'published_at' => $news->published_at,
-                    'competition_id' => $news->competition_id,
-                    'thumbnail' => $news->thumbnail,
-                    'comments' => count($news->comments),
-                ];
-            }, $result->items()),
-            'pagination' => [
-                'current_page' => $result->currentPage(),
-                'per_page'     => $result->perPage(),
-                'total'        => $result->total()
-            ]
-        ];
-    }
+
 
     public function getNewsById($id)
     {
@@ -222,5 +200,37 @@ class NewsService
             Log::error('Error in NewsService getNewsById: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
+    {
+        $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
+
+        // Convert paginator to array while preserving pagination metadata
+        $paginationInfo = [
+            'current_page' => $result->currentPage(),
+            'per_page'     => $result->perPage(),
+            'total'        => $result->total()
+        ];
+
+        // Map the news items
+        $newsItems = $result->items();
+        $mappedNews = array_map(function ($news) {
+            return [
+                'id' => $news->id,
+                'title' => $news->title,
+                'source' => $news->source,
+                'content' => $news->content,
+                'published_at' => $news->published_at,
+                'competition_id' => $news->competition_id,
+                'thumbnail' => $news->thumbnail,
+                'comments' => $news->comments_count ?? count($news->comments),
+            ];
+        }, $newsItems);
+
+        return [
+            'news' => $mappedNews,
+            'pagination' => $paginationInfo
+        ];
     }
 }

@@ -77,7 +77,7 @@ class NewsRepository
     {
         $query = $this->model->query();
 
-
+        // Apply existing filters
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
         }
@@ -102,9 +102,17 @@ class NewsRepository
             });
         }
 
-        return $query->orderBy('published_at', 'desc')
-            ->paginate($perPage,               ['*'],
-                'page',
-                $page);
+        if (isset($filters['sortBy'])) {
+            if ($filters['sortBy'] === 'comment_count') {
+                $query->withCount('comments')
+                      ->orderBy('comments_count', $filters['sortOrder'] ?? 'desc');
+            } else {
+                $query->orderBy('published_at', $filters['sortOrder'] ?? 'desc');
+            }
+        } else {
+            $query->orderBy('published_at', 'desc');
+        }
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 }

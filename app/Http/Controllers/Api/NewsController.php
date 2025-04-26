@@ -45,7 +45,8 @@ class NewsController extends Controller
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
                 'team_id' => $request->input('team_id'),
-                'team_name' => $request->input('team_name')
+                'team_name' => $request->input('team_name'),
+                'sortBy' => $request->input('sortBy', 'published_at'),
             ];
 
             $news = $this->newsService->getLatestNews($perPage, $page, $filters);

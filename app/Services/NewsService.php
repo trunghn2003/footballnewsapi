@@ -179,7 +179,18 @@ class NewsService
     {
         $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
         return [
-            'news' => $result->items(),
+            'news' => array_map(function ($news) {
+                return [
+                    'id' => $news->id,
+                    'title' => $news->title,
+                    'source' => $news->source,
+                    'content' => $news->content,
+                    'published_at' => $news->published_at,
+                    'competition_id' => $news->competition_id,
+                    'thumbnail' => $news->thumbnail,
+                    'comments' => count($news->comments),
+                ];
+            }, $result->items()),
             'pagination' => [
                 'current_page' => $result->currentPage(),
                 'per_page'     => $result->perPage(),

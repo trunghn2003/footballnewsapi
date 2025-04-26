@@ -22,7 +22,7 @@ class NewsController extends Controller
         try {
             $newsArticles = $this->newsService->fetchNewsFromApi($competitionId);
             $this->newsService->storeNewsFromApi($newsArticles, $competitionId);
-            
+
             return response()->json([
                 'message' => 'News articles fetched and saved successfully!',
                 'count' => count($newsArticles)
@@ -39,6 +39,7 @@ class NewsController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
+            $page = $request->page ?? 1;
             $filters = [
                 'competition_id' => $request->input('competition_id'),
                 'date_from' => $request->input('date_from'),
@@ -46,9 +47,9 @@ class NewsController extends Controller
                 'team_id' => $request->input('team_id'),
                 'team_name' => $request->input('team_name')
             ];
-            
-            $news = $this->newsService->getLatestNews($perPage, $filters);
-            
+
+            $news = $this->newsService->getLatestNews($perPage, $page, $filters);
+
             return $this->successResponse($news);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
@@ -59,11 +60,11 @@ class NewsController extends Controller
     {
         try {
             $news = $this->newsService->getNewsById($id);
-            
+
             if (!$news) {
                 return $this->errorResponse('News not found', 404);
             }
-            
+
             return $this->successResponse($news);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());

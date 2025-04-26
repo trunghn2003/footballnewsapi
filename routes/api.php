@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\BettingController;
 use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SearchController;
-use App\Http\Controllers\LiveMatchController;
+use App\Http\Controllers\Api\LiveMatchController;
 
 /*
 |--------------------------------------------------------------------------

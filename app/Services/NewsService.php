@@ -53,7 +53,6 @@ class NewsService
             foreach ($ids as $id) {
                 $articles = $this->fetchNewsFromApi($id);
                 $this->storeNewsFromApi($articles, $id);
-
             }
             DB::commit();
         } catch (\Exception $e) {
@@ -64,7 +63,7 @@ class NewsService
 
         // dd($response);
     }
-   public function storeNewsFromApi(array $newsArticles, $competitionId)
+    public function storeNewsFromApi(array $newsArticles, $competitionId)
     {
         DB::beginTransaction();
         try {
@@ -131,18 +130,22 @@ class NewsService
             $title = '';
 
             // Check if user has enabled competition news and this is about their favorite competition
-            if (isset($prefs['settings']['competition_news']) && isset($news)
-                && $prefs['settings']['competition_news']) {
+            if (
+                isset($prefs['settings']['competition_news']) && isset($news)
+                && $prefs['settings']['competition_news']
+            ) {
                 $notificationType = 'competition_news';
                 $title = 'Tin tức giải đấu mới';
                 $shouldNotify = true;
             }
-                // dd($news);
+            // dd($news);
 
             // Check if news contains any of user's favorite teams
-            if (isset($prefs['settings']['team_news']) && isset($news)
+            if (
+                isset($prefs['settings']['team_news']) && isset($news)
                 && $prefs['settings']['team_news']
-                && $news->teams()->count() > 0) {
+                && $news->teams()->count() > 0
+            ) {
                 $notificationType = 'team_news';
                 $title = 'Tin tức đội bóng mới';
                 $shouldNotify = true;
@@ -150,8 +153,7 @@ class NewsService
             try {
 
                 $logo = $news->teams()->first() ? $news->teams()->first()->crest : $news->competition->emblem;
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 Log::error('Error fetching team logo: ' . $e->getMessage());
                 $logo = null;
             }
@@ -173,9 +175,9 @@ class NewsService
         }
     }
 
-    public function getLatestNews($perPage = 10, $filters = [])
+    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
     {
-        $result = $this->newsRepository->getLatestNews($perPage, $filters);
+        $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
         return [
             'news' => $result->items(),
             'pagination' => [

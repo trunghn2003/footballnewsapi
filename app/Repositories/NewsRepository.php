@@ -73,9 +73,10 @@ class NewsRepository
         })->get();
     }
 
-    public function getLatestNews($perPage = 10, $filters = [])
+    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
     {
         $query = $this->model->query();
+
 
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
@@ -102,6 +103,8 @@ class NewsRepository
         }
 
         return $query->orderBy('published_at', 'desc')
-            ->paginate($perPage);
+            ->paginate($perPage,               ['*'],
+                'page',
+                $page);
     }
 }

@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\BulkIndexCompetitionsJob;
+use App\Jobs\BulkIndexFixturesJob;
+use App\Jobs\BulkIndexNewsJob;
+use App\Jobs\BulkIndexTeamsJob;
 use Illuminate\Http\Request;
 use App\Services\RAGService;
 use Illuminate\Support\Facades\Validator;
@@ -45,31 +49,46 @@ class RAGController extends Controller
 
     public function bulkIndexNews()
     {
-        $result = $this->ragService->bulkIndexNews();
-        return response()->json($result);
+        BulkIndexNewsJob::dispatch();
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk index news job has been queued'
+        ]);
     }
 
     public function bulkIndexTeams()
     {
-        $result = $this->ragService->bulkIndexTeams();
-        return response()->json($result);
+        BulkIndexTeamsJob::dispatch();
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk index teams job has been queued'
+        ]);
     }
 
     public function bulkIndexCompetitions()
     {
-        $result = $this->ragService->bulkIndexCompetitions();
-        return response()->json($result);
+        BulkIndexCompetitionsJob::dispatch();
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk index competitions job has been queued'
+        ]);
     }
 
     public function bulkIndexFixtures()
     {
-        $result = $this->ragService->bulkIndexFixtures();
-        return response()->json($result);
+        BulkIndexFixturesJob::dispatch();
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk index fixtures job has been queued'
+        ]);
     }
 
     public function bulkIndexSeasons()
     {
-        $result = $this->ragService->bulkIndexSeasons();
-        return response()->json($result);
+        // BulkIndexSeasonsJob::dispatch();
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk index seasons job has been queued'
+        ]);
     }
 }

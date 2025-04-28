@@ -19,6 +19,7 @@ services:
                 - 9000:8080
             depends_on:
                 - dbmysql
+                - redis
 
         dbmysql:
             container_name: dbmysql
@@ -33,8 +34,18 @@ services:
                 - db-data:/var/lib/mysql
             command: --port=3307
 
+        redis:
+            image: redis:alpine
+            container_name: redis
+            ports:
+                - "6379:6379"
+            volumes:
+                - redis-data:/data
+            restart: always
+
 volumes:
     db-data: ~
+    redis-data: ~
 
 networks:
     default:

@@ -13,7 +13,7 @@ class RAGService
 {
     protected $baseUrl;
     protected $maxRetries = 3;
-    protected $timeout = 30;
+    protected $timeout = 600; // 10 minutes for bulk operations
     protected $cacheTime = 3600; // 1 hour
 
     public function __construct()

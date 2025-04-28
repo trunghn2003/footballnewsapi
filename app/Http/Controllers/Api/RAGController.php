@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\RAGService;
 use Illuminate\Http\Request;
+use App\Services\RAGService;
+use Illuminate\Support\Facades\Validator;
 
 class RAGController extends Controller
 {
@@ -15,41 +16,30 @@ class RAGController extends Controller
         $this->ragService = $ragService;
     }
 
-    /**
-     * Trả lời câu hỏi của người dùng
-     */
     public function ask(Request $request)
     {
-        $request->validate([
-            'question' => 'required|string',
+        $validator = Validator::make($request->all(), [
+            'question' => 'required|string|min:3|max:1000',
             'type' => 'nullable|string|in:news,team,competition'
         ]);
 
-        $answer = $this->ragService->searchAndGenerateResponse(
-            $request->question,
-            $request->type
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input parameters',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $result = $this->ragService->searchAndGenerateResponse(
+            $request->input('question'),
+            $request->input('type')
         );
 
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'question' => $request->question,
-                'answer' => $answer
-            ]
-        ]);
-    }
+        if (!$result['success']) {
+            return response()->json($result, 500);
+        }
 
-    /**
-     * Index tất cả dữ liệu vào RAG system
-     */
-    public function indexAll()
-    {
-        $this->ragService->bulkIndexNews();
-        $this->ragService->bulkIndexTeams();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Đã index thành công tất cả dữ liệu'
-        ]);
+        return response()->json($result);
     }
 }

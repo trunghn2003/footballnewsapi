@@ -142,4 +142,4 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/rag/index', [RAGController::class, 'indexAll']);
 });
 
-Route::post('/ask', [App\Http\Controllers\RAGController::class, 'ask']);
+Route::post('/ask', [RAGController::class, 'ask']);

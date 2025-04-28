@@ -408,55 +408,72 @@ class RAGService
 
     public function bulkIndexFixtures()
     {
-        $totalIndexed = 0;
-        $failedBatches = 0;
+        try {
+            $totalIndexed = 0;
+            $failedBatches = 0;
 
-        \App\Models\Fixture::with(['competition.currentSeason', 'homeTeam', 'awayTeam'])
-            ->chunk(100, function($fixtures) use (&$totalIndexed, &$failedBatches) {
-                $documents = $fixtures->map(function($fixture) {
-                    $content = "Match: {$fixture->homeTeam->name} vs {$fixture->awayTeam->name}\n";
-                    $content .= "Competition: {$fixture->competition->name}\n";
-                    $content .= "Date: {$fixture->date}\n";
-                    if ($fixture->status) {
-                        $content .= "Status: {$fixture->status}\n";
-                    }
-                    if ($fixture->score) {
-                        $content .= "Score: {$fixture->score->home_score} - {$fixture->score->away_score}\n";
-                    }
-                    if ($fixture->venue) {
-                        $content .= "Venue: {$fixture->venue}\n";
-                    }
+            \App\Models\Fixture::with(['competition.currentSeason', 'homeTeam', 'awayTeam'])
+                ->chunk(100, function($fixtures) use (&$totalIndexed, &$failedBatches) {
+                    try {
+                        $documents = $fixtures->map(function($fixture) {
+                            $content = "Match: {$fixture->homeTeam->name} vs {$fixture->awayTeam->name}\n";
+                            $content .= "Competition: {$fixture->competition->name}\n";
+                            $content .= "Date: {$fixture->date}\n";
+                            if ($fixture->status) {
+                                $content .= "Status: {$fixture->status}\n";
+                            }
+                            if ($fixture->score) {
+                                $content .= "Score: {$fixture->score->home_score} - {$fixture->score->away_score}\n";
+                            }
+                            if ($fixture->venue) {
+                                $content .= "Venue: {$fixture->venue}\n";
+                            }
 
-                    return [
-                        'id' => 'fixture_' . $fixture->id,
-                        'content' => $content,
-                        'metadata' => [
-                            'type' => 'fixture',
-                            'competition_id' => $fixture->competition_id,
-                            'home_team_id' => $fixture->home_team_id,
-                            'away_team_id' => $fixture->away_team_id,
-                            'status' => $fixture->status,
-                            'date' => $fixture->uct_date->toIso8601String(),
-                        ]
-                    ];
-                })->toArray();
+                            return [
+                                'id' => 'fixture_' . $fixture->id,
+                                'content' => $content,
+                                'metadata' => [
+                                    'type' => 'fixture',
+                                    'competition_id' => $fixture->competition_id,
+                                    'home_team_id' => $fixture->home_team_id,
+                                    'away_team_id' => $fixture->away_team_id,
+                                    'status' => $fixture->status,
+                                    'date' => $fixture->uct_date->toIso8601String(),
+                                ]
+                            ];
+                        })->toArray();
 
-                $result = $this->processBulkIndex($documents);
-                if ($result['success']) {
-                    $totalIndexed += $result['count'];
-                    foreach ($fixtures as $fixture) {
-                        Cache::put('rag_index_fixture_' . $fixture->id, true, $this->cacheTime);
+                        $result = $this->processBulkIndex($documents);
+                        if ($result['success']) {
+                            $totalIndexed += $result['count'];
+                            foreach ($fixtures as $fixture) {
+                                Cache::put('rag_index_fixture_' . $fixture->id, true, $this->cacheTime);
+                            }
+                        } else {
+                            $failedBatches++;
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error processing fixture batch: ' . $e->getMessage());
+                        $failedBatches++;
                     }
-                } else {
-                    $failedBatches++;
-                }
-            });
+                });
 
-        return [
-            'success' => $failedBatches === 0,
-            'total_indexed' => $totalIndexed,
-            'failed_batches' => $failedBatches
-        ];
+            return [
+                'success' => $failedBatches === 0,
+                'total_indexed' => $totalIndexed,
+                'failed_batches' => $failedBatches
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error in bulk indexing fixtures: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to bulk index fixtures',
+                'error' => $e->getMessage(),
+                'total_indexed' => $totalIndexed,
+                // 'failed_batches' => $failedBatches
+            ];
+        }
     }
 
     public function bulkIndexSeasons()

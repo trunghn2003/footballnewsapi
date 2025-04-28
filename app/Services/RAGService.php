@@ -436,7 +436,7 @@ class RAGService
                             'home_team_id' => $fixture->home_team_id,
                             'away_team_id' => $fixture->away_team_id,
                             'status' => $fixture->status,
-                            'date' => $fixture->date->toIso8601String()
+                            'date' => $fixture->uct_date->toIso8601String(),
                         ]
                     ];
                 })->toArray();

@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -38,4 +37,8 @@ return [
         'api_key' => env('GEMINI_API_KEY'),
     ],
 
+    'rag' => [
+        'url' => env('RAG_SERVICE_URL', 'http://localhost:8000'),
+        'api_key' => env('RAG_API_KEY'),
+    ],
 ];

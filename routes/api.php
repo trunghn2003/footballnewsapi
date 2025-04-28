@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\LiveMatchController;
+use App\Http\Controllers\Api\RAGController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,3 +135,11 @@ Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);
 Route::get('/search', [SearchController::class, 'search']);
 
 Route::get('matches/live', [LiveMatchController::class, 'getLiveMatches']);
+
+// RAG Routes
+Route::middleware('jwt.auth')->group(function () {
+    Route::post('/rag/ask', [RAGController::class, 'ask']);
+    Route::post('/rag/index', [RAGController::class, 'indexAll']);
+});
+
+Route::post('/ask', [App\Http\Controllers\RAGController::class, 'ask']);

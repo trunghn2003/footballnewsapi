@@ -191,6 +191,17 @@ class NewsService
                     $comment->is_owner = $comment->user_id === $currentUserId;
                     return $comment;
                 });
+            $news = [
+                'id' => $news->id,
+                'title' => $news->title,
+                'source' => $news->source,
+                'content' => $news->content,
+                'published_at' => $news->published_at,
+                'competition_id' => $news->competition_id,
+                'thumbnail' => $news->thumbnail,
+                'comments_count' => count($comments),
+                'is_saved' =>  $news->savedByUsers()->where('user_id', auth()->id())->exists() ?? false,
+            ];
 
             return [
                 'news' => $news,
@@ -201,7 +212,7 @@ class NewsService
             throw $e;
         }
     }
-        public function saveNews($newsId, $userId)
+    public function saveNews($newsId, $userId)
     {
         try {
             $news = $this->newsRepository->getNewsById($newsId);
@@ -234,34 +245,22 @@ class NewsService
 
     public function getSavedNews($userId, $perPage = 10, $page = 1)
     {
-        try {
-            $user = User::findOrFail($userId);
-            $savedNews = $user->savedNews()
-                ->orderBy('saved_news.created_at', 'desc')
-                ->paginate($perPage, ['*'], 'page', $page);
+        $user = User::findOrFail($userId);
 
+        $result = $user->savedNews()
+            ->orderBy('saved_news.created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        if ($result->isEmpty()) {
             return [
-                'news' => $savedNews->items(),
+                'news' => [],
                 'pagination' => [
-                    'current_page' => $savedNews->currentPage(),
-                    'per_page' => $savedNews->perPage(),
-                    'total' => $savedNews->total()
+                    'current_page' => 1,
+                    'per_page'     => 0,
+                    'total'        => 0
                 ]
             ];
-        } catch (\Exception $e) {
-            // dd($e);
-            Log::error('Error getting saved news: ' . $e->getMessage());
-            throw $e;
         }
-    }
-
-
-    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
-    {
-        $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
-        $currentUserId = auth()->id();
-
-
         $paginationInfo = [
             'current_page' => $result->currentPage(),
             'per_page'     => $result->perPage(),
@@ -269,7 +268,7 @@ class NewsService
         ];
 
         $newsItems = $result->items();
-        $mappedNews = array_map(function ($news)  {
+        $mappedNews = array_map(function ($news) {
             return [
                 'id' => $news->id,
                 'title' => $news->title,
@@ -279,7 +278,40 @@ class NewsService
                 'competition_id' => $news->competition_id,
                 'thumbnail' => $news->thumbnail,
                 'comments' => $news->comments_count ?? count($news->comments),
-                'is_saved' =>  $news->savedByUsers()->where('user_id', auth()->id())->exists() ?? false ,
+                'is_saved' =>  $news->savedByUsers()->where('user_id', auth()->id())->exists() ?? false,
+            ];
+        }, $newsItems);
+
+        return [
+            'news' => $mappedNews,
+            'pagination' => $paginationInfo
+        ];
+    }
+
+
+    public function getLatestNews($perPage = 10, $page = 1, $filters = [])
+    {
+        $result = $this->newsRepository->getLatestNews($perPage, $page, $filters);
+
+
+        $paginationInfo = [
+            'current_page' => $result->currentPage(),
+            'per_page'     => $result->perPage(),
+            'total'        => $result->total()
+        ];
+
+        $newsItems = $result->items();
+        $mappedNews = array_map(function ($news) {
+            return [
+                'id' => $news->id,
+                'title' => $news->title,
+                'source' => $news->source,
+                'content' => $news->content,
+                'published_at' => $news->published_at,
+                'competition_id' => $news->competition_id,
+                'thumbnail' => $news->thumbnail,
+                'comments' => $news->comments_count ?? count($news->comments),
+                'is_saved' =>  $news->savedByUsers()->where('user_id', auth()->id())->exists() ?? false,
             ];
         }, $newsItems);
 

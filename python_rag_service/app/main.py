@@ -24,11 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Authentication middleware
-async def verify_api_key(x_api_key: str = Header(None)):
-    expected_api_key = os.getenv("API_KEY")
-    if not x_api_key or x_api_key != expected_api_key:
-        raise HTTPException(status_code=403, detail="Invalid API key")
+
 
 # Khởi tạo ChromaDB
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
@@ -38,7 +34,7 @@ collection = chroma_client.get_or_create_collection(
 )
 
 # Khởi tạo Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure("AIzaSyCyaBub5taZ9m7ybGCLrH0jv-X-0x4Lv-U")
 model = genai.GenerativeModel('gemini-2.0-flash')
 embedding_model = "models/embedding-001"
 
@@ -53,7 +49,7 @@ class Query(BaseModel):
     type: Optional[str] = None
 
 @app.post("/index")
-async def index_document(document: Document, authenticated: bool = Depends(verify_api_key)):
+async def index_document(document: Document):
     try:
         # Tạo embedding cho document
         embedding = genai.embed_content(

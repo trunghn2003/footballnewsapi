@@ -42,4 +42,34 @@ class RAGController extends Controller
 
         return response()->json($result);
     }
+
+    public function bulkIndexNews()
+    {
+        $result = $this->ragService->bulkIndexNews();
+        return response()->json($result);
+    }
+
+    public function bulkIndexTeams()
+    {
+        $result = $this->ragService->bulkIndexTeams();
+        return response()->json($result);
+    }
+
+    public function bulkIndexCompetitions()
+    {
+        $result = $this->ragService->bulkIndexCompetitions();
+        return response()->json($result);
+    }
+
+    public function bulkIndexFixtures()
+    {
+        $result = $this->ragService->bulkIndexFixtures();
+        return response()->json($result);
+    }
+
+    public function bulkIndexSeasons()
+    {
+        $result = $this->ragService->bulkIndexSeasons();
+        return response()->json($result);
+    }
 }

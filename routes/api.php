@@ -140,6 +140,11 @@ Route::get('matches/live', [LiveMatchController::class, 'getLiveMatches']);
 Route::middleware('jwt.auth')->group(function () {
     Route::post('/rag/ask', [RAGController::class, 'ask']);
     Route::post('/rag/index', [RAGController::class, 'indexAll']);
+    Route::post('/rag/index/news/all', [RAGController::class, 'bulkIndexNews']);
+    Route::post('/rag/index/teams/all', [RAGController::class, 'bulkIndexTeams']);
+    Route::post('/rag/index/competitions/all', [RAGController::class, 'bulkIndexCompetitions']);
+    Route::post('/rag/index/fixtures/all', [RAGController::class, 'bulkIndexFixtures']);
+    Route::post('/rag/index/seasons/all', [RAGController::class, 'bulkIndexSeasons']);
 });
 
 Route::post('/ask', [RAGController::class, 'ask']);

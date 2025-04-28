@@ -354,4 +354,155 @@ class RAGService
             'failed_batches' => $failedBatches
         ];
     }
+
+    public function bulkIndexCompetitions()
+    {
+        $totalIndexed = 0;
+        $failedBatches = 0;
+
+        \App\Models\Competition::with(['currentSeason', 'area'])->chunk(100, function($competitions) use (&$totalIndexed, &$failedBatches) {
+            $documents = $competitions->map(function($competition) {
+                $content = "Competition: {$competition->name}\n";
+                if ($competition->type) {
+                    $content .= "Type: {$competition->type}\n";
+                }
+                if ($competition->area) {
+                    $content .= "Area: {$competition->area->name}\n";
+                }
+                if ($competition->currentSeason) {
+                    $content .= "Current Season: {$competition->currentSeason->name}\n";
+                    $content .= "Start Date: {$competition->currentSeason->start_date}\n";
+                    $content .= "End Date: {$competition->currentSeason->end_date}\n";
+                }
+
+                return [
+                    'id' => 'competition_' . $competition->id,
+                    'content' => $content,
+                    'metadata' => [
+                        'type' => 'competition',
+                        'name' => $competition->name,
+                        'area_id' => $competition->area_id,
+                        'current_season_id' => $competition->current_season_id,
+                        'updated_at' => $competition->updated_at->toIso8601String()
+                    ]
+                ];
+            })->toArray();
+
+            $result = $this->processBulkIndex($documents);
+            if ($result['success']) {
+                $totalIndexed += $result['count'];
+                foreach ($competitions as $competition) {
+                    Cache::put('rag_index_competition_' . $competition->id, true, $this->cacheTime);
+                }
+            } else {
+                $failedBatches++;
+            }
+        });
+
+        return [
+            'success' => $failedBatches === 0,
+            'total_indexed' => $totalIndexed,
+            'failed_batches' => $failedBatches
+        ];
+    }
+
+    public function bulkIndexFixtures()
+    {
+        $totalIndexed = 0;
+        $failedBatches = 0;
+
+        \App\Models\Fixture::with(['competition.currentSeason', 'homeTeam', 'awayTeam'])
+            ->chunk(100, function($fixtures) use (&$totalIndexed, &$failedBatches) {
+                $documents = $fixtures->map(function($fixture) {
+                    $content = "Match: {$fixture->homeTeam->name} vs {$fixture->awayTeam->name}\n";
+                    $content .= "Competition: {$fixture->competition->name}\n";
+                    $content .= "Date: {$fixture->date}\n";
+                    if ($fixture->status) {
+                        $content .= "Status: {$fixture->status}\n";
+                    }
+                    if ($fixture->score) {
+                        $content .= "Score: {$fixture->score->home_score} - {$fixture->score->away_score}\n";
+                    }
+                    if ($fixture->venue) {
+                        $content .= "Venue: {$fixture->venue}\n";
+                    }
+
+                    return [
+                        'id' => 'fixture_' . $fixture->id,
+                        'content' => $content,
+                        'metadata' => [
+                            'type' => 'fixture',
+                            'competition_id' => $fixture->competition_id,
+                            'home_team_id' => $fixture->home_team_id,
+                            'away_team_id' => $fixture->away_team_id,
+                            'status' => $fixture->status,
+                            'date' => $fixture->date->toIso8601String()
+                        ]
+                    ];
+                })->toArray();
+
+                $result = $this->processBulkIndex($documents);
+                if ($result['success']) {
+                    $totalIndexed += $result['count'];
+                    foreach ($fixtures as $fixture) {
+                        Cache::put('rag_index_fixture_' . $fixture->id, true, $this->cacheTime);
+                    }
+                } else {
+                    $failedBatches++;
+                }
+            });
+
+        return [
+            'success' => $failedBatches === 0,
+            'total_indexed' => $totalIndexed,
+            'failed_batches' => $failedBatches
+        ];
+    }
+
+    public function bulkIndexSeasons()
+    {
+        $totalIndexed = 0;
+        $failedBatches = 0;
+
+        \App\Models\Season::with(['competition'])->chunk(100, function($seasons) use (&$totalIndexed, &$failedBatches) {
+            $documents = $seasons->map(function($season) {
+                $content = "Season: {$season->name}\n";
+                $content .= "Competition: {$season->competition->name}\n";
+                $content .= "Start Date: {$season->start_date}\n";
+                $content .= "End Date: {$season->end_date}\n";
+                if ($season->current) {
+                    $content .= "Status: Current Season\n";
+                }
+
+                return [
+                    'id' => 'season_' . $season->id,
+                    'content' => $content,
+                    'metadata' => [
+                        'type' => 'season',
+                        'name' => $season->name,
+                        'competition_id' => $season->competition_id,
+                        'start_date' => $season->start_date->toIso8601String(),
+                        'end_date' => $season->end_date->toIso8601String(),
+                        'current' => $season->current
+                    ]
+                ];
+            })->toArray();
+
+            $result = $this->processBulkIndex($documents);
+            if ($result['success']) {
+                $totalIndexed += $result['count'];
+                foreach ($seasons as $season) {
+                    Cache::put('rag_index_season_' . $season->id, true, $this->cacheTime);
+                }
+            } else {
+                $failedBatches++;
+            }
+        });
+
+        return [
+            'success' => $failedBatches === 0,
+            'total_indexed' => $totalIndexed,
+            'failed_batches' => $failedBatches
+        ];
+    }
 }

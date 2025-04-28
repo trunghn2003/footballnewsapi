@@ -33,19 +33,6 @@ services:
                 - db-data:/var/lib/mysql
             command: --port=3307
 
-        rag:
-            build:
-              context: ./python_rag_service
-              dockerfile: Dockerfile
-            ports:
-              - "8000:8000"
-            volumes:
-              - ./python_rag_service:/app
-            environment:
-              - GEMINI_API_KEY=${GEMINI_API_KEY}
-            depends_on:
-              - api
-
 volumes:
     db-data: ~
 

@@ -41,7 +41,7 @@ class BulkRagIndexCommand extends Command
 
             case 'seasons':
                 $this->info('Dispatching Seasons indexing job...');
-                // BulkIndexSeasonsJob::dispatch();
+                BulkIndexSeasonsJob::dispatch();
                 break;
 
             case 'all':
@@ -50,7 +50,7 @@ class BulkRagIndexCommand extends Command
                 BulkIndexTeamsJob::dispatch();
                 BulkIndexCompetitionsJob::dispatch();
                 BulkIndexFixturesJob::dispatch();
-                // BulkIndexSeasonsJob::dispatch();
+                BulkIndexSeasonsJob::dispatch();
                 break;
 
             default:

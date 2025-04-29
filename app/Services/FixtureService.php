@@ -479,6 +479,150 @@ class FixtureService
         ];
     }
 
+    /**
+     * Get recent fixtures filtered by team name and/or competition name
+     *
+     * @param array $filters
+     * @return array
+     */
+    public function getRecentFixturesByFilters(array $filters): array
+    {
+        $queryFilters = [
+            'status' => 'FINISHED'
+        ];
+
+        // Add team name filter if provided
+        if (!empty($filters['teamName'])) {
+            $queryFilters['teamName'] = $filters['teamName'];
+        }
+
+        // Add competition filter by name if provided
+        if (!empty($filters['competitionName'])) {
+            $competition = $this->competitionService->findCompetitionByName($filters['competitionName']);
+            if ($competition) {
+                $queryFilters['competition_id'] = $competition->id;
+            }
+        }
+
+        // Get fixtures with applied filters
+        $limit = $filters['limit'] ?? 10;
+        $page = $filters['page'] ?? 1;
+
+        $fixtures = $this->fixtureRepository->getFixturesRecent($queryFilters, $limit, $page);
+
+        if (!empty($fixtures->items())) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto->setCompetition($competition);
+
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam(TeamMapper::fromModel($homeTeam));
+                    }
+
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+                    }
+
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
+    /**
+     * Get upcoming fixtures regardless of team
+     *
+     * @param array $filters Additional filters to apply (teamName, competition_id, dateFrom, dateTo)
+     * @param int $perPage Number of fixtures per page
+     * @param int $page Current page number
+     * @return array Upcoming fixtures with pagination data
+     */
+    public function getUpcomingFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
+    {
+        // Set required filters for upcoming fixtures
+        $queryFilters = [
+            'status' => 'SCHEDULED',
+            'dateFrom' => now()->toDateString()
+        ];
+
+        // Merge additional filters provided by the caller
+        if (!empty($filters['teamName'])) {
+            $queryFilters['teamName'] = $filters['teamName'];
+        }
+
+        if (!empty($filters['competitionName'])) {
+            $competition = $this->competitionService->findCompetitionByName($filters['competitionName']);
+            if ($competition) {
+                $queryFilters['competition_id'] = $competition->id;
+            }
+        } else if (!empty($filters['competition_id'])) {
+            $queryFilters['competition_id'] = $filters['competition_id'];
+        }
+
+        if (!empty($filters['dateTo'])) {
+            $queryFilters['dateTo'] = $filters['dateTo'];
+        } else if (!empty($filters['daysAhead']) && is_numeric($filters['daysAhead'])) {
+            $queryFilters['dateTo'] = now()->addDays($filters['daysAhead'])->toDateString();
+        }
+
+        // Get fixtures with applied filters
+        $fixtures = $this->fixtureRepository->getFixtures($queryFilters, $perPage, $page);
+
+        if (!empty($fixtures->items())) {
+            return [
+                'fixtures' => array_map(function ($fixture) {
+                    $fixtureDto = FixtureMapper::fromModel($fixture);
+                    $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
+                    $fixtureDto->setCompetition($competition);
+
+                    $homeTeam = $fixture->homeTeam;
+                    if (isset($homeTeam)) {
+                        $fixtureDto->setHomeTeam(TeamMapper::fromModel($homeTeam));
+                    }
+
+                    $awayTeam = $fixture->awayTeam;
+                    if (isset($awayTeam)) {
+                        $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+                    }
+
+                    return $fixtureDto;
+                }, $fixtures->items()),
+                'pagination' => [
+                    'current_page' => $fixtures->currentPage(),
+                    'per_page' => $fixtures->perPage(),
+                    'total' => $fixtures->total()
+                ]
+            ];
+        }
+
+        return [
+            'fixtures' => [],
+            'pagination' => [
+                'current_page' => 0,
+                'per_page' => 0,
+                'total' => 0
+            ]
+        ];
+    }
+
     protected function getUsersToNotify(Fixture $match)
     {
         return User::whereJsonContains('favourite_teams', $match->homeTeam->id)
@@ -1206,5 +1350,16 @@ class FixtureService
         } else {
             return null;
         }
+    }
+
+    /**
+     * Get a competition by name
+     *
+     * @param string $name
+     * @return \App\Models\Competition|null
+     */
+    public function getCompetitionByName(string $name)
+    {
+        return $this->competitionService->findCompetitionByName($name);
     }
 }

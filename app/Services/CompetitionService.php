@@ -295,4 +295,15 @@ class CompetitionService
             throw ($e);
         }
     }
+
+    /**
+     * Find a competition by name or code
+     *
+     * @param string $name
+     * @return Competition|null
+     */
+    public function findCompetitionByName(string $name)
+    {
+        return $this->competitionRepository->findByName($name);
+    }
 }

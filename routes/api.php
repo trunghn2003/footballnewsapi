@@ -56,6 +56,8 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('byRound/{competitionId}', [FixtureController::class, 'getFixturePerRound']);
         Route::get('team/{teamId}/recent', [FixtureController::class, 'getRecentFixtures']);
         Route::get('team/{teamId}/upcoming', [FixtureController::class, 'getUpcomingFixtures']);
+        Route::get('recent', [FixtureController::class, 'getRecentFixturesByFilters']);
+        Route::get('upcoming', [FixtureController::class, 'getAllUpcomingFixtures']);
         Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
         Route::get('predict/{fixtureId}', [FixturePredictController::class, 'predictMatch']);
         Route::get('lineup/{fixtureId}', [FixtureController::class, 'getLineupByFixtureId']);

@@ -180,6 +180,23 @@ class FixtureRepository
             });
         }
 
+        // Filter by team name
+        if (isset($filters['teamName'])) {
+            $query->where(function($q) use ($filters) {
+                $q->whereHas('homeTeam', function ($query) use ($filters) {
+                    $query->where('name', 'like', '%' . $filters['teamName'] . '%');
+                })
+                ->orWhereHas('awayTeam', function ($query) use ($filters) {
+                    $query->where('name', 'like', '%' . $filters['teamName'] . '%');
+                });
+            });
+        }
+
+        // Filter by competition ID
+        if (isset($filters['competition_id'])) {
+            $query->where('competition_id', $filters['competition_id']);
+        }
+
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
         }

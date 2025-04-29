@@ -31,11 +31,10 @@ class StandingController extends Controller
     {
         try {
             $competitionId = $request->competition_id;
-            // $seasonId = $request->season_id;
-
-
-            if (!$competitionId) {
-                return $this->errorResponse('Competition ID is required');
+            $name = $request->name;
+            if (!$competitionId && !$name) {
+                return $this->errorResponse('Competition ID or Name are required');
+                return $this->errorResponse('Competition ID or name is required');
             }
 
             $standings = $this->standingService->getStandingsByCompetitionAndSeason($request);

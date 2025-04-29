@@ -146,6 +146,13 @@ class StandingService
         $competitionId = $request->competition_id;
         $seasonId = $request->season_id;
         $teamID = $request->team_id ?? null;
+        if(isset($request->name)){
+            try {
+            $competitionId = $this->competitionRepository->findByName($request->name)->id ;}
+            catch (\Exception $e) {
+                return null;
+            }
+        }
         if(!isset($seasonId)){
             $seasonId = $this->competitionRepository->findById($competitionId)->currentSeason->id;
         }

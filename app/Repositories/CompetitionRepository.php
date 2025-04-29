@@ -51,6 +51,13 @@ class CompetitionRepository
         return Competition::whereIn('id', $ids)->get();
     }
 
+    public function findByName(string $name)
+    {
+        return Competition::where('name', $name)->orWhere('code', $name)
+            ->with(['area', 'currentSeason'])
+        ->first();
+    }
+
 
 
     public function getAll($filters, $perPage, $page)

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\CompetitionRepository;
 use App\Repositories\StandingRepository;
+use App\Repositories\TeamRepository;
 use Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,11 @@ class StandingService
     protected $apiToken;
     protected $apiUrlFootball;
     protected $competitionRepository;
+    protected $teamRepository;
 
-    public function __construct(StandingRepository $standingRepository, CompetitionRepository $competitionRepository)
+    public function __construct(StandingRepository $standingRepository, CompetitionRepository $competitionRepository, TeamRepository $teamRepository)
     {
+        $this->teamRepository = $teamRepository;
         $this->standingRepository = $standingRepository;
         $this->apiToken = env('API_FOOTBALL_TOKEN');
         $this->apiUrlFootball = env('API_FOOTBALL_URL');
@@ -146,6 +149,13 @@ class StandingService
         $competitionId = $request->competition_id;
         $seasonId = $request->season_id;
         $teamID = $request->team_id ?? null;
+        if(isset($request->teamName)){
+            try {
+                $teamID = $this->teamRepository->findByName($request->teamName)->id;
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
         if(isset($request->name)){
             try {
             $competitionId = $this->competitionRepository->findByName($request->name)->id ;}

@@ -123,6 +123,7 @@ class TeamRepository
     {
         return $this->model->where('name', 'like', '%' . $name . '%')
                 ->orWhere('short_name', 'like', '%' . $name . '%')
+                ->orWhere('tla', 'like', '%' . $name . '%')
                 ->first();
     }
     public function getFavoriteTeams()

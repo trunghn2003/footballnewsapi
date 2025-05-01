@@ -67,6 +67,12 @@ Route::middleware('jwt.auth')->group(function () {
         Route::get('head-to-head/{fixtureId}', [FixtureController::class, 'getHeadToHeadFixturesByFixtureId']);
         Route::get('predict/{fixtureId}', [FixturePredictController::class, 'predictMatch']);
         Route::get('lineup/{fixtureId}', [FixtureController::class, 'getLineupByFixtureId']);
+
+        // Pin fixture routes
+        Route::post('{fixtureId}/pin', [App\Http\Controllers\Api\PinnedFixtureController::class, 'pinFixture']);
+        Route::delete('{fixtureId}/pin', [App\Http\Controllers\Api\PinnedFixtureController::class, 'unpinFixture']);
+        Route::get('{fixtureId}/pin/status', [App\Http\Controllers\Api\PinnedFixtureController::class, 'checkPinStatus']);
+        Route::get('pinned', [App\Http\Controllers\Api\PinnedFixtureController::class, 'getUserPinnedFixtures']);
     });
 
     Route::post('teams/favorite/{teamId}', [TeamController::class, 'addFavoriteTeam']);
@@ -121,7 +127,7 @@ Route::get('/news', [NewsController::class, 'getAllNews']);
     Route::get('notifications/preferences', [NotificationController::class, 'getPreferences']);
     Route::post('notifications/preferences', [NotificationController::class, 'updatePreferences']);
 
-   
+
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 });
 

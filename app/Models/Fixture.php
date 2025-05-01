@@ -85,4 +85,9 @@ class Fixture extends Model
 
             ->where('team_id', $this->away_team_id);
     }
+
+    public function pinnedByUsers()
+    {
+        return $this->hasMany(PinnedFixture::class);
+    }
 }

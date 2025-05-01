@@ -61,7 +61,40 @@ class SendMatchReminders extends Command
             $homeTeamId = $match->homeTeam->id;
             $awayTeamId = $match->awayTeam->id;
 
-            // Tìm tất cả users yêu thích 1 trong 2 đội
+            // Notify users who pinned this fixture
+            $pinnedUsers = $match->pinnedByUsers()->with('user')->get();
+            foreach ($pinnedUsers as $pinned) {
+                $user = $pinned->user;
+                if (empty($user->fcm_token)) {
+                    continue;
+                }
+
+                $matchTime = Carbon::createFromFormat('Y-m-d H:i:s', $match->utc_date, 'UTC')
+                    ->setTimezone('Asia/Ho_Chi_Minh')
+                    ->format('H:i d-m-Y');
+
+                $homeTeamName = $match->homeTeam->short_name ?? 'Unknown Team';
+                $awayTeamName = $match->awayTeam->short_name ?? 'Unknown Team';
+
+                $title = "Nhắc nhở trận đấu của {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
+                $message = "Sắp diễn ra: {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
+
+                $this->sendNotification(
+                    $user->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'title' => $title,
+                        'message' => $message,
+                        'match_time' => $matchTime,
+                        'type' => 'pinned_match_reminder',
+                        'user_id' => $user->id,
+                        'screen' => "/(drawer)/fixture/prediction/" . $match->id,
+                    ]
+                );
+            }
+
+          
             $users = User::whereJsonContains('favourite_teams', $homeTeamId)
                 ->orWhereJsonContains('favourite_teams', $awayTeamId)
                 ->get();

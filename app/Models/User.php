@@ -65,4 +65,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(News::class, 'saved_news')
                     ->withTimestamps();
     }
+
+    public function pinnedFixtures()
+    {
+        return $this->hasMany(PinnedFixture::class);
+    }
 }

@@ -8,7 +8,10 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use LogicException;
-
+use App\Models\PasswordReset;
+use App\Mail\ResetPasswordOtp;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -193,5 +196,115 @@ class AuthService
     public function getAuthenticatedUser()
     {
         return auth()->user();
+    }
+
+    /**
+     * Send password reset OTP to user's email
+     */
+    public function forgotPassword(string $email)
+    {
+        try {
+            // Check if user exists
+            $user = $this->userRepository->findByEmail($email);
+            if (!$user) {
+                throw new LogicException('User with this email does not exist');
+            }
+
+            // Generate OTP
+            $otp = $this->generateOTP();
+            $expiry = now()->addMinutes(10); // 10 minutes expiry
+
+            // Store in database
+            PasswordReset::where('email', $email)->delete(); // Remove existing records
+            PasswordReset::create([
+                'email' => $email,
+                'otp' => $otp,
+                'expires_at' => $expiry,
+                'created_at' => now(),
+                'is_used' => false
+            ]);
+
+            // Send email with OTP
+            Mail::to($email)->send(new ResetPasswordOtp($otp));
+
+            return [
+                'success' => true,
+                'message' => 'Password reset OTP has been sent to your email',
+                'email' => $email
+            ];
+        } catch (Exception $e) {
+            Log::error('Forgot password failed: ' . $e->getMessage());
+            throw new LogicException('Forgot password failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Verify OTP for password reset and enable password change
+     */
+    public function verifyResetPasswordOTP(string $email, string $otp)
+    {
+        try {
+            $resetData = PasswordReset::where('email', $email)
+                ->where('otp', $otp)
+                ->where('is_used', false)
+                ->first();
+
+            if (!$resetData) {
+                throw new LogicException('Invalid OTP');
+            }
+
+            if (now()->gt($resetData->expires_at)) {
+                throw new LogicException('OTP has expired. Please request a new one');
+            }
+
+            // Mark as verified but not used until password is reset
+            $resetData->update(['is_used' => true]);
+
+            return [
+                'success' => true,
+                'message' => 'OTP verified successfully. You can now reset your password',
+                'email' => $email
+            ];
+        } catch (Exception $e) {
+            Log::error('Reset password OTP verification failed: ' . $e->getMessage());
+            throw new LogicException('Verification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reset password after OTP verification
+     */
+    public function resetPassword(string $email, string $password)
+    {
+        try {
+            // Check if user has verified OTP
+            $resetData = PasswordReset::where('email', $email)
+                ->where('is_used', true)
+                ->first();
+
+            if (!$resetData) {
+                throw new LogicException('Please verify your OTP first');
+            }
+
+            // Update password
+            $user = $this->userRepository->findByEmail($email);
+            if (!$user) {
+                throw new LogicException('User not found');
+            }
+
+            $user->password = Hash::make($password);
+            $user->save();
+
+            // Delete reset record
+            $resetData->delete();
+
+            return [
+                'success' => true,
+                'message' => 'Password has been reset successfully',
+            ];
+        } catch (Exception $e) {
+            Log::error('Reset password failed: ' . $e->getMessage());
+            throw new LogicException('Reset password failed: ' . $e->getMessage());
+        }
     }
 }

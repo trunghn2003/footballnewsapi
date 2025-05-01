@@ -37,6 +37,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('verify-otp', [AuthController::class, 'verifyOTP']);
 Route::post('resend-otp', [AuthController::class, 'resendOTP']);
+// Thêm route quên mật khẩu
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('verify-reset-password-otp', [AuthController::class, 'verifyResetPasswordOTP']);
+Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
 Route::middleware('jwt.auth')->group(function () {

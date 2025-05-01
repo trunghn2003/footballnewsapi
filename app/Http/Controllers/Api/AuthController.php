@@ -146,4 +146,72 @@ class AuthController extends Controller {
             return $this->errorResponse($e->getMessage(), 400);
         }
     }
+
+    /**
+     * Request password reset OTP
+     */
+    public function forgotPassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->forgotPassword($request->email);
+            return $this->successResponse($result, 'Password reset OTP sent successfully', 200);
+        } catch (LogicException $e) {
+            Log::error('Forgot password error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * Verify password reset OTP
+     */
+    public function verifyResetPasswordOTP(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'otp' => 'required|string|size:6'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->verifyResetPasswordOTP($request->email, $request->otp);
+            return $this->successResponse($result, 'Password reset OTP verified successfully', 200);
+        } catch (LogicException $e) {
+            Log::error('OTP verification error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * Reset password after OTP verification
+     */
+    public function resetPassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required|min:6|confirmed',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->resetPassword($request->email, $request->password);
+            return $this->successResponse($result, 'Password reset successfully', 200);
+        } catch (LogicException $e) {
+            Log::error('Reset password error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
 }

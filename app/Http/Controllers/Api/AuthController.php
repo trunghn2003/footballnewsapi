@@ -100,4 +100,50 @@ class AuthController extends Controller {
             return $this->errorResponse($e->getMessage(), 400);
         }
     }
+    /**
+     * verify OTP for registration
+     */
+    public function verifyOTP(Request $request)
+    {
+        try {
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'otp' => 'required|string|size:6'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->verifyOTP($request->email, $request->otp);
+            return $this->successResponse($result, 'OTP verified successfully', 200);
+        } catch (LogicException $e) {
+            Log::error('OTP verification error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * Resend OTP for registration
+     */
+    public function resendOTP(Request $request)
+    {
+        try {
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->resendOTP($request->email);
+            return $this->successResponse($result, 'OTP resent successfully', 200);
+        } catch (LogicException $e) {
+            Log::error('Resend OTP error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
 }

@@ -35,6 +35,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('verify-otp', [AuthController::class, 'verifyOTP']);
+Route::post('resend-otp', [AuthController::class, 'resendOTP']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
 Route::middleware('jwt.auth')->group(function () {

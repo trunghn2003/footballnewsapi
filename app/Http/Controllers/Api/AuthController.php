@@ -214,4 +214,34 @@ class AuthController extends Controller {
             return $this->errorResponse($e->getMessage(), 400);
         }
     }
+
+     /**
+     * Change password for authenticated user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changePassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'current_password' => 'required|string',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $result = $this->authService->changePassword(
+                $request->current_password,
+                $request->password
+            );
+
+            return $this->successResponse($result, 'Mật khẩu đã được thay đổi thành công', 200);
+        } catch (LogicException $e) {
+            Log::error('Change password error: ' . $e->getMessage());
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+    }
 }

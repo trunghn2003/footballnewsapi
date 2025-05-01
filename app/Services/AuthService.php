@@ -12,6 +12,8 @@ use App\Models\PasswordReset;
 use App\Mail\ResetPasswordOtp;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AuthService
 {
@@ -307,4 +309,42 @@ class AuthService
             throw new LogicException('Reset password failed: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Change password for authenticated user
+     *
+     * @param string $currentPassword Current password for verification
+     * @param string $newPassword New password to set
+     * @return array Success status and message
+     */
+    public function changePassword(string $currentPassword, string $newPassword)
+    {
+        try {
+            // Get authenticated user
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                throw new LogicException('User not authenticated');
+            }
+
+            // Verify current password
+            if (!Hash::check($currentPassword, $user->password)) {
+                throw new LogicException('Current password is incorrect');
+            }
+
+            // Update password
+            $user->password = Hash::make($newPassword);
+            $user->save();
+
+            return [
+                'success' => true,
+                'message' => 'Mật khẩu đã được thay đổi thành công'
+            ];
+        } catch (Exception $e) {
+            Log::error('Change password failed: ' . $e->getMessage());
+            throw new LogicException('Không thể thay đổi mật khẩu: ' . $e->getMessage());
+        }
+    }
+
+   
 }

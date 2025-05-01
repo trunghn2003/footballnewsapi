@@ -120,6 +120,9 @@ Route::get('/news', [NewsController::class, 'getAllNews']);
     // Notification preferences routes
     Route::get('notifications/preferences', [NotificationController::class, 'getPreferences']);
     Route::post('notifications/preferences', [NotificationController::class, 'updatePreferences']);
+
+   
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 });
 
 Route::post('/competitions/sync', [CompetitionController::class, 'sync']);

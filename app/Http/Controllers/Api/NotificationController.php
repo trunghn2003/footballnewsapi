@@ -82,13 +82,14 @@ class NotificationController extends Controller
         try {
             $user = auth()->user();
             $preferences = json_decode($user->notification_pref, true) ?? [
-                'favourite_teams' => [],
-                'favourite_competitions' => [],
-                'settings' => [
+                'global_settings' => [
                     'team_news' => true,
                     'match_reminders' => true,
-                    'competition_news' => true
-                ]
+                    'competition_news' => true,
+                    'match_score' => true
+                ],
+                'team_settings' => [],
+                'competition_settings' => []
             ];
 
             return $this->successResponse($preferences);

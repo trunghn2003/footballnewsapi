@@ -12,38 +12,19 @@ use Illuminate\Support\Facades\Log;
 // use GPBMetadata\Google\Api\Http;
 
 trait PushNotification
-{    public function sendNotification($token, $title, $body, $data = [])
+{
+    public function sendNotification($token, $title, $body, $data = [])
     {
-        // Check notification preferences if user_id is provided
+        // Kiểm tra cài đặt thông báo nếu user_id được cung cấp
         if (isset($data['user_id'])) {
             $user = \App\Models\User::find($data['user_id']);
-            // dd(($user));
             if ($user && $user->notification_pref) {
                 $prefs = json_decode($user->notification_pref, true);
                 $type = $data['type'] ?? 'default';
-                // dd($type);
-                // Check notification type settings
-                switch ($type) {
-                    case 'match_score':
-                        if (!($prefs['settings']['match_score'] ?? true)) {
-                            return false;
-                        }
-                        break;
-                    case 'team_news':
-                        if (!($prefs['settings']['team_news'] ?? true)) {
-                            return false;
-                        }
-                        break;
-                    case 'match_reminder':
-                        if (!($prefs['settings']['match_reminders'] ?? true)) {
-                            return false;
-                        }
-                        break;
-                    case 'competition_news':
-                        if (!($prefs['settings']['competition_news'] ?? true)) {
-                            return false;
-                        }
-                        break;
+
+                // Kiểm tra chi tiết cài đặt thông báo
+                if (!$this->shouldSendNotification($user, $type, $data)) {
+                    return false;
                 }
             }
         }
@@ -53,7 +34,7 @@ trait PushNotification
         // Convert all data values to strings for FCM
         $stringData = [];
         foreach ($data as $key => $value) {
-            $stringData[$key] = (string) $value;
+            $stringData[$key] = is_array($value) ? json_encode($value) : (string) $value;
         }
 
         $notification = [
@@ -64,14 +45,12 @@ trait PushNotification
             'data' => $stringData,
             "token" => $token
         ];
-        // dump($notification);
 
         try {
             $response  = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->getAccessToken(),
                 'Content-Type' => 'application/json',
             ])->post($fcmurl, ['message' => $notification]);
-            // dd($response->json());
 
             // Only create notification if user_id exists in data
             if (isset($data['user_id'])) {
@@ -84,13 +63,134 @@ trait PushNotification
                     'is_read' => 0,
                 ]);
             }
-            // dd($response->json());
 
             return $response->json();
         } catch (Exception $e) {
             Log::info('Error in sending notification: ' . $e->getMessage());
-            // return response()->json(['error' => 'Failed to send notification'], 500);
             return false;
+        }
+    }
+
+    /**
+     * Kiểm tra xem có nên gửi thông báo dựa trên cài đặt của người dùng
+     *
+     * @param \App\Models\User $user
+     * @param string $type
+     * @param array $data
+     * @return bool
+     */
+    protected function shouldSendNotification($user, $type, $data = [])
+    {
+        if (!$user->notification_pref) {
+            return true; // Mặc định là gửi thông báo nếu không có cài đặt
+        }
+
+        $prefs = json_decode($user->notification_pref, true);
+
+        // Kiểm tra cài đặt toàn cục trước
+        if (!isset($prefs['global_settings']) || !$this->isEnabledInGlobalSettings($prefs['global_settings'], $type)) {
+            return false;
+        }
+
+        // Nếu là thông báo liên quan đến đội bóng
+        if (in_array($type, ['team_news', 'match_reminder', 'match_score'])) {
+            // Kiểm tra cài đặt đội bóng
+            if (isset($data['team_ids']) && is_array($data['team_ids'])) {
+                foreach ($data['team_ids'] as $teamId) {
+                    // Nếu có cài đặt riêng cho đội này và bị tắt
+                    if ($this->hasTeamSpecificSetting($prefs, $teamId) &&
+                        !$this->isEnabledForTeam($prefs, $teamId, $type)) {
+                        return false;
+                    }
+                }
+            } elseif (isset($data['team_id'])) {
+                $teamId = $data['team_id'];
+                // Nếu có cài đặt riêng cho đội này và bị tắt
+                if ($this->hasTeamSpecificSetting($prefs, $teamId) &&
+                    !$this->isEnabledForTeam($prefs, $teamId, $type)) {
+                    return false;
+                }
+            }
+        }
+
+        // Nếu là thông báo liên quan đến giải đấu
+        if (in_array($type, ['competition_news', 'match_reminder', 'match_score'])) {
+            // Kiểm tra cài đặt giải đấu
+            if (isset($data['competition_id'])) {
+                $competitionId = $data['competition_id'];
+                // Nếu có cài đặt riêng cho giải đấu này và bị tắt
+                if ($this->hasCompetitionSpecificSetting($prefs, $competitionId) &&
+                    !$this->isEnabledForCompetition($prefs, $competitionId, $type)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Kiểm tra loại thông báo có được bật trong cài đặt toàn cục không
+     */
+    private function isEnabledInGlobalSettings($globalSettings, $type)
+    {
+        $settingKey = $this->getSettingKeyByType($type);
+        return isset($globalSettings[$settingKey]) && $globalSettings[$settingKey];
+    }
+
+    /**
+     * Kiểm tra xem có cài đặt cụ thể cho đội bóng không
+     */
+    private function hasTeamSpecificSetting($prefs, $teamId)
+    {
+        return isset($prefs['team_settings']) && isset($prefs['team_settings'][$teamId]);
+    }
+
+    /**
+     * Kiểm tra cài đặt thông báo cho đội bóng cụ thể
+     */
+    private function isEnabledForTeam($prefs, $teamId, $type)
+    {
+        $settingKey = $this->getSettingKeyByType($type);
+        return isset($prefs['team_settings'][$teamId][$settingKey]) &&
+               $prefs['team_settings'][$teamId][$settingKey];
+    }
+
+    /**
+     * Kiểm tra xem có cài đặt cụ thể cho giải đấu không
+     */
+    private function hasCompetitionSpecificSetting($prefs, $competitionId)
+    {
+        return isset($prefs['competition_settings']) && isset($prefs['competition_settings'][$competitionId]);
+    }
+
+    /**
+     * Kiểm tra cài đặt thông báo cho giải đấu cụ thể
+     */
+    private function isEnabledForCompetition($prefs, $competitionId, $type)
+    {
+        $settingKey = $this->getSettingKeyByType($type);
+        return isset($prefs['competition_settings'][$competitionId][$settingKey]) &&
+               $prefs['competition_settings'][$competitionId][$settingKey];
+    }
+
+    /**
+     * Chuyển đổi loại thông báo thành tên cài đặt tương ứng
+     */
+    private function getSettingKeyByType($type)
+    {
+        switch ($type) {
+            case 'team_news':
+                return 'team_news';
+            case 'match_reminder':
+            case 'pinned_match_reminder':
+                return 'match_reminders';
+            case 'competition_news':
+                return 'competition_news';
+            case 'match_score':
+                return 'match_score';
+            default:
+                return '';
         }
     }
 

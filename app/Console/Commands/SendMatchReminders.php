@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Fixture;
 use App\Models\User;
 use App\Repositories\NotificationRepository;
+use App\Services\NotificationService;
 use App\Traits\PushNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -42,7 +43,7 @@ class SendMatchReminders extends Command
         $nextUtc = (clone $nowUtc)->addHour(168);
 
         // Get all upcoming matches within 1 hour
-        $matches = Fixture::with(['homeTeam', 'awayTeam'])
+        $matches = Fixture::with(['homeTeam', 'awayTeam', 'competition'])
             ->where('utc_date', '>=', $nowUtc)
             ->where('utc_date', '<=', $nextUtc)
             ->orderBy('utc_date', 'asc')
@@ -60,6 +61,7 @@ class SendMatchReminders extends Command
 
             $homeTeamId = $match->homeTeam->id;
             $awayTeamId = $match->awayTeam->id;
+            $competitionId = $match->competition ? $match->competition->id : null;
 
             // Notify users who pinned this fixture
             $pinnedUsers = $match->pinnedByUsers()->with('user')->get();
@@ -90,11 +92,15 @@ class SendMatchReminders extends Command
                         'type' => 'pinned_match_reminder',
                         'user_id' => $user->id,
                         'screen' => "/(drawer)/fixture/prediction/" . $match->id,
+                        'fixture_id' => $match->id,
+                        'team_ids' => [$homeTeamId, $awayTeamId],
+                        'competition_id' => $competitionId,
+                        'is_pinned' => true
                     ]
                 );
             }
 
-          
+            // Tìm tất cả users yêu thích 1 trong 2 đội
             $users = User::whereJsonContains('favourite_teams', $homeTeamId)
                 ->orWhereJsonContains('favourite_teams', $awayTeamId)
                 ->get();
@@ -102,6 +108,16 @@ class SendMatchReminders extends Command
             foreach ($users as $user) {
                 if (empty($user->fcm_token)) {
                     continue;
+                }
+
+                // Xác định đội bóng mà người dùng yêu thích
+                $favouriteTeams = json_decode($user->favourite_teams ?? '[]', true);
+                $userFavTeamIds = [];
+                if (in_array($homeTeamId, $favouriteTeams)) {
+                    $userFavTeamIds[] = $homeTeamId;
+                }
+                if (in_array($awayTeamId, $favouriteTeams)) {
+                    $userFavTeamIds[] = $awayTeamId;
                 }
 
                 $matchTime = Carbon::createFromFormat('Y-m-d H:i:s', $match->utc_date, 'UTC')
@@ -115,7 +131,6 @@ class SendMatchReminders extends Command
                 $message = "Sắp diễn ra: {$homeTeamName} vs {$awayTeamName} lúc {$matchTime}";
 
                 $logo = null;
-                $favouriteTeams = json_decode($user->favourite_teams ?? '[]', true);
                 if (in_array($homeTeamId, $favouriteTeams)) {
                     $logo = $match->homeTeam->crest;
                 } elseif (in_array($awayTeamId, $favouriteTeams)) {
@@ -134,12 +149,16 @@ class SendMatchReminders extends Command
                         'user_id' => $user->id,
                         'logo' => $logo ?? null,
                         'screen' => "/(drawer)/fixture/prediction/" . $match->id,
+                        'fixture_id' => $match->id,
+                        'team_ids' => $userFavTeamIds,
+                        'competition_id' => $competitionId
                     ]
                 );
             }
         }
 
         $this->info('Match reminders sent successfully!');
+        return 0;
     }
 
 

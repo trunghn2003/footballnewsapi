@@ -125,33 +125,75 @@ class NewsService
             $prefs = json_decode($user->notification_pref, true);
             if (!$prefs) continue;
 
+            // Lấy danh sách team_ids từ tin tức
+            $newsTeamIds = $news->teams()->pluck('id')->toArray();
+
+            // Thiết lập giá trị mặc định
             $shouldNotify = false;
             $notificationType = '';
             $title = '';
 
-            // Check if user has enabled competition news and this is about their favorite competition
-            if (
-                isset($prefs['settings']['competition_news']) && isset($news)
-                && $prefs['settings']['competition_news']
-            ) {
-                $notificationType = 'competition_news';
-                $title = 'Tin tức giải đấu mới';
-                $shouldNotify = true;
-            }
-            // dd($news);
+            // Kiểm tra cài đặt thông báo theo định dạng mới
+            // 1. Kiểm tra cài đặt toàn cục trước
+            $globalSettings = $prefs['global_settings'] ?? [];
 
-            // Check if news contains any of user's favorite teams
-            if (
-                isset($prefs['settings']['team_news']) && isset($news)
-                && $prefs['settings']['team_news']
-                && $news->teams()->count() > 0
-            ) {
-                $notificationType = 'team_news';
-                $title = 'Tin tức đội bóng mới';
-                $shouldNotify = true;
+            // 2. Kiểm tra tin tức giải đấu
+            if (isset($globalSettings['competition_news']) && $globalSettings['competition_news']) {
+                // Kiểm tra cài đặt riêng cho giải đấu cụ thể
+                $competitionSettings = $prefs['competition_settings'] ?? [];
+                $hasSpecificSetting = false;
+
+                // Nếu có cài đặt cụ thể cho giải đấu này
+                if (is_array($competitionSettings) && isset($competitionSettings[$competitionId])) {
+                    $hasSpecificSetting = true;
+                    if ($competitionSettings[$competitionId]['competition_news'] ?? false) {
+                        $notificationType = 'competition_news';
+                        $title = 'Tin tức giải đấu mới';
+                        $shouldNotify = true;
+                    }
+                }
+
+                // Nếu không có cài đặt cụ thể, sử dụng cài đặt toàn cục
+                if (!$hasSpecificSetting) {
+                    $notificationType = 'competition_news';
+                    $title = 'Tin tức giải đấu mới';
+                    $shouldNotify = true;
+                }
             }
+
+            // 3. Kiểm tra tin tức đội bóng
+            if (!$shouldNotify && isset($globalSettings['team_news']) && $globalSettings['team_news'] && !empty($newsTeamIds)) {
+                $teamSettings = $prefs['team_settings'] ?? [];
+                $hasSpecificTeamSetting = false;
+
+                // Kiểm tra xem có đội bóng nào trong tin tức mà người dùng có cài đặt riêng không
+                foreach ($newsTeamIds as $teamId) {
+                    if (is_array($teamSettings) && isset($teamSettings[$teamId])) {
+                        $hasSpecificTeamSetting = true;
+                        // Cài đặt thông báo chi tiết của một đội bóng gồm 3 loại:
+                        // 1. team_news - Thông báo tin tức về đội bóng
+                        // 2. match_reminders - Thông báo nhắc nhở trận đấu
+                        // 3. match_score - Thông báo kết quả trận đấu
+
+                        // Vì đây là tin tức nên chỉ cần kiểm tra team_news
+                        if ($teamSettings[$teamId]['team_news'] ?? false) {
+                            $notificationType = 'team_news';
+                            $title = 'Tin tức đội bóng mới';
+                            $shouldNotify = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Nếu không có cài đặt cụ thể cho đội bóng nào, sử dụng cài đặt toàn cục
+                if (!$hasSpecificTeamSetting) {
+                    $notificationType = 'team_news';
+                    $title = 'Tin tức đội bóng mới';
+                    $shouldNotify = true;
+                }
+            }
+
             try {
-
                 $logo = $news->teams()->first() ? $news->teams()->first()->crest : $news->competition->emblem;
             } catch (\Exception $e) {
                 Log::error('Error fetching team logo: ' . $e->getMessage());
@@ -159,6 +201,7 @@ class NewsService
             }
 
             if ($shouldNotify) {
+                // Thêm thông tin team_ids và competition_id để kiểm tra cài đặt chi tiết
                 $this->sendNotification(
                     $user->fcm_token,
                     $title,
@@ -168,14 +211,14 @@ class NewsService
                         'news_id' => $news->id,
                         'screen' => "NewsView/?id=" . $news->id,
                         'user_id' => $user->id,
-                        'logo' => $logo
+                        'logo' => $logo,
+                        'team_ids' => $newsTeamIds,
+                        'competition_id' => $competitionId
                     ]
                 );
             }
         }
     }
-
-
 
     public function getNewsById($id)
     {

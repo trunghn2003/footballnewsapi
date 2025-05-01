@@ -1,41 +1,54 @@
-    services:
-        api:
-            image: trungisdead1/php:latest
-            build:
-                context: .
-                dockerfile: Dockerfile
-                args:
-                    - APP_ENV=${APP_ENV}
-            container_name: api
-            environment:
+services:
+    api:
+        image: trungisdead1/php:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
                 - APP_ENV=${APP_ENV}
-            restart: always
-            env_file:
-                - .env
-            working_dir: /var/www
-            volumes:
-                - ./:/var/www
-            ports:
-                - 9000:8080
-            depends_on:
-                - dbmysql
+        container_name: api
+        environment:
+            - APP_ENV=${APP_ENV}
+        restart: always
+        env_file:
+            - .env
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        ports:
+            - 9000:8080
+        depends_on:
+            - dbmysql
+            - redis
 
-        dbmysql:
-            container_name: dbmysql
-            image: mysql:8.0
-            ports:
-                -   3307:3307
-            environment:
-                - MYSQL_DATABASE=${DB_DATABASE}
-                - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-            restart: always
-            volumes:
-                - db-data:/var/lib/mysql
-            command: --port=3307
-    volumes:
-        db-data: ~
+    dbmysql:
+        container_name: dbmysql
+        image: mysql:8.0
+        ports:
+            -   3307:3307
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        restart: always
+        volumes:
+            - db-data:/var/lib/mysql
+        command: --port=3307
 
-    networks:
-        default:
-            name: footballnewsapi_default
-            external: true
+    redis:
+        image: redis:alpine
+        container_name: redis
+        ports:
+            - 6379:6379
+        volumes:
+            - redis-data:/data
+        restart: always
+        command: redis-server --appendonly yes
+
+volumes:
+    db-data: ~
+    redis-data: ~
+
+networks:
+    default:
+        name: footballnewsapi_default
+        external: true

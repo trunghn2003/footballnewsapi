@@ -161,11 +161,11 @@ class FixtureRepository
             });
         }
 
-        $query->orderBy('utc_date', 'asc');
         if(isset( $filters['recently']) &&  $filters['recently'] == 1)
         {
             $query->orderBy('utc_date', 'desc');
-        }
+        } else
+        $query->orderBy('utc_date', 'asc');
 
         // Lấy kết quả với các mối quan hệ và sắp xếp
         return $query

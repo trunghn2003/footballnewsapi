@@ -162,7 +162,11 @@ class FixtureRepository
         }
 
         $query->orderBy('utc_date', 'asc');
-
+        if($filters['recently'] == 1)
+        {
+            $query->orderBy('utc_date', 'desc');
+        }
+        
         // Lấy kết quả với các mối quan hệ và sắp xếp
         return $query
             ->with(['homeTeam', 'awayTeam', 'homeLineup.players.players', 'awayLineup.player.players'])

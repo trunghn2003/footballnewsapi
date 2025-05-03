@@ -34,9 +34,8 @@ class FixtureService
     private LineupMapper $lineupMapper;
     private SeasonRepository $seasonRepository;
     private LineUpRepository $lineUpRepository;
-    use PushNotification;
-
-    public function __construct(
+    private \App\Repositories\PinnedFixtureRepository $pinnedFixtureRepository;
+    use PushNotification;    public function __construct(
         FixtureRepository      $fixtureRepository,
         CompetitionService     $competitionService,
         TeamService            $teamService,
@@ -45,7 +44,8 @@ class FixtureService
         PersonRepository       $personRepository,
         LineupMapper           $lineupMapper,
         SeasonRepository       $seasonRepository,
-        LineUpRepository       $lineUpRepository
+        LineUpRepository       $lineUpRepository,
+        \App\Repositories\PinnedFixtureRepository $pinnedFixtureRepository
     ) {
         $this->fixtureRepository = $fixtureRepository;
         $this->apiToken = env('API_FOOTBALL_TOKEN');
@@ -58,6 +58,7 @@ class FixtureService
         $this->lineupMapper = $lineupMapper;
         $this->seasonRepository = $seasonRepository;
         $this->lineUpRepository = $lineUpRepository;
+        $this->pinnedFixtureRepository = $pinnedFixtureRepository;
     }
 
     public function syncFixtures()
@@ -225,8 +226,7 @@ class FixtureService
      *
      * @param int $id
      * @return array
-     */
-    public function getFixtureById(int $id): array
+     */    public function getFixtureById(int $id, ?int $userId = null): array
     {
         // try {
         $fixture = $this->fixtureRepository->findById($id);
@@ -257,6 +257,12 @@ class FixtureService
         $awayTeam = $fixture->awayTeam;
         if (isset($awayTeam)) {
             $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+        }
+
+        // Set isPinned status if user is logged in
+        if ($userId) {
+            $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+            $fixtureDto->setIsPinned($isPinned);
         }
 
         // Check if lineups exist, if not fetch from API
@@ -315,16 +321,14 @@ class FixtureService
                 ];
             }),
         ];
-    }
-
-    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
+    }    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1, ?int $userId = null): array
     {
         $filters['recently'] = 1;
         $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page, 1);
         if (isset($fixtures) && count($fixtures) > 0)
             // dd($fixtures->items());
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
@@ -336,6 +340,13 @@ class FixtureService
                         $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
                     }
                     $fixtureDto->setCompetition($competition);
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
+                    }
+
                     return $fixtureDto;
                 }, $fixtures->items()),
                 'pagination' => [
@@ -352,15 +363,13 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }
-
-    public function getFixtureByCompetition($filters)
+    }    public function getFixtureByCompetition($filters, ?int $userId = null)
     {
         $fixtures = $this->fixtureRepository->getFixtures($filters, 50, 1, $flag = true);
         if (isset($fixtures) && count($fixtures) > 0)
 
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
@@ -372,6 +381,13 @@ class FixtureService
                         $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
                     }
                     $fixtureDto->setCompetition($competition);
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
+                    }
+
                     return $fixtureDto;
                 }, $fixtures->items()),
                 'pagination' => [
@@ -388,9 +404,7 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }
-
-    public function getRecentFixturesByTeam(int $teamId, int $limit = 5): array
+    }    public function getRecentFixturesByTeam(int $teamId, int $limit = 5, ?int $userId = null): array
     {
         // dd(1);
         $fixtures = $this->fixtureRepository->getFixturesRecent([
@@ -400,7 +414,7 @@ class FixtureService
 
         if (!empty($fixtures->items())) {
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
@@ -412,6 +426,13 @@ class FixtureService
                         $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
                     }
                     $fixtureDto->setCompetition($competition);
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
+                    }
+
                     return $fixtureDto;
                 }, $fixtures->items()),
                 'pagination' => [
@@ -430,9 +451,7 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }
-
-    public function getUpcomingFixturesByTeam(int $teamId, $filter): array
+    }    public function getUpcomingFixturesByTeam(int $teamId, $filter, ?int $userId = null): array
     {
         // dd($teamId);
         $fixtures = $this->fixtureRepository->getFixtures([
@@ -447,7 +466,7 @@ class FixtureService
 
         if (isset($fixtures) && count($fixtures) > 0) {
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $homeTeam = $fixture->homeTeam;
@@ -459,6 +478,13 @@ class FixtureService
                         $fixtureDto->setAwayTeam((TeamMapper::fromModel($awayTeam)));
                     }
                     $fixtureDto->setCompetition($competition);
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
+                    }
+
                     return $fixtureDto;
                 }, $fixtures->items()),
                 'pagination' => [
@@ -484,8 +510,7 @@ class FixtureService
      *
      * @param array $filters
      * @return array
-     */
-    public function getRecentFixturesByFilters(array $filters): array
+     */    public function getRecentFixturesByFilters(array $filters, ?int $userId = null): array
     {
         $queryFilters = [
             'status' => 'FINISHED'
@@ -512,7 +537,7 @@ class FixtureService
 
         if (!empty($fixtures->items())) {
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto->setCompetition($competition);
@@ -525,6 +550,12 @@ class FixtureService
                     $awayTeam = $fixture->awayTeam;
                     if (isset($awayTeam)) {
                         $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+                    }
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
                     }
 
                     return $fixtureDto;
@@ -554,8 +585,7 @@ class FixtureService
      * @param int $perPage Number of fixtures per page
      * @param int $page Current page number
      * @return array Upcoming fixtures with pagination data
-     */
-    public function getUpcomingFixtures(array $filters = [], int $perPage = 10, int $page = 1): array
+     */    public function getUpcomingFixtures(array $filters = [], int $perPage = 10, int $page = 1, ?int $userId = null): array
     {
         // Set required filters for upcoming fixtures
         $queryFilters = [
@@ -584,11 +614,9 @@ class FixtureService
         }
 
         // Get fixtures with applied filters
-        $fixtures = $this->fixtureRepository->getFixtures($queryFilters, $perPage, $page);
-
-        if (!empty($fixtures->items())) {
+        $fixtures = $this->fixtureRepository->getFixtures($queryFilters, $perPage, $page);        if (!empty($fixtures->items())) {
             return [
-                'fixtures' => array_map(function ($fixture) {
+                'fixtures' => array_map(function ($fixture) use ($userId) {
                     $fixtureDto = FixtureMapper::fromModel($fixture);
                     $competition = $this->competitionService->getCompetitionById($fixture->competition_id);
                     $fixtureDto->setCompetition($competition);
@@ -601,6 +629,12 @@ class FixtureService
                     $awayTeam = $fixture->awayTeam;
                     if (isset($awayTeam)) {
                         $fixtureDto->setAwayTeam(TeamMapper::fromModel($awayTeam));
+                    }
+
+                    // Set isPinned status if user is logged in
+                    if ($userId) {
+                        $isPinned = $this->pinnedFixtureRepository->isPinned($userId, $fixture->id);
+                        $fixtureDto->setIsPinned($isPinned);
                     }
 
                     return $fixtureDto;

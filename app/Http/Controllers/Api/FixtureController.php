@@ -32,11 +32,10 @@ class FixtureController extends Controller
             'message' => 'Fixture sync successfully',
 
         ], Response::HTTP_OK);
-    }
-
-    public function getFixtureById(int $id)
+    }    public function getFixtureById(int $id)
     {
-        $fixture = $this->fixtureService->getFixtureById($id);
+        $userId = auth()->check() ? auth()->id() : null;
+        $fixture = $this->fixtureService->getFixtureById($id, $userId);
         return $this->successResponse($fixture);
     }
 
@@ -44,22 +43,20 @@ class FixtureController extends Controller
     {
         $fixture = $this->fixtureService->getLineupByFixtureId($id);
         return $this->successResponse($fixture);
-    }
-
-    public function getFixtures(Request $request)
+    }    public function getFixtures(Request $request)
     {
         $filters = $request->only(['competition', 'ids', 'dateFrom', 'dateTo', 'status', 'teamName', 'teamId', 'competition_id']);
         $perPage = $request->input('perPage', 10);
         $page = $request->input('page', 1);
+        $userId = auth()->check() ? auth()->id() : null;
 
-        $fixtures = $this->fixtureService->getFixtures($filters, $perPage, $page);
+        $fixtures = $this->fixtureService->getFixtures($filters, $perPage, $page, $userId);
         return $this->successResponse($fixtures);
-    }
-
-    public function getFixtureCompetition(Request $request)
+    }    public function getFixtureCompetition(Request $request)
     {
         $filters = $request->only(['dateFrom', 'dateTo', 'competition']);
-        $fixtures = $this->fixtureService->getFixtureByCompetition($filters);
+        $userId = auth()->check() ? auth()->id() : null;
+        $fixtures = $this->fixtureService->getFixtureByCompetition($filters, $userId);
         return $this->successResponse($fixtures);
     }
 
@@ -69,12 +66,12 @@ class FixtureController extends Controller
      * @param Request $request
      * @param int $teamId
      * @return JsonResponse
-     */
-    public function getRecentFixtures(Request $request, int $teamId): JsonResponse
+     */    public function getRecentFixtures(Request $request, int $teamId): JsonResponse
     {
         try {
             $limit = $request->input('limit', 5);
-            $result = $this->fixtureService->getRecentFixturesByTeam($teamId, $limit);
+            $userId = auth()->check() ? auth()->id() : null;
+            $result = $this->fixtureService->getRecentFixturesByTeam($teamId, $limit, $userId);
             return $this->successResponse($result);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -87,13 +84,13 @@ class FixtureController extends Controller
      * @param Request $request
      * @param int $teamId
      * @return JsonResponse
-     */
-    public function getUpcomingFixtures(Request $request, int $teamId): JsonResponse
+     */    public function getUpcomingFixtures(Request $request, int $teamId): JsonResponse
     {
         try {
             $filter = $request->only(['competition', 'dateFrom', 'dateTo', 'status',
                 'teamName', 'teamId', 'competition_id', 'limit']);
-            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $filter);
+            $userId = auth()->check() ? auth()->id() : null;
+            $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $filter, $userId);
             return $this->successResponse($result);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -185,8 +182,7 @@ class FixtureController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
-     */
-    public function getAllUpcomingFixtures(Request $request)
+     */    public function getAllUpcomingFixtures(Request $request)
     {
         try {
             $perPage = $request->input('per_page', 10);
@@ -211,13 +207,14 @@ class FixtureController extends Controller
                 $filters['daysAhead'] = $request->input('days_ahead');
             }
 
-            $fixtures = $this->fixtureService->getUpcomingFixtures($filters, $perPage, $page);
+            $userId = auth()->check() ? auth()->id() : null;
+            $fixtures = $this->fixtureService->getUpcomingFixtures($filters, $perPage, $page, $userId);
             return $this->successResponse($fixtures);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
     }
 
-    
+
 
 }

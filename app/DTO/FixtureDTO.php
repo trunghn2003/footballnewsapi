@@ -17,7 +17,7 @@ class FixtureDTO implements \JsonSerializable
     public ?TeamDTO $awayTeam = null;
     private ?ScoreDTO $score;
     // private array $referees;
-
+    private bool $isPinned = false;
 
     public function __construct(
         int $id,
@@ -122,8 +122,6 @@ class FixtureDTO implements \JsonSerializable
 
 
 
-
-
     public function jsonSerialize(): array
     {
         return [
@@ -137,7 +135,7 @@ class FixtureDTO implements \JsonSerializable
             'homeTeam' => $this->homeTeam,
             'awayTeam' => $this->awayTeam,
             'score' => $this->score,
-
+            'isPinned' => $this->isPinned,
         ];
     }
 
@@ -149,5 +147,15 @@ class FixtureDTO implements \JsonSerializable
     public function setCompetition(CompetitionDTO $competition): void
     {
         $this->competition = $competition;
+    }
+
+    public function getIsPinned(): bool
+    {
+        return $this->isPinned;
+    }
+
+    public function setIsPinned(bool $isPinned): void
+    {
+        $this->isPinned = $isPinned;
     }
 }

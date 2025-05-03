@@ -1105,7 +1105,7 @@ class FixtureService
                                 [
                                     'position' => $person->position ?? null,
                                     'grid_position' => $positionNumber,
-                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 'NA',
+                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 0,
                                     'is_substitute' => false,
                                     'statistics' => ($player['statistics']),
                                     'last_updated' => now()
@@ -1161,7 +1161,7 @@ class FixtureService
                                 [
                                     'position' => $person->position ?? null,
                                     'grid_position' => null,
-                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 'NA',
+                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 0,
                                     'is_substitute' => true,
                                     'last_updated' => now(),
                                     'statistics' => ($player['statistics']) ?? null,
@@ -1226,7 +1226,7 @@ class FixtureService
                                 [
                                     'position' => $person->position ?? null,
                                     'grid_position' => $positionNumber,
-                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 'NA',
+                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 0,
                                     'is_substitute' => false,
                                     'last_updated' => now(),
                                     'statistics' => ($player['statistics']) ?? null,
@@ -1282,7 +1282,7 @@ class FixtureService
                                 [
                                     'position' => $person->position ?? null,
                                     'grid_position' => null, // Substitutes don't have grid positions
-                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 'NA',
+                                    'shirt_number' => $player['player']['jerseyNumber'] ?? 0,
                                     'is_substitute' => true,
                                     'last_updated' => now(),
                                     'statistics' => ($player['statistics']) ?? null,

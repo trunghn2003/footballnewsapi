@@ -679,7 +679,7 @@ class FixtureService
                     'away_score' => $awayScore,
                     'competition_id' => $fixture->competition_id,
                     'competition_name' => $fixture->competition->name ?? 'Unknown Competition',
-                    'screen' => "/(drawer)/fixture/" . $fixture->id,
+                    'screen' => "FixtureDetail/?id=" . $fixture->id,
 
                 ]
             );

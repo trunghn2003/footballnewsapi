@@ -91,7 +91,7 @@ class SendMatchReminders extends Command
                         'match_time' => $matchTime,
                         'type' => 'pinned_match_reminder',
                         'user_id' => $user->id,
-                        'screen' => "/(drawer)/fixture/prediction/" . $match->id,
+                        'screen' => "MatchPrediction/?id=" . $match->id,
                         'fixture_id' => $match->id,
                         'team_ids' => [$homeTeamId, $awayTeamId],
                         'competition_id' => $competitionId,

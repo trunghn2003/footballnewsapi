@@ -35,7 +35,8 @@ class FixtureService
     private SeasonRepository $seasonRepository;
     private LineUpRepository $lineUpRepository;
     private \App\Repositories\PinnedFixtureRepository $pinnedFixtureRepository;
-    use PushNotification;    public function __construct(
+    use PushNotification;
+    public function __construct(
         FixtureRepository      $fixtureRepository,
         CompetitionService     $competitionService,
         TeamService            $teamService,
@@ -321,7 +322,8 @@ class FixtureService
                 ];
             }),
         ];
-    }    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1, ?int $userId = null): array
+    }
+    public function getFixtures(array $filters = [], int $perPage = 10, int $page = 1, ?int $userId = null): array
     {
         $filters['recently'] = 1;
         $fixtures = $this->fixtureRepository->getFixtures($filters, $perPage, $page, 1);
@@ -363,7 +365,8 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }    public function getFixtureByCompetition($filters, ?int $userId = null)
+    }
+    public function getFixtureByCompetition($filters, ?int $userId = null)
     {
         $fixtures = $this->fixtureRepository->getFixtures($filters, 50, 1, $flag = true);
         if (isset($fixtures) && count($fixtures) > 0)
@@ -404,7 +407,8 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }    public function getRecentFixturesByTeam(int $teamId, int $limit = 5, ?int $userId = null): array
+    }
+    public function getRecentFixturesByTeam(int $teamId, int $limit = 5, ?int $userId = null): array
     {
         // dd(1);
         $fixtures = $this->fixtureRepository->getFixturesRecent([
@@ -451,7 +455,8 @@ class FixtureService
                 'total' => 0
             ]
         ];
-    }    public function getUpcomingFixturesByTeam(int $teamId, $filter, ?int $userId = null): array
+    }
+    public function getUpcomingFixturesByTeam(int $teamId, $filter, ?int $userId = null): array
     {
         // dd($teamId);
         $fixtures = $this->fixtureRepository->getFixtures([
@@ -462,7 +467,7 @@ class FixtureService
             'dateTo' => $filter['dateTo'] ?? null,
             'teamName' => $filter['teamName'] ?? null,
             'competition_id' => $filter['competition_id'] ?? null
-        ], $filter['limit'] ?? 5 , 1);
+        ], $filter['limit'] ?? 5, 1);
 
         if (isset($fixtures) && count($fixtures) > 0) {
             return [
@@ -614,7 +619,8 @@ class FixtureService
         }
 
         // Get fixtures with applied filters
-        $fixtures = $this->fixtureRepository->getFixtures($queryFilters, $perPage, $page);        if (!empty($fixtures->items())) {
+        $fixtures = $this->fixtureRepository->getFixtures($queryFilters, $perPage, $page);
+        if (!empty($fixtures->items())) {
             return [
                 'fixtures' => array_map(function ($fixture) use ($userId) {
                     $fixtureDto = FixtureMapper::fromModel($fixture);
@@ -718,6 +724,38 @@ class FixtureService
                 ]
             );
         }
+        try {
+            $pinnedUsers = $fixture->pinnedByUsers()->with('user')->get();
+            foreach ($pinnedUsers as $pinnedUser) {
+                if (empty($pinnedUser->user->fcm_token)) {
+                    continue;
+                }
+
+                $this->sendNotification(
+                    $pinnedUser->user->fcm_token,
+                    $title,
+                    $body,
+                    [
+                        'user_id' => $pinnedUser->user->id,
+                        'type' => 'match_score',
+                        'fixture_id' => $fixture->id,
+                        'home_team_id' => $homeTeam->id,
+                        'away_team_id' => $awayTeam->id,
+                        'home_team_name' => $homeTeam->name,
+                        'away_team_name' => $awayTeam->name,
+                        'home_score' => $homeScore,
+                        'away_score' => $awayScore,
+                        'competition_id' => $fixture->competition_id,
+                        'competition_name' => $fixture->competition->name ?? 'Unknown Competition',
+                        'screen' => "FixtureDetail/?id=" . $fixture->id,
+
+                    ]
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error("Error sending pinned user notification: " . $e->getMessage());
+        }
+
 
         Log::info("Match score notification sent for fixture ID: {$fixture->id}");
     }
@@ -1357,7 +1395,7 @@ class FixtureService
         if (!$fixture) {
             return null;
         }
-        if($fixture->status != 'FINISHED'){
+        if ($fixture->status != 'FINISHED') {
             return null;
         }
         if (!$fixture->homeLineup || !$fixture->awayLineup) {

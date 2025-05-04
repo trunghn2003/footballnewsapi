@@ -152,3 +152,4 @@ Route::get('/syncFixturesv3', [FixtureController::class, 'syncv3']);
 Route::get('/search', [SearchController::class, 'search']);
 
 Route::get('matches/live', [LiveMatchController::class, 'getLiveMatches']);
+Route::post('/query/chatbot', [FixtureController::class, 'chatbot']);

@@ -8,6 +8,7 @@ use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
 
 class FixtureController extends Controller
 {
@@ -32,7 +33,8 @@ class FixtureController extends Controller
             'message' => 'Fixture sync successfully',
 
         ], Response::HTTP_OK);
-    }    public function getFixtureById(int $id)
+    }
+    public function getFixtureById(int $id)
     {
         $userId = auth()->check() ? auth()->id() : null;
         $fixture = $this->fixtureService->getFixtureById($id, $userId);
@@ -43,7 +45,8 @@ class FixtureController extends Controller
     {
         $fixture = $this->fixtureService->getLineupByFixtureId($id);
         return $this->successResponse($fixture);
-    }    public function getFixtures(Request $request)
+    }
+    public function getFixtures(Request $request)
     {
         $filters = $request->only(['competition', 'ids', 'dateFrom', 'dateTo', 'status', 'teamName', 'teamId', 'competition_id']);
         $perPage = $request->input('perPage', 10);
@@ -52,7 +55,8 @@ class FixtureController extends Controller
 
         $fixtures = $this->fixtureService->getFixtures($filters, $perPage, $page, $userId);
         return $this->successResponse($fixtures);
-    }    public function getFixtureCompetition(Request $request)
+    }
+    public function getFixtureCompetition(Request $request)
     {
         $filters = $request->only(['dateFrom', 'dateTo', 'competition']);
         $userId = auth()->check() ? auth()->id() : null;
@@ -87,8 +91,16 @@ class FixtureController extends Controller
      */    public function getUpcomingFixtures(Request $request, int $teamId): JsonResponse
     {
         try {
-            $filter = $request->only(['competition', 'dateFrom', 'dateTo', 'status',
-                'teamName', 'teamId', 'competition_id', 'limit']);
+            $filter = $request->only([
+                'competition',
+                'dateFrom',
+                'dateTo',
+                'status',
+                'teamName',
+                'teamId',
+                'competition_id',
+                'limit'
+            ]);
             $userId = auth()->check() ? auth()->id() : null;
             $result = $this->fixtureService->getUpcomingFixturesByTeam($teamId, $filter, $userId);
             return $this->successResponse($result);
@@ -137,7 +149,6 @@ class FixtureController extends Controller
             return $this->errorResponse($result['message'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         return $this->successResponse($result, Response::HTTP_OK);
-
     }
 
     /**
@@ -215,6 +226,13 @@ class FixtureController extends Controller
         }
     }
 
-
-
+    public function chatbot(Request $request)
+    {
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post('http://3.1.100.34:5001/query', [
+            'query' => $request->query1,
+        ]);
+        return $response->json();
+    }
 }

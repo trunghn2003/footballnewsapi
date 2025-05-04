@@ -88,7 +88,7 @@ class NewsController extends Controller
         $result =  $this->newsService->getSavedNews(
             auth()->id(),
             $request->input('per_page', 10),
-            $request->input('page', 1)
+            $request->page ?? 1
         );
         return $this->successResponse($result);
     }

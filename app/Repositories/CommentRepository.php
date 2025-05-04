@@ -30,7 +30,7 @@ class CommentRepository
             if ($comment->parent_id) {
                 $parentComment = $this->model->with('user')->find($comment->parent_id);
                 if ($parentComment && $parentComment->user_id !== $data['user_id'] && $parentComment->user->fcm_token) {
-                    $title =  auth()->user()->name.  "đã trả lời bình luận của bạn";
+                    $title =  auth()->user()->name.  " đã trả lời bình luận của bạn";
                     $message = $comment->content;
 
                     $this->sendNotification(
@@ -43,7 +43,8 @@ class CommentRepository
                             'news_id' => $comment->news_id,
                             'replier_name' => auth()->user()->name,
                             'content' => $comment->content,
-                            'screen' => "NewsView/?id=" . $comment->news_id
+                            'screen' => "NewsView/?id=" . $comment->news_id,
+                            'user_id' => $parentComment->user_id,
                         ]
                     );
                 }

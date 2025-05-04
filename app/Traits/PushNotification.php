@@ -86,44 +86,8 @@ trait PushNotification
         }
 
         $prefs = json_decode($user->notification_pref, true);
-        // dd(!$prefs['global_settings']);
-        // Kiểm tra cài đặt toàn cục trước
         if (!isset($prefs['global_settings']) || !$this->isEnabledInGlobalSettings($prefs['global_settings'], $type)) {
             return false;
-        }
-
-        // Nếu là thông báo liên quan đến đội bóng
-        if (in_array($type, ['team_news', 'match_reminders', 'match_score'])) {
-            // Kiểm tra cài đặt đội bóng
-            if (isset($data['team_ids']) && is_array($data['team_ids'])) {
-                foreach ($data['team_ids'] as $teamId) {
-                    // Nếu có cài đặt riêng cho đội này và bị tắt
-                    if ($this->hasTeamSpecificSetting($prefs, $teamId) &&
-                        !$this->isEnabledForTeam($prefs, $teamId, $type)) {
-                        return false;
-                    }
-                }
-            } elseif (isset($data['team_id'])) {
-                $teamId = $data['team_id'];
-                // Nếu có cài đặt riêng cho đội này và bị tắt
-                if ($this->hasTeamSpecificSetting($prefs, $teamId) &&
-                    !$this->isEnabledForTeam($prefs, $teamId, $type)) {
-                    return false;
-                }
-            }
-        }
-
-        // Nếu là thông báo liên quan đến giải đấu
-        if (in_array($type, ['competition_news', 'match_reminders', 'match_score'])) {
-            // Kiểm tra cài đặt giải đấu
-            if (isset($data['competition_id'])) {
-                $competitionId = $data['competition_id'];
-                // Nếu có cài đặt riêng cho giải đấu này và bị tắt
-                if ($this->hasCompetitionSpecificSetting($prefs, $competitionId) &&
-                    !$this->isEnabledForCompetition($prefs, $competitionId, $type)) {
-                    return false;
-                }
-            }
         }
 
         return true;
@@ -134,65 +98,10 @@ trait PushNotification
      */
     private function isEnabledInGlobalSettings($globalSettings, $type)
     {
-        $settingKey = $this->getSettingKeyByType($type);
-        return isset($globalSettings[$settingKey]) && $globalSettings[$settingKey];
+        return isset($globalSettings[$type]) && $globalSettings[$type];
     }
 
-    /**
-     * Kiểm tra xem có cài đặt cụ thể cho đội bóng không
-     */
-    private function hasTeamSpecificSetting($prefs, $teamId)
-    {
-        return isset($prefs['team_settings']) && isset($prefs['team_settings'][$teamId]);
-    }
 
-    /**
-     * Kiểm tra cài đặt thông báo cho đội bóng cụ thể
-     */
-    private function isEnabledForTeam($prefs, $teamId, $type)
-    {
-        $settingKey = $this->getSettingKeyByType($type);
-        return isset($prefs['team_settings'][$teamId][$settingKey]) &&
-               $prefs['team_settings'][$teamId][$settingKey];
-    }
-
-    /**
-     * Kiểm tra xem có cài đặt cụ thể cho giải đấu không
-     */
-    private function hasCompetitionSpecificSetting($prefs, $competitionId)
-    {
-        return isset($prefs['competition_settings']) && isset($prefs['competition_settings'][$competitionId]);
-    }
-
-    /**
-     * Kiểm tra cài đặt thông báo cho giải đấu cụ thể
-     */
-    private function isEnabledForCompetition($prefs, $competitionId, $type)
-    {
-        $settingKey = $this->getSettingKeyByType($type);
-        return isset($prefs['competition_settings'][$competitionId][$settingKey]) &&
-               $prefs['competition_settings'][$competitionId][$settingKey];
-    }
-
-    /**
-     * Chuyển đổi loại thông báo thành tên cài đặt tương ứng
-     */
-    private function getSettingKeyByType($type)
-    {
-        switch ($type) {
-            case 'team_news':
-                return 'team_news';
-            case 'match_reminders':
-            case 'pinned_match_reminder':
-                return 'match_reminders';
-            case 'competition_news':
-                return 'competition_news';
-            case 'match_score':
-                return 'match_score';
-            default:
-                return '';
-        }
-    }
 
     private function getAccessToken()
     {

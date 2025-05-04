@@ -91,4 +91,25 @@ class TeamController extends Controller
         return $this->successResponse($result);
     }
 
+    /**
+     * Lấy thống kê của đội bóng trong một giải đấu cụ thể
+     *
+     * @param int $teamId ID của đội bóng
+     * @param int $competitionId ID của giải đấu
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTeamStatsByCompetition(int $teamId, int $competitionId, Request $request): JsonResponse
+    {
+        try {
+            // Lấy seasonId từ request nếu có
+            $seasonId = $request->input('season_id');
+
+            $result = $this->teamService->getTeamStatsByCompetition($teamId, $competitionId, $seasonId);
+            return $this->successResponse($result);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
 }

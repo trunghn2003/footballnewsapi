@@ -80,6 +80,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('teams/favorite', [TeamController::class, 'getFavoriteTeams']);
     Route::get('teams', [TeamController::class, 'getTeams']);
     Route::get('teams/{teamId}', [TeamController::class, 'getTeam']);
+    Route::get('teams/{teamId}/competitions/{competitionId}/stats', [TeamController::class, 'getTeamStatsByCompetition']);
 
     Route::get('/scrape-articles/{competitionId}', [NewsController::class, 'scrapeArticles']);
     Route::get('/news/{newsId}', [NewsController::class, 'getNewsById']);

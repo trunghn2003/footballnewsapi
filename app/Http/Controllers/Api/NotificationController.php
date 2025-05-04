@@ -40,7 +40,7 @@ class NotificationController extends Controller
                     'title' => $title,
                     'message' => $message,
                     'match_time' => $matchTime,
-                    'type' => 'match_reminder',
+                    'type' => 'match_reminders',
                     'user_id' => $user->id,
                     'logo' => $match->homeTeam->crest ?? null,
                 ]

@@ -145,7 +145,7 @@ class SendMatchReminders extends Command
                         'title' => $title,
                         'message' => $message,
                         'match_time' => $matchTime,
-                        'type' => 'match_reminder',
+                        'type' => 'match_reminders',
                         'user_id' => $user->id,
                         'logo' => $logo ?? null,
                         'screen' => "MatchPrediction/?id=" . $match->id,

@@ -82,18 +82,18 @@ trait PushNotification
     protected function shouldSendNotification($user, $type, $data = [])
     {
         if (!$user->notification_pref) {
-            return true; // Mặc định là gửi thông báo nếu không có cài đặt
+            return true;
         }
 
         $prefs = json_decode($user->notification_pref, true);
-
+        // dd(!$prefs['global_settings']);
         // Kiểm tra cài đặt toàn cục trước
         if (!isset($prefs['global_settings']) || !$this->isEnabledInGlobalSettings($prefs['global_settings'], $type)) {
             return false;
         }
 
         // Nếu là thông báo liên quan đến đội bóng
-        if (in_array($type, ['team_news', 'match_reminder', 'match_score'])) {
+        if (in_array($type, ['team_news', 'match_reminders', 'match_score'])) {
             // Kiểm tra cài đặt đội bóng
             if (isset($data['team_ids']) && is_array($data['team_ids'])) {
                 foreach ($data['team_ids'] as $teamId) {
@@ -114,7 +114,7 @@ trait PushNotification
         }
 
         // Nếu là thông báo liên quan đến giải đấu
-        if (in_array($type, ['competition_news', 'match_reminder', 'match_score'])) {
+        if (in_array($type, ['competition_news', 'match_reminders', 'match_score'])) {
             // Kiểm tra cài đặt giải đấu
             if (isset($data['competition_id'])) {
                 $competitionId = $data['competition_id'];
@@ -182,7 +182,7 @@ trait PushNotification
         switch ($type) {
             case 'team_news':
                 return 'team_news';
-            case 'match_reminder':
+            case 'match_reminders':
             case 'pinned_match_reminder':
                 return 'match_reminders';
             case 'competition_news':

@@ -242,7 +242,7 @@ class NotificationService
         }
 
         // Kiểm tra cài đặt cụ thể cho đội bóng
-        if ($type === 'team_news' || $type === 'match_reminder' || $type === 'match_score') {
+        if ($type === 'team_news' || $type === 'match_reminders' || $type === 'match_score') {
             if (isset($metadata['team_id'])) {
                 $teamId = $metadata['team_id'];
                 if ($this->hasTeamSpecificSetting($prefs, $teamId, $type) &&
@@ -253,7 +253,7 @@ class NotificationService
         }
 
         // Kiểm tra cài đặt cụ thể cho giải đấu
-        if ($type === 'competition_news' || $type === 'match_reminder' || $type === 'match_score') {
+        if ($type === 'competition_news' || $type === 'match_reminders' || $type === 'match_score') {
             if (isset($metadata['competition_id'])) {
                 $competitionId = $metadata['competition_id'];
                 if ($this->hasCompetitionSpecificSetting($prefs, $competitionId, $type) &&
@@ -319,7 +319,7 @@ class NotificationService
         switch ($type) {
             case 'team_news':
                 return 'team_news';
-            case 'match_reminder':
+            case 'match_reminders':
                 return 'match_reminders';
             case 'competition_news':
                 return 'competition_news';

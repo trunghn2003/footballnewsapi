@@ -49,7 +49,7 @@ class MatchNotificationTest extends TestCase
                     'message' => "Trận đấu  sẽ diễn ra trong 30 phút!",
                     'match_id' => $match->id,
                     'user_id' => 1,
-                    'type' => 'match_reminder',
+                    'type' => 'match_reminders',
                 ]);
             }
             DB::commit();

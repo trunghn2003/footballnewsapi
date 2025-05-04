@@ -287,10 +287,12 @@ class TeamService
 
             // Lấy lịch sử trận đấu của team trong giải đấu
             $fixtureRepo = app()->make(\App\Repositories\FixtureRepository::class);
+            $seasonId = $competition->currentSeason ? $competition->currentSeason->id : null;
             $fixtures = $fixtureRepo->getFixtures([
                 'teamId' => $teamId,
                 'competition_id' => $competitionId,
                 'status' => 'FINISHED',
+                'season_id' => $seasonId,
                 'recently' => 1
             ], 100, 1);
 
@@ -448,10 +450,10 @@ class TeamService
                 }
             }
 
-            // Lấy 5 ký tự cuối cùng của form để hiển thị 5 trận gần nhất
+
             $fixtureStats['form'] = substr($fixtureStats['form'], -5);
 
-            // Kết hợp dữ liệu từ standings và fixtures để tạo kết quả cuối cùng
+
             $result = [
                 'team' => [
                     'id' => $team->id,

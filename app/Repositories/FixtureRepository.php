@@ -105,6 +105,10 @@ class FixtureRepository
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
         }
+        if(isset($filters['season_id']) && $filters['season_id'] != null)
+        {
+            $query->where('season_id', $filters['season_id']);
+        }
         if(isset($filters['recently']) && $filters['recently'] == 1)
         {
             // dd(1);

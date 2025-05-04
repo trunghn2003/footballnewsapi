@@ -72,7 +72,7 @@ Route::middleware('jwt.auth')->group(function () {
         Route::post('{fixtureId}/pin', [App\Http\Controllers\Api\PinnedFixtureController::class, 'pinFixture']);
         Route::delete('{fixtureId}/pin', [App\Http\Controllers\Api\PinnedFixtureController::class, 'unpinFixture']);
         Route::get('{fixtureId}/pin/status', [App\Http\Controllers\Api\PinnedFixtureController::class, 'checkPinStatus']);
-        Route::get('pinned', [App\Http\Controllers\Api\PinnedFixtureController::class, 'getUserPinnedFixtures']);
+        Route::get('pinned/pin', [App\Http\Controllers\Api\PinnedFixtureController::class, 'getUserPinnedFixtures']);
     });
 
     Route::post('teams/favorite/{teamId}', [TeamController::class, 'addFavoriteTeam']);

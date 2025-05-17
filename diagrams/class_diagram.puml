@@ -1,0 +1,456 @@
+@startuml class_diagram
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+package "Models" {
+  class User {
+    -id: int
+    -name: string
+    -email: string
+    -password: string
+    -role: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +favorites(): hasMany
+    +bets(): hasMany
+    +notifications(): hasMany
+    +comments(): hasMany
+  }
+
+  class Area {
+    -id: int
+    -name: string
+    -code: string
+    -flag: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +competitions(): hasMany
+    +teams(): hasMany
+  }
+
+  class Competition {
+    -id: int
+    -area_id: int
+    -name: string
+    -code: string
+    -type: string
+    -logo: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +area(): belongsTo
+    +seasons(): hasMany
+    +teams(): hasMany
+    +fixtures(): hasMany
+    +standings(): hasMany
+  }
+
+  class Season {
+    -id: int
+    -competition_id: int
+    -year: string
+    -start_date: date
+    -end_date: date
+    -current: boolean
+    -created_at: timestamp
+    -updated_at: timestamp
+    +competition(): belongsTo
+    +fixtures(): hasMany
+    +standings(): hasMany
+  }
+
+  class Team {
+    -id: int
+    -area_id: int
+    -name: string
+    -short_name: string
+    -tla: string
+    -logo: string
+    -founded: int
+    -venue: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +area(): belongsTo
+    +competitions(): belongsToMany
+    +homeFixtures(): hasMany
+    +awayFixtures(): hasMany
+    +standings(): hasMany
+    +lineups(): hasMany
+  }
+
+  class Fixture {
+    -id: int
+    -competition_id: int
+    -season_id: int
+    -home_team_id: int
+    -away_team_id: int
+    -matchday: int
+    -status: string
+    -utc_date: datetime
+    -venue: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +competition(): belongsTo
+    +season(): belongsTo
+    +homeTeam(): belongsTo
+    +awayTeam(): belongsTo
+    +scores(): hasOne
+    +lineups(): hasMany
+    +bets(): hasMany
+  }
+
+  class Score {
+    -id: int
+    -fixture_id: int
+    -home_score: int
+    -away_score: int
+    -home_half: int
+    -away_half: int
+    -winner: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +fixture(): belongsTo
+  }
+
+  class Standing {
+    -id: int
+    -competition_id: int
+    -season_id: int
+    -team_id: int
+    -position: int
+    -played: int
+    -won: int
+    -draw: int
+    -lost: int
+    -points: int
+    -goals_for: int
+    -goals_against: int
+    -goal_diff: int
+    -created_at: timestamp
+    -updated_at: timestamp
+    +competition(): belongsTo
+    +season(): belongsTo
+    +team(): belongsTo
+  }
+
+  class Person {
+    -id: int
+    -name: string
+    -position: string
+    -date_of_birth: date
+    -nationality: string
+    -role: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +lineupPlayers(): hasMany
+  }
+
+  class Lineup {
+    -id: int
+    -fixture_id: int
+    -team_id: int
+    -formation: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +fixture(): belongsTo
+    +team(): belongsTo
+    +players(): hasMany
+  }
+
+  class LineupPlayer {
+    -id: int
+    -lineup_id: int
+    -person_id: int
+    -position: string
+    -shirt_number: int
+    -role: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +lineup(): belongsTo
+    +person(): belongsTo
+  }
+
+  class Bet {
+    -id: int
+    -user_id: int
+    -fixture_id: int
+    -bet_type: string
+    -prediction: string
+    -amount: decimal
+    -odds: decimal
+    -status: string
+    -result: string
+    -payout: decimal
+    -created_at: timestamp
+    -updated_at: timestamp
+    +user(): belongsTo
+    +fixture(): belongsTo
+  }
+
+  class News {
+    -id: int
+    -title: string
+    -content: text
+    -image: string
+    -published_at: datetime
+    -created_at: timestamp
+    -updated_at: timestamp
+    +comments(): hasMany
+  }
+
+  class Comment {
+    -id: int
+    -user_id: int
+    -news_id: int
+    -content: text
+    -created_at: timestamp
+    -updated_at: timestamp
+    +user(): belongsTo
+    +news(): belongsTo
+  }
+
+  class Notification {
+    -id: int
+    -user_id: int
+    -type: string
+    -data: json
+    -read_at: timestamp
+    -created_at: timestamp
+    -updated_at: timestamp
+    +user(): belongsTo
+  }
+
+  class Favorite {
+    -id: int
+    -user_id: int
+    -favoritable_id: int
+    -favoritable_type: string
+    -created_at: timestamp
+    -updated_at: timestamp
+    +user(): belongsTo
+    +favoritable(): morphTo
+  }
+}
+
+package "Services" {
+  class AuthService {
+    +register(data): User
+    +login(credentials): Token
+    +logout(): void
+    +refresh(): Token
+    +user(): User
+  }
+
+  class CompetitionService {
+    +getAll(filters): Collection
+    +getById(id): Competition
+    +sync(): void
+    +addToFavorite(id, userId): void
+    +removeFromFavorite(id, userId): void
+  }
+
+  class TeamService {
+    +getAll(filters): Collection
+    +getById(id): Team
+    +getStats(id, competitionId): array
+    +sync(): void
+    +addToFavorite(id, userId): void
+    +removeFromFavorite(id, userId): void
+  }
+
+  class FixtureService {
+    +getAll(filters): Collection
+    +getById(id): Fixture
+    +getLineups(id): Collection
+    +getRecentByTeam(teamId): Collection
+    +getUpcomingByTeam(teamId): Collection
+    +sync(): void
+  }
+
+  class StandingService {
+    +getAll(filters): Collection
+    +getByMatchday(competitionId, matchday): Collection
+    +sync(): void
+  }
+
+  class BettingService {
+    +getFixtures(): Collection
+    +placeBet(data): Bet
+    +getHistory(userId): Collection
+    +getRankings(): Collection
+    +processResults(fixtureId): void
+  }
+
+  class NewsService {
+    +getAll(filters): Collection
+    +getById(id): News
+    +create(data): News
+    +update(id, data): News
+    +delete(id): void
+    +addComment(id, data): Comment
+    +getComments(id): Collection
+  }
+
+  class NotificationService {
+    +send(userId, type, data): void
+    +markAsRead(id): void
+    +getUnread(userId): Collection
+  }
+}
+
+package "Controllers" {
+  class AuthController {
+    +register(): Response
+    +login(): Response
+    +logout(): Response
+    +refresh(): Response
+    +user(): Response
+  }
+
+  class CompetitionController {
+    +index(): Response
+    +show(id): Response
+    +sync(): Response
+    +addToFavorite(id): Response
+    +removeFromFavorite(id): Response
+  }
+
+  class TeamController {
+    +index(): Response
+    +show(id): Response
+    +stats(id, competitionId): Response
+    +sync(): Response
+    +addToFavorite(id): Response
+    +removeFromFavorite(id): Response
+  }
+
+  class FixtureController {
+    +index(): Response
+    +show(id): Response
+    +lineups(id): Response
+    +recentByTeam(teamId): Response
+    +upcomingByTeam(teamId): Response
+    +sync(): Response
+  }
+
+  class StandingController {
+    +index(): Response
+    +byMatchday(): Response
+    +sync(): Response
+  }
+
+  class BettingController {
+    +fixtures(): Response
+    +place(): Response
+    +history(): Response
+    +rankings(): Response
+  }
+
+  class NewsController {
+    +index(): Response
+    +show(id): Response
+    +store(): Response
+    +update(id): Response
+    +destroy(id): Response
+    +addComment(id): Response
+    +getComments(id): Response
+  }
+}
+
+package "Repositories" {
+  class CompetitionRepository {
+    +all(filters): Collection
+    +findById(id): Competition
+    +create(data): Competition
+    +update(id, data): Competition
+    +delete(id): void
+  }
+
+  class TeamRepository {
+    +all(filters): Collection
+    +findById(id): Team
+    +create(data): Team
+    +update(id, data): Team
+    +delete(id): void
+  }
+
+  class FixtureRepository {
+    +all(filters): Collection
+    +findById(id): Fixture
+    +create(data): Fixture
+    +update(id, data): Fixture
+    +delete(id): void
+  }
+
+  class StandingRepository {
+    +all(filters): Collection
+    +findById(id): Standing
+    +create(data): Standing
+    +update(id, data): Standing
+    +delete(id): void
+  }
+
+  class BetRepository {
+    +all(filters): Collection
+    +findById(id): Bet
+    +create(data): Bet
+    +update(id, data): Bet
+    +delete(id): void
+  }
+
+  class NewsRepository {
+    +all(filters): Collection
+    +findById(id): News
+    +create(data): News
+    +update(id, data): News
+    +delete(id): void
+  }
+}
+
+' Relationship between controllers and services
+AuthController --> AuthService
+CompetitionController --> CompetitionService
+TeamController --> TeamService
+FixtureController --> FixtureService
+StandingController --> StandingService
+BettingController --> BettingService
+NewsController --> NewsService
+
+' Relationship between services and repositories
+CompetitionService --> CompetitionRepository
+TeamService --> TeamRepository
+FixtureService --> FixtureRepository
+StandingService --> StandingRepository
+BettingService --> BetRepository
+NewsService --> NewsRepository
+
+' Model relationships
+User "1" -- "n" Favorite
+User "1" -- "n" Bet
+User "1" -- "n" Comment
+User "1" -- "n" Notification
+
+Area "1" -- "n" Competition
+Area "1" -- "n" Team
+
+Competition "1" -- "n" Season
+Competition "1" -- "n" Fixture
+Competition "1" -- "n" Standing
+Competition "n" -- "n" Team
+
+Season "1" -- "n" Fixture
+Season "1" -- "n" Standing
+
+Team "1" -- "n" Lineup
+Team "1" -- "n" Standing
+
+Fixture "1" -- "1" Score
+Fixture "1" -- "n" Lineup
+Fixture "1" -- "n" Bet
+
+Lineup "1" -- "n" LineupPlayer
+LineupPlayer "n" -- "1" Person
+
+News "1" -- "n" Comment
+
+@enduml

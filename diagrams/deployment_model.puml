@@ -1,0 +1,89 @@
+@startuml deployment_model
+skinparam shadowing false
+skinparam componentStyle uml2
+skinparam nodeBackgroundColor white
+skinparam nodeBorderColor black
+
+node "Docker Environment" {
+  node "Nginx Container" as nginx {
+    component "Nginx Web Server" as nginxServer {
+      [HTTP Request Handler]
+      [Static Files Server]
+      [Reverse Proxy]
+    }
+  }
+
+  node "PHP-FPM Container" as phpfpm {
+    component "Laravel Application" as laravel {
+      [Controllers]
+      [Services]
+      [Repositories]
+      [Models]
+      [Routes]
+      [Middleware]
+    }
+    component "PHP-FPM" as fpm {
+      [PHP Interpreter]
+      [FastCGI Process Manager]
+    }
+  }
+
+  node "MySQL Container" as mysql {
+    database "MySQL Database" as mysqlDB {
+      [Football Data Tables]
+      [User Data Tables]
+      [Betting Data Tables]
+    }
+  }
+
+  node "Redis Container" as redis {
+    database "Redis" as redisDB {
+      [Cache Storage]
+      [Queue Storage]
+      [Session Storage]
+    }
+  }
+
+  node "Queue Worker Container" as queueWorker {
+    component "Laravel Queue Worker" as queue {
+      [Job Processor]
+      [Failed Jobs Handler]
+    }
+  }
+
+  node "Cron Container" as cron {
+    component "Laravel Scheduler" as scheduler {
+      [Task Scheduler]
+      [Data Sync Jobs]
+    }
+  }
+}
+
+cloud "External Systems" {
+  [Football API]
+  [Firebase Cloud Messaging]
+  [Email Service]
+}
+
+node "Client Applications" as clients {
+  [Web Application]
+  [Mobile Application]
+  [Admin Dashboard]
+}
+
+' Connections
+clients --> nginx : HTTP/HTTPS
+nginx --> phpfpm : FastCGI
+phpfpm --> mysql : SQL Queries
+phpfpm --> redis : Cache/Queue/Session
+queueWorker --> redis : Process Jobs
+queueWorker --> mysql : Update Data
+queueWorker --> [Football API] : API Requests
+queueWorker --> [Firebase Cloud Messaging] : Push Notifications
+queueWorker --> [Email Service] : Send Emails
+cron --> phpfpm : Schedule Commands
+phpfpm --> [Football API] : API Requests
+phpfpm --> [Firebase Cloud Messaging] : Push Notifications
+phpfpm --> [Email Service] : Send Emails
+
+@enduml

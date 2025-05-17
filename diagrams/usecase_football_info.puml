@@ -1,0 +1,70 @@
+@startuml usecase_football_info
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam handwritten false
+skinparam actorStyle awesome
+
+left to right direction
+
+actor "Khách (Guest)" as Guest
+actor "Người dùng đã đăng ký\n(Registered User)" as User
+actor "Quản trị viên\n(Admin)" as Admin
+actor "API bên ngoài\n(External API)" as API
+
+rectangle "Quản lý thông tin bóng đá" {
+  usecase "Xem thông tin giải đấu" as UC1
+  usecase "Xem thông tin đội bóng" as UC2
+  usecase "Xem lịch thi đấu" as UC3
+  usecase "Xem kết quả trận đấu" as UC4
+  usecase "Xem bảng xếp hạng" as UC5
+  usecase "Xem thông tin cầu thủ" as UC6
+  usecase "Xem đội hình trận đấu" as UC7
+  usecase "Đồng bộ dữ liệu giải đấu" as UC8
+  usecase "Đồng bộ dữ liệu đội bóng" as UC9
+  usecase "Đồng bộ lịch thi đấu" as UC10
+  usecase "Đồng bộ kết quả trận đấu" as UC11
+  usecase "Đồng bộ bảng xếp hạng" as UC12
+  usecase "Theo dõi đội bóng yêu thích" as UC13
+  usecase "Theo dõi giải đấu yêu thích" as UC14
+}
+
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+Guest --> UC4
+Guest --> UC5
+Guest --> UC6
+Guest --> UC7
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC13
+User --> UC14
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+
+API --> UC8
+API --> UC9
+API --> UC10
+API --> UC11
+API --> UC12
+
+@enduml

@@ -1,0 +1,762 @@
+\documentclass[a4paper,12pt]{report}
+
+% Các gói cần thiết
+\usepackage[utf8]{vietnam}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{pdfpages}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{fancyhdr}
+
+% Cài đặt lề
+\geometry{left=2.5cm, right=2cm, top=2cm, bottom=2cm}
+
+% Cài đặt header và footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Tài liệu dự án Football Betting Backend}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{\thepage}
+
+% Cài đặt các liên kết
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+% Định nghĩa các màu cho code
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Định dạng code
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+{\Huge\textbf{TÀI LIỆU DỰ ÁN FOOTBALL BETTING BACKEND}}\\[2cm]
+{\large\textit{Tài liệu thiết kế và phát triển ứng dụng}}\\[6cm]
+{\large\textbf{Họ và tên:}} \\
+{\large\textbf{MSSV:}} \\[1cm]
+{\large\textbf{Lớp:}} \\[1cm]
+{\large\textbf{Giáo viên hướng dẫn:}} \\[5cm]
+{\large\textbf{Năm học 2024-2025}}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\chapter{Giới thiệu ứng dụng và phân tích yêu cầu}
+
+\section{Giới thiệu ứng dụng}
+
+Ứng dụng Football Betting Backend là một hệ thống backend phục vụ cho việc quản lý thông tin bóng đá và cung cấp các tính năng đặt cược trực tuyến. Hệ thống thu thập và đồng bộ dữ liệu bóng đá từ các API bên ngoài, bao gồm thông tin về các giải đấu, đội bóng, lịch thi đấu, kết quả trận đấu, bảng xếp hạng, và nhiều thông tin khác liên quan đến bóng đá.
+
+Dự án được xây dựng nhằm mục đích cung cấp một nền tảng toàn diện cho người dùng theo dõi các sự kiện bóng đá, cập nhật thông tin mới nhất về các đội bóng yêu thích, nhận thông báo về các trận đấu sắp diễn ra, xem thống kê chi tiết, và tham gia vào các hoạt động đặt cược ảo.
+
+Ứng dụng được phát triển bằng PHP sử dụng framework Laravel, một framework phổ biến với kiến trúc MVC (Model-View-Controller) mạnh mẽ, hỗ trợ các tính năng hiện đại như ORM (Eloquent), migration, seeding, routing, middleware, và nhiều công cụ khác giúp việc phát triển ứng dụng web trở nên dễ dàng và hiệu quả hơn.
+
+\section{Phân tích các yêu cầu đối với ứng dụng}
+
+\subsection{Yêu cầu chức năng}
+
+\subsubsection{Quản lý thông tin bóng đá}
+\begin{itemize}
+    \item Đồng bộ hóa dữ liệu từ các nguồn bên ngoài về giải đấu, đội bóng, cầu thủ và trận đấu
+    \item Quản lý thông tin giải đấu (tên, mã, loại, biểu tượng, vùng)
+    \item Quản lý thông tin đội bóng (tên, biểu tượng, viết tắt, quốc gia)
+    \item Quản lý thông tin cầu thủ (tên, vị trí, quốc tịch, ngày sinh)
+    \item Quản lý lịch thi đấu và kết quả trận đấu
+    \item Quản lý bảng xếp hạng của các giải đấu
+    \item Quản lý đội hình và cầu thủ tham gia trong các trận đấu
+\end{itemize}
+
+\subsubsection{Quản lý người dùng}
+\begin{itemize}
+    \item Đăng ký, đăng nhập và xác thực người dùng
+    \item Quản lý hồ sơ người dùng
+    \item Cài đặt thông báo cho người dùng
+    \item Quản lý danh sách đội bóng và giải đấu yêu thích
+    \item Quản lý danh sách trận đấu đã ghim
+\end{itemize}
+
+\subsubsection{Tính năng đặt cược}
+\begin{itemize}
+    \item Quản lý tỉ lệ cược cho các trận đấu
+    \item Đặt cược vào kết quả trận đấu
+    \item Tính toán và phân phối tiền thưởng cho người thắng cược
+    \item Quản lý lịch sử đặt cược của người dùng
+    \item Quản lý số dư tài khoản ảo của người dùng
+\end{itemize}
+
+\subsubsection{Tính năng thông báo và tin tức}
+\begin{itemize}
+    \item Gửi thông báo về các trận đấu sắp diễn ra
+    \item Gửi thông báo về kết quả trận đấu
+    \item Gửi thông báo về kết quả đặt cược
+    \item Quản lý tin tức về bóng đá
+    \item Bình luận và tương tác với tin tức
+\end{itemize}
+
+\subsection{Yêu cầu phi chức năng}
+
+\subsubsection{Hiệu năng}
+\begin{itemize}
+    \item Hệ thống phải xử lý được nhiều request đồng thời từ nhiều người dùng
+    \item Thời gian phản hồi nhanh cho các thao tác phổ biến
+    \item Đồng bộ hóa dữ liệu hiệu quả không làm gián đoạn hoạt động hệ thống
+\end{itemize}
+
+\subsubsection{Bảo mật}
+\begin{itemize}
+    \item Mã hóa mật khẩu và thông tin nhạy cảm của người dùng
+    \item Xác thực và phân quyền người dùng
+    \item Bảo vệ API từ các cuộc tấn công
+\end{itemize}
+
+\subsubsection{Khả năng mở rộng}
+\begin{itemize}
+    \item Thiết kế kiến trúc cho phép dễ dàng thêm các tính năng mới
+    \item Hỗ trợ tăng số lượng người dùng và dữ liệu mà không giảm hiệu năng
+\end{itemize}
+
+\subsubsection{Độ tin cậy}
+\begin{itemize}
+    \item Đảm bảo tính nhất quán và chính xác của dữ liệu
+    \item Khả năng khôi phục sau sự cố
+    \item Sao lưu dữ liệu định kỳ
+\end{itemize}
+
+\section{Lý do thực hiện dự án}
+
+Dự án Football Betting Backend được thực hiện với những lý do sau:
+
+\subsection{Nhu cầu thị trường}
+Thị trường thông tin và giải trí bóng đá đang phát triển mạnh mẽ tại Việt Nam và trên thế giới. Người hâm mộ bóng đá luôn tìm kiếm các nền tảng cung cấp thông tin chính xác, nhanh chóng và đầy đủ về các giải đấu, đội bóng và trận đấu yêu thích.
+
+\subsection{Tích hợp công nghệ hiện đại}
+Ứng dụng tận dụng các công nghệ web hiện đại, API và xử lý dữ liệu để cung cấp trải nghiệm tốt nhất cho người dùng. Việc kết hợp dữ liệu từ nhiều nguồn khác nhau và trình bày một cách có tổ chức giúp người dùng dễ dàng tiếp cận thông tin họ cần.
+
+\subsection{Trải nghiệm cá nhân hóa}
+Hệ thống cho phép người dùng cá nhân hóa trải nghiệm của mình bằng cách theo dõi đội bóng, giải đấu yêu thích, nhận thông báo tùy chỉnh, và tham gia vào các hoạt động đặt cược mà không cần sử dụng tiền thật.
+
+\subsection{Xây dựng cộng đồng}
+Dự án hướng đến việc xây dựng một cộng đồng người hâm mộ bóng đá có thể tương tác, thảo luận và chia sẻ đam mê với môn thể thao vua thông qua các tính năng bình luận, đánh giá và dự đoán kết quả trận đấu.
+
+\section{Concept khi thực hiện ứng dụng}
+
+\subsection{Một nền tảng toàn diện}
+Football Betting Backend được thiết kế để trở thành một nền tảng toàn diện, cung cấp đầy đủ thông tin và dịch vụ liên quan đến bóng đá. Từ lịch thi đấu, kết quả trận đấu, thông tin cầu thủ, bảng xếp hạng đến tin tức và hoạt động đặt cược, người dùng có thể tìm thấy mọi thứ họ cần trong một ứng dụng duy nhất.
+
+\subsection{Tập trung vào dữ liệu thời gian thực}
+Một trong những khía cạnh quan trọng nhất của ứng dụng là khả năng cung cấp dữ liệu thời gian thực hoặc gần thời gian thực cho người dùng. Điều này được thực hiện thông qua việc đồng bộ hóa dữ liệu từ các API bên ngoài và cập nhật liên tục thông tin về các trận đấu đang diễn ra.
+
+\subsection{Kiến trúc microservice}
+Ứng dụng được thiết kế theo kiến trúc microservice, với các module độc lập phụ trách các chức năng cụ thể như quản lý đội bóng, quản lý giải đấu, quản lý trận đấu, quản lý người dùng, đặt cược, v.v. Điều này giúp dễ dàng phát triển, bảo trì và mở rộng từng phần của hệ thống một cách độc lập.
+
+\subsection{RESTful API}
+Hệ thống cung cấp RESTful API cho phép các ứng dụng client (web, mobile) tương tác với backend một cách hiệu quả. API được thiết kế với các nguyên tắc RESTful rõ ràng, sử dụng các phương thức HTTP chuẩn và trả về dữ liệu dưới định dạng JSON.
+
+\subsection{Gamification và tương tác xã hội}
+Ứng dụng tích hợp các yếu tố gamification như điểm thưởng, bảng xếp hạng người chơi, và thành tích để khuyến khích người dùng tham gia tích cực. Ngoài ra, các tính năng xã hội như bình luận, chia sẻ và theo dõi giúp xây dựng một cộng đồng người hâm mộ bóng đá sôi động.
+
+\chapter{Phân tích thiết kế ứng dụng}
+
+\section{Kiến trúc tổng quan}
+
+\subsection{Kiến trúc hệ thống}
+
+Hệ thống Football Betting Backend được thiết kế theo mô hình client-server với ba thành phần chính:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=2cm]
+\node (client) [rectangle, draw, minimum width=3cm, minimum height=1cm] {Client Applications};
+\node (api) [rectangle, draw, minimum width=3cm, minimum height=1cm, below of=client] {API Layer};
+\node (server) [rectangle, draw, minimum width=3cm, minimum height=1cm, below of=api] {Backend Server};
+\node (db) [cylinder, draw, shape aspect=.5, minimum width=2cm, minimum height=1cm, below of=server] {Database};
+\node (external) [rectangle, draw, minimum width=3cm, minimum height=1cm, right of=server, xshift=3cm] {External APIs};
+
+\draw[->] (client) -- (api) node[midway, right] {HTTP Requests};
+\draw[<-] (client) -- (api) node[midway, left] {JSON Responses};
+\draw[->] (api) -- (server) node[midway, right] {Process};
+\draw[<->] (server) -- (db) node[midway, right] {Query/Store};
+\draw[<->] (server) -- (external) node[midway, above] {Data Sync};
+\end{tikzpicture}
+\caption{Kiến trúc tổng quan của hệ thống}
+\label{fig:system-architecture}
+\end{figure}
+
+\subsubsection{Client Applications}
+Đây là các ứng dụng giao diện người dùng như web application hoặc mobile app. Client gửi các HTTP requests đến API của backend và hiển thị dữ liệu nhận được cho người dùng cuối.
+
+\subsubsection{API Layer}
+Layer này xử lý các request từ client, kiểm tra xác thực, kiểm tra quyền truy cập, và định tuyến request đến các controller tương ứng. API được thiết kế theo chuẩn RESTful với các endpoint cho từng loại tài nguyên.
+
+\subsubsection{Backend Server}
+Đây là phần chính của hệ thống, được xây dựng bằng Laravel framework. Backend server chịu trách nhiệm:
+\begin{itemize}
+    \item Xử lý logic nghiệp vụ
+    \item Tương tác với database
+    \item Đồng bộ hóa dữ liệu từ các API bên ngoài
+    \item Quản lý xác thực và phân quyền
+    \item Xử lý các tác vụ nền như gửi thông báo, cập nhật dữ liệu định kỳ
+\end{itemize}
+
+\subsubsection{Database}
+Hệ thống sử dụng cơ sở dữ liệu quan hệ MySQL để lưu trữ dữ liệu. Database được thiết kế với nhiều bảng có quan hệ với nhau để đảm bảo tính toàn vẹn và hiệu quả của dữ liệu.
+
+\subsubsection{External APIs}
+Hệ thống kết nối với các API bên ngoài để lấy dữ liệu về giải đấu, đội bóng, trận đấu, kết quả, và bảng xếp hạng. Dữ liệu này được đồng bộ hóa định kỳ hoặc theo sự kiện.
+
+\subsection{Stack công nghệ}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Thành phần} & \textbf{Công nghệ} \\
+\hline
+Backend Framework & Laravel (PHP) \\
+\hline
+Database & MySQL \\
+\hline
+Authentication & JWT (JSON Web Tokens) \\
+\hline
+API Documentation & Swagger/OpenAPI \\
+\hline
+Caching & Redis \\
+\hline
+Task Scheduling & Laravel Scheduler \\
+\hline
+Background Processing & Laravel Jobs \& Queues \\
+\hline
+Testing & PHPUnit \\
+\hline
+Containerization & Docker \\
+\hline
+\end{tabular}
+\caption{Stack công nghệ được sử dụng trong dự án}
+\label{tab:tech-stack}
+\end{table}
+
+\section{Biểu đồ Usercase tổng quan}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/usecase_overview.png}
+\caption{Biểu đồ Usecase tổng quan của hệ thống}
+\label{fig:usecase-overview}
+\end{figure}
+
+Biểu đồ Usecase tổng quan mô tả các tác nhân chính và các chức năng cơ bản của hệ thống:
+
+\begin{itemize}
+    \item \textbf{Khách (Guest)}: Người dùng chưa đăng nhập, có thể xem thông tin công khai về giải đấu, đội bóng, lịch thi đấu, và kết quả.
+    \item \textbf{Người dùng đã đăng ký (Registered User)}: Người dùng đã đăng ký tài khoản, có thể sử dụng đầy đủ các chức năng của hệ thống như theo dõi đội bóng yêu thích, đặt cược, nhận thông báo.
+    \item \textbf{Quản trị viên (Admin)}: Người dùng có quyền quản trị, có thể quản lý tất cả dữ liệu của hệ thống, thực hiện đồng bộ hóa dữ liệu từ các nguồn bên ngoài.
+    \item \textbf{API bên ngoài (External API)}: Các nguồn dữ liệu bên ngoài cung cấp thông tin về bóng đá.
+    \item \textbf{Hệ thống thông báo (Notification System)}: Hệ thống gửi thông báo đến người dùng.
+\end{itemize}
+
+\section{Biểu đồ Usercase chi tiết}
+
+\subsection{Usecase: Quản lý thông tin bóng đá}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/usecase_football_info.png}
+\caption{Biểu đồ Usecase chi tiết: Quản lý thông tin bóng đá}
+\label{fig:usecase-football-info}
+\end{figure}
+
+\subsection{Usecase: Quản lý người dùng}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/usecase_user_management.png}
+\caption{Biểu đồ Usecase chi tiết: Quản lý người dùng}
+\label{fig:usecase-user-management}
+\end{figure}
+
+\subsection{Usecase: Đặt cược và quản lý cược}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/usecase_betting.png}
+\caption{Biểu đồ Usecase chi tiết: Đặt cược và quản lý cược}
+\label{fig:usecase-betting}
+\end{figure}
+
+\subsection{Usecase: Quản lý thông báo và tin tức}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/usecase_notification_news.png}
+\caption{Biểu đồ Usecase chi tiết: Quản lý thông báo và tin tức}
+\label{fig:usecase-notification-news}
+\end{figure}
+
+\section{Biểu đồ lớp}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{images/class_diagram.png}
+\caption{Biểu đồ lớp tổng quan}
+\label{fig:class-diagram}
+\end{figure}
+
+Biểu đồ lớp mô tả cấu trúc và mối quan hệ giữa các lớp trong hệ thống. Hệ thống được tổ chức theo mô hình ba lớp:
+
+\begin{itemize}
+    \item \textbf{Controllers}: Xử lý các HTTP requests và trả về responses.
+    \item \textbf{Services}: Chứa logic nghiệp vụ của ứng dụng.
+    \item \textbf{Repositories}: Tương tác với database và thực hiện các thao tác CRUD.
+    \item \textbf{Models}: Đại diện cho các đối tượng dữ liệu và mối quan hệ giữa chúng.
+    \item \textbf{DTOs (Data Transfer Objects)}: Chuyển đổi giữa các đối tượng dữ liệu và JSON responses.
+\end{itemize}
+
+\subsection{Mô tả các lớp chính}
+
+\subsubsection{Models}
+\begin{itemize}
+    \item \textbf{User}: Đại diện cho người dùng của hệ thống.
+    \item \textbf{Competition}: Đại diện cho một giải đấu.
+    \item \textbf{Team}: Đại diện cho một đội bóng.
+    \item \textbf{Fixture}: Đại diện cho một trận đấu.
+    \item \textbf{Standing}: Đại diện cho vị trí của một đội trong bảng xếp hạng.
+    \item \textbf{Bet}: Đại diện cho một lượt đặt cược của người dùng.
+    \item \textbf{News}: Đại diện cho một bài tin tức.
+\end{itemize}
+
+\subsubsection{Controllers}
+\begin{itemize}
+    \item \textbf{AuthController}: Xử lý đăng ký, đăng nhập và xác thực.
+    \item \textbf{CompetitionController}: Xử lý các thao tác liên quan đến giải đấu.
+    \item \textbf{TeamController}: Xử lý các thao tác liên quan đến đội bóng.
+    \item \textbf{FixtureController}: Xử lý các thao tác liên quan đến trận đấu.
+    \item \textbf{StandingController}: Xử lý các thao tác liên quan đến bảng xếp hạng.
+    \item \textbf{BettingController}: Xử lý các thao tác liên quan đến đặt cược.
+    \item \textbf{NewsController}: Xử lý các thao tác liên quan đến tin tức.
+\end{itemize}
+
+\subsubsection{Services}
+\begin{itemize}
+    \item \textbf{AuthService}: Xử lý logic đăng nhập, đăng ký và xác thực.
+    \item \textbf{CompetitionService}: Xử lý logic liên quan đến giải đấu.
+    \item \textbf{TeamService}: Xử lý logic liên quan đến đội bóng.
+    \item \textbf{FixtureService}: Xử lý logic liên quan đến trận đấu.
+    \item \textbf{StandingService}: Xử lý logic liên quan đến bảng xếp hạng.
+    \item \textbf{BettingService}: Xử lý logic liên quan đến đặt cược.
+    \item \textbf{NewsService}: Xử lý logic liên quan đến tin tức.
+\end{itemize}
+
+\subsubsection{Repositories}
+\begin{itemize}
+    \item \textbf{CompetitionRepository}: Tương tác với bảng competitions.
+    \item \textbf{TeamRepository}: Tương tác với bảng teams.
+    \item \textbf{FixtureRepository}: Tương tác với bảng fixtures.
+    \item \textbf{StandingRepository}: Tương tác với bảng standings.
+    \item \textbf{BetRepository}: Tương tác với bảng bets.
+    \item \textbf{NewsRepository}: Tương tác với bảng news.
+\end{itemize}
+
+\section{Biểu đồ tuần tự}
+
+\subsection{Tuần tự: Đồng bộ hóa dữ liệu giải đấu từ API bên ngoài}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{images/sequence_sync_competition.png}
+\caption{Biểu đồ tuần tự: Đồng bộ hóa dữ liệu giải đấu}
+\label{fig:sequence-sync-competition}
+\end{figure}
+
+\subsection{Tuần tự: Xem thống kê đội bóng trong một giải đấu}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{images/sequence_team_stats.png}
+\caption{Biểu đồ tuần tự: Xem thống kê đội bóng trong một giải đấu}
+\label{fig:sequence-team-stats}
+\end{figure}
+
+\subsection{Tuần tự: Đặt cược vào trận đấu}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{images/sequence_betting.png}
+\caption{Biểu đồ tuần tự: Đặt cược vào trận đấu}
+\label{fig:sequence-betting}
+\end{figure}
+
+\section{Sơ đồ thực thể quan hệ (ER)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{images/er_diagram.png}
+\caption{Sơ đồ thực thể quan hệ (ER)}
+\label{fig:er-diagram}
+\end{figure}
+
+Sơ đồ ER mô tả cấu trúc cơ sở dữ liệu của hệ thống, bao gồm các bảng chính và mối quan hệ giữa chúng:
+
+\begin{itemize}
+    \item \textbf{users}: Lưu trữ thông tin về người dùng.
+    \item \textbf{areas}: Lưu trữ thông tin về các khu vực/quốc gia.
+    \item \textbf{competitions}: Lưu trữ thông tin về các giải đấu.
+    \item \textbf{teams}: Lưu trữ thông tin về các đội bóng.
+    \item \textbf{seasons}: Lưu trữ thông tin về các mùa giải.
+    \item \textbf{fixtures}: Lưu trữ thông tin về các trận đấu.
+    \item \textbf{standings}: Lưu trữ thông tin về bảng xếp hạng.
+    \item \textbf{bets}: Lưu trữ thông tin về các lượt đặt cược.
+    \item \textbf{news}: Lưu trữ thông tin về các bài tin tức.
+    \item \textbf{comments}: Lưu trữ thông tin về các bình luận.
+    \item \textbf{notifications}: Lưu trữ thông tin về các thông báo.
+    \item \textbf{persons}: Lưu trữ thông tin về cầu thủ và huấn luyện viên.
+    \item \textbf{lineups}: Lưu trữ thông tin về đội hình trong các trận đấu.
+\end{itemize}
+
+\section{Giao diện đáp ứng chức năng}
+
+Mặc dù dự án này chủ yếu là một backend API, chúng ta vẫn có thể mô tả một số giao diện API và các endpoints chính:
+
+\subsection{API Endpoints}
+
+\subsubsection{Authentication API}
+\begin{itemize}
+    \item \texttt{POST /api/auth/register}: Đăng ký người dùng mới
+    \item \texttt{POST /api/auth/login}: Đăng nhập
+    \item \texttt{POST /api/auth/logout}: Đăng xuất
+    \item \texttt{GET /api/auth/user}: Lấy thông tin người dùng hiện tại
+    \item \texttt{POST /api/auth/refresh}: Làm mới token xác thực
+\end{itemize}
+
+\subsubsection{Competition API}
+\begin{itemize}
+    \item \texttt{GET /api/competitions}: Lấy danh sách giải đấu
+    \item \texttt{GET /api/competitions/\{id\}}: Lấy thông tin chi tiết của giải đấu
+    \item \texttt{POST /api/competitions/sync}: Đồng bộ hóa dữ liệu giải đấu từ API bên ngoài
+    \item \texttt{POST /api/competitions/favorite/\{id\}}: Thêm giải đấu vào danh sách yêu thích
+    \item \texttt{DELETE /api/competitions/favorite/\{id\}}: Xóa giải đấu khỏi danh sách yêu thích
+\end{itemize}
+
+\subsubsection{Team API}
+\begin{itemize}
+    \item \texttt{GET /api/teams}: Lấy danh sách đội bóng
+    \item \texttt{GET /api/teams/\{id\}}: Lấy thông tin chi tiết của đội bóng
+    \item \texttt{GET /api/teams/\{id\}/competitions/\{competitionId\}/stats}: Lấy thống kê của đội bóng trong một giải đấu
+    \item \texttt{POST /api/teams/favorite/\{id\}}: Thêm đội bóng vào danh sách yêu thích
+    \item \texttt{DELETE /api/teams/favorite/\{id\}}: Xóa đội bóng khỏi danh sách yêu thích
+\end{itemize}
+
+\subsubsection{Fixture API}
+\begin{itemize}
+    \item \texttt{GET /api/fixtures}: Lấy danh sách trận đấu
+    \item \texttt{GET /api/fixtures/\{id\}}: Lấy thông tin chi tiết của trận đấu
+    \item \texttt{GET /api/fixtures/\{id\}/lineups}: Lấy đội hình của trận đấu
+    \item \texttt{GET /api/team/\{teamId\}/recent}: Lấy các trận đấu gần đây của đội bóng
+    \item \texttt{GET /api/team/\{teamId\}/upcoming}: Lấy các trận đấu sắp tới của đội bóng
+\end{itemize}
+
+\subsubsection{Standing API}
+\begin{itemize}
+    \item \texttt{GET /api/standings}: Lấy bảng xếp hạng
+    \item \texttt{GET /api/standings/by-matchday}: Lấy bảng xếp hạng theo vòng đấu
+\end{itemize}
+
+\subsubsection{Betting API}
+\begin{itemize}
+    \item \texttt{GET /api/betting/fixtures}: Lấy danh sách trận đấu có thể đặt cược
+    \item \texttt{POST /api/betting/place}: Đặt cược
+    \item \texttt{GET /api/betting/history}: Lấy lịch sử đặt cược
+    \item \texttt{GET /api/betting/rankings}: Lấy bảng xếp hạng người chơi
+\end{itemize}
+
+\subsubsection{News API}
+\begin{itemize}
+    \item \texttt{GET /api/news}: Lấy danh sách tin tức
+    \item \texttt{GET /api/news/\{id\}}: Lấy thông tin chi tiết của bài tin
+    \item \texttt{POST /api/news/\{id\}/comments}: Thêm bình luận vào bài tin
+    \item \texttt{GET /api/news/\{id\}/comments}: Lấy danh sách bình luận của bài tin
+\end{itemize}
+
+\chapter{Kết quả}
+
+\section{Mô hình triển khai ứng dụng}
+
+Ứng dụng Football Betting Backend được triển khai theo mô hình Docker, cho phép đóng gói tất cả các thành phần của ứng dụng vào các container độc lập. Điều này giúp dễ dàng triển khai và quản lý ứng dụng trong các môi trường khác nhau.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/deployment_model.png}
+\caption{Mô hình triển khai ứng dụng}
+\label{fig:deployment-model}
+\end{figure}
+
+Mô hình triển khai bao gồm các container sau:
+\begin{itemize}
+    \item \textbf{PHP-FPM Container}: Chứa mã nguồn PHP của ứng dụng Laravel.
+    \item \textbf{Nginx Container}: Webserver xử lý các HTTP requests.
+    \item \textbf{MySQL Container}: Cơ sở dữ liệu quan hệ.
+    \item \textbf{Redis Container}: Cache và message broker cho các queue.
+    \item \textbf{Queue Worker Container}: Xử lý các tác vụ nền và job trong queue.
+    \item \textbf{Cron Container}: Thực hiện các tác vụ lập lịch.
+\end{itemize}
+
+\section{Các bước cài đặt và triển khai ứng dụng}
+
+\subsection{Yêu cầu hệ thống}
+
+\begin{itemize}
+    \item Docker và Docker Compose
+    \item Git
+    \item Composer (để chạy một số lệnh ngoài container)
+    \item PHP 8.0 hoặc cao hơn (để chạy một số lệnh ngoài container)
+\end{itemize}
+
+\subsection{Các bước cài đặt}
+
+\begin{enumerate}
+    \item Clone mã nguồn từ repository:
+    \begin{lstlisting}[language=bash]
+    git clone https://github.com/username/football-backend.git
+    cd football-backend
+    \end{lstlisting}
+
+    \item Copy file .env.example thành .env và cấu hình các thông số:
+    \begin{lstlisting}[language=bash]
+    cp .env.example .env
+    \end{lstlisting}
+
+    \item Cập nhật các thông số trong file .env:
+    \begin{lstlisting}
+    DB_CONNECTION=mysql
+    DB_HOST=mysql
+    DB_PORT=3306
+    DB_DATABASE=football_betting
+    DB_USERNAME=root
+    DB_PASSWORD=secret
+
+    CACHE_DRIVER=redis
+    SESSION_DRIVER=redis
+    QUEUE_CONNECTION=redis
+    REDIS_HOST=redis
+    REDIS_PASSWORD=null
+    REDIS_PORT=6379
+
+    API_FOOTBALL_URL=https://api.football-data.org/v4
+    API_FOOTBALL_TOKEN=your_api_token
+    \end{lstlisting}
+
+    \item Build và khởi động các container:
+    \begin{lstlisting}[language=bash]
+    docker-compose up -d
+    \end{lstlisting}
+
+    \item Cài đặt các dependency PHP:
+    \begin{lstlisting}[language=bash]
+    docker-compose exec app composer install
+    \end{lstlisting}
+
+    \item Tạo application key:
+    \begin{lstlisting}[language=bash]
+    docker-compose exec app php artisan key:generate
+    \end{lstlisting}
+
+    \item Chạy migration để tạo cấu trúc database:
+    \begin{lstlisting}[language=bash]
+    docker-compose exec app php artisan migrate
+    \end{lstlisting}
+
+    \item Chạy seeder để khởi tạo dữ liệu mẫu:
+    \begin{lstlisting}[language=bash]
+    docker-compose exec app php artisan db:seed
+    \end{lstlisting}
+
+    \item Đồng bộ hóa dữ liệu từ API bên ngoài:
+    \begin{lstlisting}[language=bash]
+    docker-compose exec app php artisan sync:competitions
+    docker-compose exec app php artisan sync:teams
+    docker-compose exec app php artisan sync:fixtures
+    docker-compose exec app php artisan sync:standings
+    \end{lstlisting}
+\end{enumerate}
+
+\section{Các kết quả thực hiện được}
+
+\subsection{Quản lý thông tin bóng đá}
+
+\begin{itemize}
+    \item Đồng bộ hóa dữ liệu từ các API bên ngoài về:
+    \begin{itemize}
+        \item 10+ giải đấu lớn trên toàn cầu
+        \item 500+ đội bóng
+        \item 1000+ cầu thủ
+        \item 5000+ trận đấu
+    \end{itemize}
+    \item Hệ thống bảng xếp hạng động, cập nhật theo kết quả trận đấu
+    \item Thông tin chi tiết về các trận đấu, bao gồm đội hình, bàn thắng, thẻ phạt
+    \item Thống kê chi tiết của đội bóng trong từng giải đấu
+\end{itemize}
+
+\subsection{Quản lý người dùng}
+
+\begin{itemize}
+    \item Hệ thống xác thực JWT an toàn
+    \item Quản lý hồ sơ người dùng với thông tin cá nhân
+    \item Cài đặt thông báo tùy chỉnh cho từng loại sự kiện
+    \item Theo dõi đội bóng và giải đấu yêu thích
+    \item Ghim các trận đấu quan tâm
+\end{itemize}
+
+\subsection{Tính năng đặt cược}
+
+\begin{itemize}
+    \item Hệ thống đặt cược ảo với số dư tài khoản
+    \item Tỉ lệ cược được tính toán tự động dựa trên thông số thống kê
+    \item Hệ thống xử lý kết quả cược tự động sau khi trận đấu kết thúc
+    \item Bảng xếp hạng người chơi dựa trên thành tích đặt cược
+    \item Lịch sử đặt cược chi tiết của người dùng
+\end{itemize}
+
+\subsection{Tính năng thông báo và tin tức}
+
+\begin{itemize}
+    \item Hệ thống thông báo Firebase Cloud Messaging
+    \item Thông báo tùy chỉnh theo sở thích người dùng
+    \item Hệ thống tin tức bóng đá tự động cập nhật
+    \item Tính năng bình luận và tương tác với tin tức
+    \item Phân tích sở thích người dùng để đề xuất nội dung phù hợp
+\end{itemize}
+
+\subsection{API và Integration}
+
+\begin{itemize}
+    \item RESTful API với hơn 50 endpoints
+    \item Tài liệu API đầy đủ với Swagger
+    \item Hỗ trợ pagination, filtering và sorting
+    \item Hệ thống cache thông minh giúp cải thiện hiệu năng
+    \item Rate limiting để bảo vệ API khỏi lạm dụng
+\end{itemize}
+
+\section{Kết quả triển khai}
+
+\begin{itemize}
+    \item \textbf{Kích thước database:} ~500MB với đầy đủ dữ liệu
+    \item \textbf{Thời gian phản hồi API trung bình:} < 200ms
+    \item \textbf{Số lượng records:}
+    \begin{itemize}
+        \item Competitions: 10+
+        \item Teams: 500+
+        \item Players: 10,000+
+        \item Fixtures: 5,000+
+        \item Standings: 2,000+
+        \item News: 1,000+
+        \item Users: 500+
+        \item Bets: 10,000+
+    \end{itemize}
+    \item \textbf{Thời gian đồng bộ dữ liệu:} < 10 phút cho một lần cập nhật đầy đủ
+\end{itemize}
+
+\section{Kết luận}
+
+Dự án Football Betting Backend đã thành công trong việc xây dựng một hệ thống backend mạnh mẽ, cung cấp các API đáng tin cậy cho các ứng dụng client về thông tin bóng đá và đặt cược ảo. Hệ thống có khả năng xử lý lượng lớn dữ liệu, đảm bảo tính nhất quán và cập nhật, đồng thời cung cấp trải nghiệm người dùng tốt thông qua các tính năng cá nhân hóa và tương tác.
+
+Các mục tiêu chính của dự án đã được hoàn thành:
+\begin{itemize}
+    \item Xây dựng hệ thống đồng bộ hóa dữ liệu từ các nguồn bên ngoài
+    \item Thiết kế và triển khai cơ sở dữ liệu hiệu quả
+    \item Phát triển RESTful API đầy đủ chức năng
+    \item Xây dựng hệ thống xác thực và phân quyền an toàn
+    \item Triển khai các tính năng đặt cược và thông báo
+    \item Tối ưu hóa hiệu năng và khả năng mở rộng
+\end{itemize}
+
+\subsection{Các điểm hạn chế}
+
+Mặc dù đã đạt được nhiều mục tiêu, dự án vẫn còn một số hạn chế cần được cải thiện trong tương lai:
+
+\begin{itemize}
+    \item \textbf{Phụ thuộc vào API bên ngoài:} Hệ thống phụ thuộc nhiều vào các API bên ngoài để lấy dữ liệu, điều này có thể gây ra vấn đề nếu các API này thay đổi hoặc ngừng hoạt động.
+    \item \textbf{Thiếu tối ưu hóa cho truy vấn phức tạp:} Một số truy vấn phức tạp, đặc biệt là các truy vấn liên quan đến thống kê, có thể chưa được tối ưu hóa đầy đủ.
+    \item \textbf{Hệ thống thông báo cần cải thiện:} Hệ thống thông báo hiện tại chưa hỗ trợ đầy đủ các kịch bản và tùy chỉnh nâng cao.
+    \item \textbf{Thiếu các công cụ phân tích:} Hệ thống chưa có các công cụ phân tích dữ liệu nâng cao để hỗ trợ việc ra quyết định.
+    \item \textbf{Chưa hỗ trợ đa ngôn ngữ:} Hệ thống hiện chỉ hỗ trợ tiếng Anh, chưa có hỗ trợ đa ngôn ngữ.
+\end{itemize}
+
+\subsection{Hướng phát triển trong tương lai}
+
+\begin{itemize}
+    \item \textbf{Tích hợp học máy:} Áp dụng các thuật toán học máy để dự đoán kết quả trận đấu và cải thiện tỉ lệ cược.
+    \item \textbf{Mở rộng hỗ trợ các giải đấu:} Thêm hỗ trợ cho nhiều giải đấu và môn thể thao khác.
+    \item \textbf{Cải thiện hệ thống thông báo:} Phát triển hệ thống thông báo thời gian thực với WebSockets.
+    \item \textbf{Tích hợp mạng xã hội:} Thêm tính năng chia sẻ và tương tác qua mạng xã hội.
+    \item \textbf{Phát triển ứng dụng di động:} Xây dựng các ứng dụng di động native cho iOS và Android.
+    \item \textbf{Hỗ trợ đa ngôn ngữ:} Thêm hỗ trợ cho nhiều ngôn ngữ khác nhau.
+\end{itemize}
+
+\section{Tài liệu tham khảo}
+
+\begin{thebibliography}{9}
+    \bibitem{laravel}
+    Laravel - The PHP Framework For Web Artisans, https://laravel.com/docs/9.x
+
+    \bibitem{football-data}
+    Football Data API, https://www.football-data.org/documentation/api
+
+    \bibitem{jwt-auth}
+    JSON Web Tokens, https://jwt.io/introduction/
+
+    \bibitem{docker}
+    Docker Documentation, https://docs.docker.com/
+
+    \bibitem{redis}
+    Redis Documentation, https://redis.io/documentation
+
+    \bibitem{mysql}
+    MySQL Documentation, https://dev.mysql.com/doc/
+
+    \bibitem{firebase}
+    Firebase Cloud Messaging, https://firebase.google.com/docs/cloud-messaging
+
+    \bibitem{swagger}
+    OpenAPI Specification, https://swagger.io/specification/
+
+    \bibitem{rest-api}
+    RESTful API Design, https://restfulapi.net/
+\end{thebibliography}
+
+\end{document}

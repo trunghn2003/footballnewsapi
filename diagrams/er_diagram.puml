@@ -1,0 +1,247 @@
+@startuml er_diagram
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <i>x</i>
+hide methods
+hide stereotypes
+skinparam classBorderColor #000000
+skinparam classArrowColor #000000
+skinparam classBackgroundColor #FFFFFF
+skinparam shadowing false
+
+table(users) {
+  primary_key(id)
+  name
+  email
+  password
+  balance
+  role
+  remember_token
+  created_at
+  updated_at
+}
+
+table(areas) {
+  primary_key(id)
+  external_id
+  name
+  code
+  flag
+  created_at
+  updated_at
+}
+
+table(competitions) {
+  primary_key(id)
+  external_id
+  foreign_key(area_id)
+  name
+  code
+  type
+  logo
+  created_at
+  updated_at
+}
+
+table(seasons) {
+  primary_key(id)
+  external_id
+  foreign_key(competition_id)
+  year
+  start_date
+  end_date
+  current
+  created_at
+  updated_at
+}
+
+table(teams) {
+  primary_key(id)
+  external_id
+  foreign_key(area_id)
+  name
+  short_name
+  tla
+  logo
+  founded
+  venue
+  created_at
+  updated_at
+}
+
+table(fixtures) {
+  primary_key(id)
+  external_id
+  foreign_key(competition_id)
+  foreign_key(season_id)
+  foreign_key(home_team_id)
+  foreign_key(away_team_id)
+  matchday
+  status
+  utc_date
+  venue
+  created_at
+  updated_at
+}
+
+table(scores) {
+  primary_key(id)
+  foreign_key(fixture_id)
+  home_score
+  away_score
+  home_half
+  away_half
+  winner
+  created_at
+  updated_at
+}
+
+table(standings) {
+  primary_key(id)
+  foreign_key(competition_id)
+  foreign_key(season_id)
+  foreign_key(team_id)
+  position
+  played
+  won
+  draw
+  lost
+  points
+  goals_for
+  goals_against
+  goal_diff
+  created_at
+  updated_at
+}
+
+table(persons) {
+  primary_key(id)
+  external_id
+  name
+  position
+  date_of_birth
+  nationality
+  role
+  created_at
+  updated_at
+}
+
+table(lineups) {
+  primary_key(id)
+  foreign_key(fixture_id)
+  foreign_key(team_id)
+  formation
+  created_at
+  updated_at
+}
+
+table(lineup_players) {
+  primary_key(id)
+  foreign_key(lineup_id)
+  foreign_key(person_id)
+  position
+  shirt_number
+  role
+  created_at
+  updated_at
+}
+
+table(bets) {
+  primary_key(id)
+  foreign_key(user_id)
+  foreign_key(fixture_id)
+  bet_type
+  prediction
+  amount
+  odds
+  status
+  result
+  payout
+  created_at
+  updated_at
+}
+
+table(news) {
+  primary_key(id)
+  title
+  content
+  image
+  published_at
+  created_at
+  updated_at
+}
+
+table(comments) {
+  primary_key(id)
+  foreign_key(user_id)
+  foreign_key(news_id)
+  content
+  created_at
+  updated_at
+}
+
+table(notifications) {
+  primary_key(id)
+  foreign_key(user_id)
+  type
+  data
+  read_at
+  created_at
+  updated_at
+}
+
+table(favorites) {
+  primary_key(id)
+  foreign_key(user_id)
+  favoritable_id
+  favoritable_type
+  created_at
+  updated_at
+}
+
+table(competition_team) {
+  primary_key(id)
+  foreign_key(competition_id)
+  foreign_key(team_id)
+  created_at
+  updated_at
+}
+
+' Relationships
+users "1" --o{ "n" favorites
+users "1" --o{ "n" bets
+users "1" --o{ "n" comments
+users "1" --o{ "n" notifications
+
+areas "1" --o{ "n" competitions
+areas "1" --o{ "n" teams
+
+competitions "1" --o{ "n" seasons
+competitions "1" --o{ "n" fixtures
+competitions "1" --o{ "n" standings
+competitions "n" --o{ "n" teams
+competitions "n" --o{ "n" competition_team
+teams "n" --o{ "n" competition_team
+
+seasons "1" --o{ "n" fixtures
+seasons "1" --o{ "n" standings
+
+teams "1" --o{ "n" favorites : "team favorite"
+teams "1" --o{ "n" standings
+teams "1" --o{ "n" lineups
+teams "1" --o{ "n" fixtures : "home team"
+teams "1" --o{ "n" fixtures : "away team"
+
+fixtures "1" --o{ "1" scores
+fixtures "1" --o{ "n" lineups
+fixtures "1" --o{ "n" bets
+
+lineups "1" --o{ "n" lineup_players
+lineup_players "n" --o{ "1" persons
+
+news "1" --o{ "n" comments
+news "1" --o{ "n" favorites : "news favorite"
+
+competitions "1" --o{ "n" favorites : "competition favorite"
+
+@enduml

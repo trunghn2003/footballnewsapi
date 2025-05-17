@@ -1,0 +1,54 @@
+@startuml usecase_user_management
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam handwritten false
+skinparam actorStyle awesome
+
+left to right direction
+
+actor "Khách (Guest)" as Guest
+actor "Người dùng đã đăng ký\n(Registered User)" as User
+actor "Quản trị viên\n(Admin)" as Admin
+
+rectangle "Quản lý người dùng" {
+  usecase "Đăng ký tài khoản" as UC1
+  usecase "Đăng nhập" as UC2
+  usecase "Đăng xuất" as UC3
+  usecase "Quên mật khẩu" as UC4
+  usecase "Cập nhật thông tin cá nhân" as UC5
+  usecase "Thay đổi mật khẩu" as UC6
+  usecase "Quản lý thông báo" as UC7
+  usecase "Quản lý đội bóng yêu thích" as UC8
+  usecase "Quản lý giải đấu yêu thích" as UC9
+  usecase "Ghim trận đấu" as UC10
+  usecase "Quản lý tài khoản người dùng" as UC11
+  usecase "Phân quyền người dùng" as UC12
+}
+
+Guest --> UC1
+Guest --> UC2
+Guest --> UC4
+
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+
+@enduml

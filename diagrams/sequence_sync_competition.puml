@@ -1,0 +1,72 @@
+@startuml sequence_sync_competition
+skinparam shadowing false
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam sequenceParticipant underline
+
+actor Admin
+participant "SyncCompetitionsCommand" as Command
+participant "CompetitionService" as Service
+participant "ExternalApiService" as ApiService
+participant "CompetitionRepository" as Repository
+participant "AreaRepository" as AreaRepo
+database "Database" as DB
+
+Admin -> Command: php artisan sync:competitions
+activate Command
+
+Command -> Service: syncCompetitions()
+activate Service
+
+Service -> ApiService: fetchCompetitions()
+activate ApiService
+ApiService -> ApiService: prepareRequest()
+ApiService --> Service: competitionsData
+deactivate ApiService
+
+loop for each competition
+    Service -> Repository: findByExternalId(externalId)
+    activate Repository
+    Repository --> Service: competition or null
+    deactivate Repository
+
+    alt competition exists
+        Service -> Repository: update(competition, data)
+        activate Repository
+        Repository -> DB: UPDATE
+        Repository --> Service: updated competition
+        deactivate Repository
+    else competition does not exist
+        Service -> AreaRepo: findByExternalId(areaExternalId)
+        activate AreaRepo
+        AreaRepo --> Service: area or null
+        deactivate AreaRepo
+
+        alt area does not exist
+            Service -> ApiService: fetchArea(areaExternalId)
+            activate ApiService
+            ApiService --> Service: areaData
+            deactivate ApiService
+
+            Service -> AreaRepo: create(areaData)
+            activate AreaRepo
+            AreaRepo -> DB: INSERT
+            AreaRepo --> Service: new area
+            deactivate AreaRepo
+        end
+
+        Service -> Repository: create(data)
+        activate Repository
+        Repository -> DB: INSERT
+        Repository --> Service: new competition
+        deactivate Repository
+    end
+end
+
+Service --> Command: sync results
+deactivate Service
+
+Command --> Admin: "Competitions synchronized successfully"
+deactivate Command
+
+@enduml

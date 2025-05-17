@@ -1,0 +1,55 @@
+@startuml sequence_team_stats
+skinparam shadowing false
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam sequenceParticipant underline
+
+actor User
+participant "TeamController" as Controller
+participant "TeamService" as Service
+participant "TeamRepository" as TeamRepo
+participant "FixtureRepository" as FixtureRepo
+participant "StandingRepository" as StandingRepo
+database "Database" as DB
+
+User -> Controller: GET /api/teams/{id}/competitions/{competitionId}/stats
+activate Controller
+
+Controller -> Service: getStats(teamId, competitionId)
+activate Service
+
+Service -> TeamRepo: findById(teamId)
+activate TeamRepo
+TeamRepo -> DB: SELECT * FROM teams WHERE id = teamId
+TeamRepo --> Service: team
+deactivate TeamRepo
+
+alt team not found
+    Service --> Controller: NotFoundError
+    Controller --> User: 404 Not Found
+    note right of User: Team not found
+else team found
+    Service -> FixtureRepo: getTeamFixturesByCompetition(teamId, competitionId)
+    activate FixtureRepo
+    FixtureRepo -> DB: SELECT * FROM fixtures WHERE (home_team_id = teamId OR away_team_id = teamId) AND competition_id = competitionId
+    FixtureRepo --> Service: fixtures
+    deactivate FixtureRepo
+
+    Service -> StandingRepo: getTeamStandingByCompetition(teamId, competitionId)
+    activate StandingRepo
+    StandingRepo -> DB: SELECT * FROM standings WHERE team_id = teamId AND competition_id = competitionId
+    StandingRepo --> Service: standing
+    deactivate StandingRepo
+
+    Service -> Service: calculateStats(team, fixtures, standing)
+    note right of Service: Calculate win rate, goal average,\nform in last 5 matches, etc.
+
+    Service --> Controller: stats
+    deactivate Service
+
+    Controller --> User: 200 OK (JSON response with stats)
+end
+
+deactivate Controller
+
+@enduml

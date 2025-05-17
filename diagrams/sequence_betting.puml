@@ -1,0 +1,71 @@
+@startuml sequence_betting
+skinparam shadowing false
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam sequenceParticipant underline
+
+actor "Registered User" as User
+participant "BettingController" as Controller
+participant "BettingService" as Service
+participant "FixtureRepository" as FixtureRepo
+participant "BetRepository" as BetRepo
+participant "UserRepository" as UserRepo
+participant "NotificationService" as NotifService
+database "Database" as DB
+
+User -> Controller: POST /api/betting/place (fixtureId, betType, prediction, amount)
+activate Controller
+
+Controller -> Service: placeBet(userId, fixtureId, betType, prediction, amount)
+activate Service
+
+Service -> UserRepo: getUserBalance(userId)
+activate UserRepo
+UserRepo -> DB: SELECT balance FROM users WHERE id = userId
+UserRepo --> Service: userBalance
+deactivate UserRepo
+
+alt userBalance < amount
+    Service --> Controller: InsufficientFundsError
+    Controller --> User: 400 Bad Request
+    note right of User: Insufficient balance to place bet
+else userBalance >= amount
+    Service -> FixtureRepo: findById(fixtureId)
+    activate FixtureRepo
+    FixtureRepo -> DB: SELECT * FROM fixtures WHERE id = fixtureId
+    FixtureRepo --> Service: fixture
+    deactivate FixtureRepo
+
+    alt fixture not found or not open for betting
+        Service --> Controller: InvalidFixtureError
+        Controller --> User: 400 Bad Request
+        note right of User: Fixture not available for betting
+    else fixture valid for betting
+        Service -> Service: calculateOdds(fixture, betType, prediction)
+
+        Service -> BetRepo: create(userId, fixtureId, betType, prediction, amount, odds)
+        activate BetRepo
+        BetRepo -> DB: BEGIN TRANSACTION
+        BetRepo -> DB: INSERT INTO bets
+        BetRepo -> DB: UPDATE users SET balance = balance - amount WHERE id = userId
+        BetRepo -> DB: COMMIT
+        BetRepo --> Service: bet
+        deactivate BetRepo
+
+        Service -> NotifService: sendBetPlacedNotification(userId, bet)
+        activate NotifService
+        NotifService -> DB: INSERT INTO notifications
+        NotifService --> Service: notification
+        deactivate NotifService
+
+        Service --> Controller: bet
+        deactivate Service
+
+        Controller --> User: 200 OK (JSON response with bet details)
+        note right of User: Bet placed successfully
+    end
+end
+
+deactivate Controller
+
+@enduml

@@ -105,17 +105,16 @@ class FixtureRepository
         if (isset($filters['competition_id'])) {
             $query->where('competition_id', $filters['competition_id']);
         }
-        if(isset($filters['season_id']) && $filters['season_id'] != null)
-        {
+        if (isset($filters['season_id']) && $filters['season_id'] != null) {
             $query->where('season_id', $filters['season_id']);
         }
-        if(isset($filters['recently']) && $filters['recently'] == 1)
-        {
+        if (isset($filters['recently']) && $filters['recently'] == 1) {
             // dd(1);
-            if(!isset($filters['competition_id']))
-            $query->where('status', 'FINISHED')
+            if (!isset($filters['competition_id'])) {
+                $query->where('status', 'FINISHED')
                 ->where('utc_date', '<=', now())
                 ->orderBy('utc_date', 'desc');
+            }
         }
 
         // Lọc theo danh sách ID
@@ -134,12 +133,9 @@ class FixtureRepository
 
         // Lọc theo trạng thái
         if (isset($filters['status'])) {
-            if($filters['status'] == 'SCHEDULED')
-            {
+            if ($filters['status'] == 'SCHEDULED') {
                 $query->where('status', '!=', 'FINISHED');
-            }
-            else
-            {
+            } else {
                 $query->where('status', $filters['status']);
             }
             // $query->where('status', $filters['status']);
@@ -147,7 +143,7 @@ class FixtureRepository
 
         // Lọc theo tên đội bóng
         if (isset($filters['teamName'])) {
-            $query->where(function($q) use ($filters) {
+            $query->where(function ($q) use ($filters) {
                 $q->whereHas('homeTeam', function ($query) use ($filters) {
                     $query->where('name', 'like', '%' . $filters['teamName'] . '%');
                 })
@@ -159,17 +155,17 @@ class FixtureRepository
 
         // Lọc theo ID đội bóng
         if (isset($filters['teamId'])) {
-            $query->where(function($q) use ($filters) {
+            $query->where(function ($q) use ($filters) {
                 $q->where('home_team_id', $filters['teamId'])
                   ->orWhere('away_team_id', $filters['teamId']);
             });
         }
 
-        if(isset( $filters['recently']) &&  $filters['recently'] == 1)
-        {
+        if (isset($filters['recently']) &&  $filters['recently'] == 1) {
             $query->orderBy('utc_date', 'desc');
-        } else
-        $query->orderBy('utc_date', 'asc');
+        } else {
+            $query->orderBy('utc_date', 'asc');
+        }
 
         // Lấy kết quả với các mối quan hệ và sắp xếp
         return $query
@@ -190,7 +186,7 @@ class FixtureRepository
 
         // Filter by team name
         if (isset($filters['teamName'])) {
-            $query->where(function($q) use ($filters) {
+            $query->where(function ($q) use ($filters) {
                 $q->whereHas('homeTeam', function ($query) use ($filters) {
                     $query->where('name', 'like', '%' . $filters['teamName'] . '%');
                 })
@@ -574,7 +570,7 @@ class FixtureRepository
                 });
                 $q->WhereHas('awayTeam', function ($query) use ($tlaAway) {
                         $query->where('tla', $tlaAway);
-                    });
+                });
             });
             $query->where('status', 'FINISHED')
             ->where('utc_date', '<=', now());
@@ -584,7 +580,7 @@ class FixtureRepository
             ->first();
     }
 
-    public function findByTLAOrName($tlaHome, $tlaAway, $name_home, $away_name,$competitionId)
+    public function findByTLAOrName($tlaHome, $tlaAway, $name_home, $away_name, $competitionId)
     {
         $query = $this->model->newQuery();
         $query->where('competition_id', $competitionId)
@@ -601,8 +597,7 @@ class FixtureRepository
                             ->orWhere('name', 'like', '%' . $away_name . '%')
                             ->orWhere('short_name', 'like', '%' . $away_name . '%');
                         $query->where('tla', $tlaAway);
-
-                    });
+                });
             });
             $query->where('status', 'FINISHED')
             ->where('utc_date', '<=', now());

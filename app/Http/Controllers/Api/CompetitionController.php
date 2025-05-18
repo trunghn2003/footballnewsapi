@@ -14,6 +14,7 @@ use App\Models\Competition;
 class CompetitionController extends Controller
 {
     use ApiResponseTrait;
+
     private CompetitionService $competitionService;
 
     public function __construct(CompetitionService $competitionService)
@@ -74,13 +75,11 @@ class CompetitionController extends Controller
     public function addToFavourite($id): JsonResponse
     {
         $result = $this->competitionService->addToFavourite($id);
-        if($result) {
+        if ($result) {
             return $this->successResponse($result);
         } else {
             return $this->errorResponse('Competition not found', Response::HTTP_NOT_FOUND);
         }
-
-
     }
 
     /**
@@ -89,7 +88,7 @@ class CompetitionController extends Controller
     public function removeFromFavourite($id): JsonResponse
     {
         $result = $this->competitionService->removeFromFavourite($id);
-        if($result) {
+        if ($result) {
             return $this->successResponse($result);
         } else {
             return $this->errorResponse('Competition not found', Response::HTTP_NOT_FOUND);
@@ -102,7 +101,7 @@ class CompetitionController extends Controller
     public function getFavouriteCompetitions(): JsonResponse
     {
         $result = $this->competitionService->getFavouriteCompetitions();
-        if($result) {
+        if ($result) {
             return $this->successResponse($result);
         } else {
             return $this->errorResponse('No favourite competitions found', Response::HTTP_NOT_FOUND);

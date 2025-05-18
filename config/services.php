@@ -18,7 +18,6 @@ return [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),
         'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
-        'scheme' => 'https',
     ],
 
     'postmark' => [
@@ -30,12 +29,13 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+
+    'football_api' => [
+        'url' => env('API_FOOTBALL_URL'),
+        'token' => env('API_FOOTBALL_TOKEN'),
+    ],
+
     'firebase' => [
-        'key_path' => public_path(env('FIREBASE_CREDENTIALS')),
+        'fcm_server_key' => env('FIREBASE_FCM_SERVER_KEY'),
     ],
-
-    'gemini' => [
-        'api_key' => env('GEMINI_API_KEY'),
-    ],
-
 ];

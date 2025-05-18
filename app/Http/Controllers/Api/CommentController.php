@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class CommentController extends Controller
 {
     use ApiResponseTrait;
+
     protected $commentService;
 
     public function __construct(CommentService $commentService)

@@ -8,14 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponseTrait;
+
 class AreaController extends Controller
 {
-    private AreaService $areaService;
     use ApiResponseTrait;
 
-    public function __construct(AreaService $areaService)
-    {
-        $this->areaService = $areaService;
+    public function __construct(
+        private AreaService $areaService
+    ) {
     }
 
     /**
@@ -61,5 +61,4 @@ class AreaController extends Controller
         $result = $this->areaService->getPaginatedAreas($filters, $perPage, $page);
         return $this->successResponse($result);
     }
-   
 }

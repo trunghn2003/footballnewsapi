@@ -1,25 +1,21 @@
 <?php
+
 namespace App\DTO;
+
 class AreaDTO implements \JsonSerializable
 {
-    private $id;
-    private ?String  $name;
-    private ?String $code;
-    private ?String $flag;
-
     /**
-     * Summary of __construct
-     * @param mixed $id
-     * @param mixed $name
-     * @param mixed $code
-     * @param mixed $flag
+     * @param int|string|null $id
+     * @param string|null $name
+     * @param string|null $code
+     * @param string|null $flag
      */
-    public function __construct($id, $name, $code, $flag)
-    {
-        $this->id = $id;
-        $this->name = $name;
-        $this->code = $code;
-        $this->flag = $flag;
+    public function __construct(
+        private $id,
+        private ?string $name,
+        private ?string $code,
+        private ?string $flag
+    ) {
     }
 
     public function jsonSerialize(): array
@@ -31,5 +27,4 @@ class AreaDTO implements \JsonSerializable
             'flag' => $this->flag,
         ];
     }
-
 }

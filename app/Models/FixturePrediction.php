@@ -35,4 +35,4 @@ class FixturePrediction extends Model
     {
         return $this->belongsTo(Fixture::class);
     }
-} 
+}

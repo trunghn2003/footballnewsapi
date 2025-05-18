@@ -1,42 +1,9 @@
 <?php
 
-
 namespace App\DTO;
-
-
 
 class CompetitionDTO implements \JsonSerializable
 {
-    /**
-     * @var int
-     */
-    private int $id;
-
-
-
-    /**
-     * @var string
-     */
-    private ?string $name;
-
-    /**
-     * @var string|null
-     */
-    private ?string $code;
-
-    /**
-     * @var string
-     */
-    private ?string $type;
-
-    /**
-     * @var string|null
-     */
-    private ?string $emblem;
-
-    private ?AreaDTO $area = null;
-    private ?SeasonDTO $season = null;
-
     /**
      * @param int $id
      * @param string|null $name
@@ -46,15 +13,15 @@ class CompetitionDTO implements \JsonSerializable
      * @param AreaDTO|null $area
      * @param SeasonDTO|null $season
      */
-    public function __construct(int $id, ?string $name, ?string $code, ?string $type, ?string $emblem, ?AreaDTO $area, ?SeasonDTO $season)
-    {
-        $this->id = $id;
-        $this->name = $name;
-        $this->code = $code;
-        $this->type = $type;
-        $this->emblem = $emblem;
-        $this->area = $area;
-        $this->season = $season;
+    public function __construct(
+        private int $id,
+        private ?string $name,
+        private ?string $code,
+        private ?string $type,
+        private ?string $emblem,
+        private ?AreaDTO $area = null,
+        private ?SeasonDTO $season = null
+    ) {
     }
 
     public function getId(): int
@@ -139,9 +106,4 @@ class CompetitionDTO implements \JsonSerializable
             'currentSeason' => $this->season,
         ];
     }
-
-
-
-
-
 }

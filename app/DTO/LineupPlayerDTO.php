@@ -13,7 +13,6 @@ class LineupPlayerDTO implements \JsonSerializable
     private ?PersonDTO $player;
 
     public function __construct(
-
         int $lineupId,
         int $playerId,
         ?string $position = null,

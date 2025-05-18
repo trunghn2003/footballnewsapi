@@ -19,8 +19,7 @@ class ScoreMapper
             [
                 'home' => $fixture->half_time_home_score,
                 'away' => $fixture->half_time_away_score
-            ]
-            ,
+            ],
             [
                 'home' => $fixture->extra_time_home_score,
                 'away' => $fixture->extra_time_away_score

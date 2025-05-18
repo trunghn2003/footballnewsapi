@@ -345,6 +345,4 @@ class AuthService
             throw new LogicException('Không thể thay đổi mật khẩu: ' . $e->getMessage());
         }
     }
-
-   
 }

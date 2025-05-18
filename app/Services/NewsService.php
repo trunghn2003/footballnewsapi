@@ -123,7 +123,9 @@ class NewsService
 
         foreach ($users as $user) {
             $prefs = json_decode($user->notification_pref, true);
-            if (!$prefs) continue;
+            if (!$prefs) {
+                continue;
+            }
 
             // Lấy danh sách team_ids từ tin tức
             $newsTeamIds = $news->teams()->pluck('id')->toArray();

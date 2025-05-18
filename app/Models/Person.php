@@ -31,6 +31,4 @@ class Person extends Model
     {
         return $this->hasMany(Goal::class);
     }
-
-   
 }

@@ -48,7 +48,6 @@ class BalanceController extends Controller
                 'transaction' => $result['transaction'],
                 'new_balance' => $result['new_balance']
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -85,7 +84,6 @@ class BalanceController extends Controller
                 'transaction' => $result['transaction'],
                 'new_balance' => $result['new_balance']
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -112,7 +110,6 @@ class BalanceController extends Controller
             return $this->successResponse([
                 'balance' => $result['balance']
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -146,7 +143,6 @@ class BalanceController extends Controller
             return $this->successResponse([
                 'transactions' => $result['transactions']
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -177,7 +173,6 @@ class BalanceController extends Controller
             return $this->successResponse([
                 'message' => 'Cấp tiền thành công cho tất cả người dùng'
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),

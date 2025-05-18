@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class NewsController extends Controller
 {
     use ApiResponseTrait;
+
     protected $newsService;
 
     public function __construct(NewsService $newsService)

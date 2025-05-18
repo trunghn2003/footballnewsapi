@@ -53,7 +53,6 @@ class LiveMatchService
                 'message' => null,
                 'data' => $processedData
             ];
-
         } catch (\Exception $e) {
             Log::error('Error fetching live matches: ' . $e->getMessage());
             return [
@@ -71,8 +70,8 @@ class LiveMatchService
             'key_sync' => $match['key_sync'],
             'match_time' => [
                 'timestamp' => $match['timestamp'],
-                'date' => Carbon::createFromTimestamp($match['timestamp']/1000)->format('Y-m-d'),
-                'time' => Carbon::createFromTimestamp($match['timestamp']/1000)->format('H:i'),
+                'date' => Carbon::createFromTimestamp($match['timestamp'] / 1000)->format('Y-m-d'),
+                'time' => Carbon::createFromTimestamp($match['timestamp'] / 1000)->format('H:i'),
                 'status' => $match['match_status'],
                 'current_time' => $match['time_str'] ?? null
             ],

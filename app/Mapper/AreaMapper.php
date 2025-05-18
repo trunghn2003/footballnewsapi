@@ -4,8 +4,6 @@ namespace App\Mapper;
 
 use App\DTO\AreaDTO;
 use App\Models\Area;
-
-
 use AutoMapperPlus\AutoMapper;
 use AutoMapperPlus\Configuration\AutoMapperConfig;
 

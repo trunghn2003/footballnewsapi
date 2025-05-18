@@ -11,7 +11,7 @@ class OddsService
     {
         // Lấy xác suất cơ bản từ dự đoán
         $baseProbabilities = $prediction['win_probability'];
-        
+
         // Tính tỉ lệ cược cơ bản
         $baseOdds = [
             'home' => $this->probabilityToOdds($baseProbabilities['home']),
@@ -41,7 +41,9 @@ class OddsService
      */
     private function probabilityToOdds(float $probability): float
     {
-        if ($probability <= 0) return 999.0;
+        if ($probability <= 0) {
+            return 999.0;
+        }
         return round(100 / $probability, 2);
     }
 
@@ -51,7 +53,7 @@ class OddsService
     private function adjustOdds(array $baseOdds, array $fixtureData): array
     {
         $adjustedOdds = $baseOdds;
-        
+
         // Điều chỉnh dựa trên sân nhà/khách
         if ($fixtureData['is_home_advantage']) {
             $adjustedOdds['home'] *= 0.95; // Giảm tỉ lệ cho đội nhà
@@ -88,13 +90,13 @@ class OddsService
     private function calculateHandicapOdds(array $baseOdds, array $fixtureData): array
     {
         $handicapOdds = [];
-        
+
         // Tính handicap dựa trên sức mạnh tương đối
         $strengthDiff = $fixtureData['home_team_strength'] - $fixtureData['away_team_strength'];
-        
+
         // Tạo các mức handicap
         $handicaps = [-2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5];
-        
+
         foreach ($handicaps as $handicap) {
             $handicapOdds[$handicap] = [
                 'home' => $this->calculateHandicapOddsForTeam($baseOdds['home'], $strengthDiff, $handicap),
@@ -121,10 +123,10 @@ class OddsService
     {
         $overUnderOdds = [];
         $expectedGoals = $prediction['predicted_score']['home'] + $prediction['predicted_score']['away'];
-        
+
         // Tạo các mức tài/xỉu
         $lines = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5];
-        
+
         foreach ($lines as $line) {
             $overUnderOdds[$line] = [
                 'over' => $this->calculateOverUnderOddsForLine($expectedGoals, $line, true),
@@ -140,10 +142,10 @@ class OddsService
      */
     private function calculateOverUnderOddsForLine(float $expectedGoals, float $line, bool $isOver): float
     {
-        $probability = $isOver ? 
+        $probability = $isOver ?
             $this->calculateOverProbability($expectedGoals, $line) :
             $this->calculateUnderProbability($expectedGoals, $line);
-        
+
         return $this->probabilityToOdds($probability * 100);
     }
 
@@ -176,7 +178,7 @@ class OddsService
         $correctScoreOdds = [];
         $homeStrength = $fixtureData['home_team_strength'];
         $awayStrength = $fixtureData['away_team_strength'];
-        
+
         // Tạo các tỉ số có khả năng cao
         for ($home = 0; $home <= 5; $home++) {
             for ($away = 0; $away <= 5; $away++) {
@@ -197,10 +199,10 @@ class OddsService
     {
         $homeExpected = $homeStrength * 1.5;
         $awayExpected = $awayStrength * 1.2;
-        
+
         $homeProb = pow($homeExpected, $homeGoals) * exp(-$homeExpected) / factorial($homeGoals);
         $awayProb = pow($awayExpected, $awayGoals) * exp(-$awayExpected) / factorial($awayGoals);
-        
+
         return $homeProb * $awayProb;
     }
 
@@ -211,7 +213,7 @@ class OddsService
     {
         $homeScoringProb = $this->calculateTeamScoringProbability($fixtureData['home_team_strength']);
         $awayScoringProb = $this->calculateTeamScoringProbability($fixtureData['away_team_strength']);
-        
+
         $bttsProb = $homeScoringProb * $awayScoringProb;
         $noBttsProb = 1 - $bttsProb;
 
@@ -231,7 +233,10 @@ class OddsService
 }
 
 // Hàm tính giai thừa
-function factorial($n) {
-    if ($n <= 1) return 1;
+function factorial($n)
+{
+    if ($n <= 1) {
+        return 1;
+    }
     return $n * factorial($n - 1);
-} 
+}

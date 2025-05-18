@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -46,10 +47,8 @@ class Formation
             ['position' => 'CF2', 'grid' => '4:2', 'group' => 'F']
         ],
     ];
-
     public static function getFormation($formation)
     {
         return self::$formations[$formation] ?? null;
     }
-    
 }

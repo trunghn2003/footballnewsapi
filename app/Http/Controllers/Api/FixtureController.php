@@ -13,11 +13,10 @@ use Illuminate\Support\Facades\Http;
 class FixtureController extends Controller
 {
     use ApiResponseTrait;
-    private FixtureService $fixtureService;
 
-    public function __construct(FixtureService $fixtureService)
-    {
-        $this->fixtureService = $fixtureService;
+    public function __construct(
+        private FixtureService $fixtureService
+    ) {
     }
 
     public function sync(): JsonResponse

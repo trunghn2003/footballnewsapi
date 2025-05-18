@@ -18,28 +18,16 @@ class CompetitionService
 {
     private string $apiUrlFootball;
     private string $apiToken;
-    private CompetitionRepository $competitionRepository;
-    private AreaRepository $areaRepository;
-    private SeasonMapper $seasonMapper;
-    private AreaMapper  $areaMapper;
-    private CompetitionMapper $competitionMapper;
-
-
 
     public function __construct(
-        CompetitionRepository $competitionRepository,
-        AreaRepository $areaRepository,
-        SeasonMapper $seasonMapper,
-        AreaMapper $areaMapper,
-        CompetitionMapper $competitionMapper
+        private CompetitionRepository $competitionRepository,
+        private AreaRepository $areaRepository,
+        private SeasonMapper $seasonMapper,
+        private AreaMapper $areaMapper,
+        private CompetitionMapper $competitionMapper
     ) {
-        $this->apiUrlFootball = env('API_FOOTBALL_URL');
-        $this->apiToken = env('API_FOOTBALL_TOKEN');
-        $this->competitionRepository = $competitionRepository;
-        $this->areaRepository = $areaRepository;
-        $this->seasonMapper = $seasonMapper;
-        $this->areaMapper = $areaMapper;
-        $this->competitionMapper = $competitionMapper;
+        $this->apiUrlFootball = config('services.football_api.url');
+        $this->apiToken = config('services.football_api.token');
     }
 
     /**
@@ -137,7 +125,9 @@ class CompetitionService
                 $areaDTO = $this->areaMapper->toDTO($area);
                 $season = $competition->currentSeason ?? null;
                 $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+                if (isset($seaDTO)) {
+                    $seaDTO->setCompetitionName($competition->name);
+                }
                 //                 dump($seaDTO);
                 $competitionDto = $this->competitionMapper->toDTO($competition);
                 $competitionDto->setArea($areaDTO);
@@ -168,7 +158,9 @@ class CompetitionService
             $areaDTO = $this->areaMapper->toDTO($area);
             $season = $competition->currentSeason ?? null;
             $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-            if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+            if (isset($seaDTO)) {
+                $seaDTO->setCompetitionName($competition->name);
+            }
             $competitionDto = $this->competitionMapper->toDTO($competition);
             $competitionDto->setArea($areaDTO);
             $competitionDto->setSeason($seaDTO);
@@ -193,7 +185,9 @@ class CompetitionService
                 $areaDTO = $this->areaMapper->toDTO($area);
                 $season = $competition->currentSeason ?? null;
                 $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+                if (isset($seaDTO)) {
+                    $seaDTO->setCompetitionName($competition->name);
+                }
 
                 $competitionDto = $this->competitionMapper->toDTO($competition);
                 $competitionDto->setArea($areaDTO);
@@ -255,7 +249,9 @@ class CompetitionService
                 $areaDTO = $this->areaMapper->toDTO($area);
                 $season = $competition->currentSeason ?? null;
                 $seaDTO = $season ? $this->seasonMapper->toDTO($season) : null;
-                if (isset($seaDTO)) $seaDTO->setCompetitionName($competition->name);
+                if (isset($seaDTO)) {
+                    $seaDTO->setCompetitionName($competition->name);
+                }
 
                 $competitionDto = $this->competitionMapper->toDTO($competition);
                 $competitionDto->setArea($areaDTO);
@@ -281,7 +277,7 @@ class CompetitionService
             if (!is_array($favouriteCompetitions)) {
                 $favouriteCompetitions = json_decode($favouriteCompetitions, true) ?? [];
             }
-             if (($key = array_search($id, $favouriteCompetitions)) !== false) {
+            if (($key = array_search($id, $favouriteCompetitions)) !== false) {
                 unset($favouriteCompetitions[$key]);
                 $user->favourite_competitions = array_values($favouriteCompetitions);
                 $user->save();

@@ -15,29 +15,19 @@ use Illuminate\Support\Facades\Log;
 
 class TeamService
 {
-    private $teamRepository;
-    private $personRepository;
-    private $competitionRepository;
-    private $lineUpPlayerRepository;
     private string $apiUrl;
     private string $apiToken;
-    private CompetitionMapper $competitionMapper;
 
 
     public function __construct(
-        TeamRepository $teamRepository,
-        CompetitionRepository $competitionRepository,
-        PersonRepository $personRepository,
-        LineUpPlayerRepository $lineUpPlayerRepository,
-        CompetitionMapper $competitionMapper
+        private TeamRepository $teamRepository,
+        private CompetitionRepository $competitionRepository,
+        private PersonRepository $personRepository,
+        private LineUpPlayerRepository $lineUpPlayerRepository,
+        private CompetitionMapper $competitionMapper
     ) {
-        $this->teamRepository = $teamRepository;
-        $this->competitionRepository = $competitionRepository;
-        $this->personRepository = $personRepository;
-        $this->lineUpPlayerRepository = $lineUpPlayerRepository;
-        $this->apiUrl = env('API_FOOTBALL_URL');
-        $this->apiToken = env('API_FOOTBALL_TOKEN');
-        $this->competitionMapper = $competitionMapper;
+        $this->apiUrl = config('services.football_api.url');
+        $this->apiToken = config('services.football_api.token');
     }
 
      /**
@@ -59,7 +49,7 @@ class TeamService
                 'PD' => 2014,
              ];
         try {
-            foreach ($names as $name =>$id1) {
+            foreach ($names as $name => $id1) {
                 $response = Http::withHeaders([
                     'X-Auth-Token' => $this->apiToken
                 ])->get("{$this->apiUrl}/competitions/{$name}/teams");
@@ -89,7 +79,7 @@ class TeamService
                         //     ],
                         //     ['created_at' => now(), 'updated_at' => now()]
                         // );
-                        Log::info('Team: ' . $team->name . ' ' .$competition->id. ' '. $currentSeason->id . ' synced successfully.');
+                        Log::info('Team: ' . $team->name . ' ' . $competition->id . ' ' . $currentSeason->id . ' synced successfully.');
                         foreach ($teamData['squad'] as $playerData) {
                             $this->personRepository->syncPerson($playerData, $team->id);
                         }
@@ -113,7 +103,6 @@ class TeamService
         $competionDtos = [];
         foreach ($competition as $item) {
                     $competionDtos[] = $this->competitionMapper->toDTO($item);
-
         }
         $players = $result->players()->get();
 
@@ -125,7 +114,7 @@ class TeamService
         $lineupInfoMap = $lineupInfo->keyBy('player_id');
 
         // Thêm thông tin số áo và vị trí vào đối tượng cầu thủ
-        $playersWithShirtNumber = $players->map(function($player) use ($lineupInfoMap) {
+        $playersWithShirtNumber = $players->map(function ($player) use ($lineupInfoMap) {
             $playerData = $player->toArray();
 
             if ($lineupInfoMap->has($player->id)) {
@@ -411,8 +400,10 @@ class TeamService
                 }
 
                 // Theo dõi kết quả lớn nhất
-                if ($goalDiff > 0 &&
-                    (!$fixtureStats['biggest_win'] || $goalDiff > $fixtureStats['biggest_win']['goal_difference'])) {
+                if (
+                    $goalDiff > 0 &&
+                    (!$fixtureStats['biggest_win'] || $goalDiff > $fixtureStats['biggest_win']['goal_difference'])
+                ) {
                     $fixtureStats['biggest_win'] = [
                         'id' => $fixture->id,
                         'date' => $fixture->utc_date,
@@ -430,8 +421,10 @@ class TeamService
                     ];
                 }
 
-                if ($goalDiff < 0 &&
-                    (!$fixtureStats['biggest_loss'] || $goalDiff < $fixtureStats['biggest_loss']['goal_difference'])) {
+                if (
+                    $goalDiff < 0 &&
+                    (!$fixtureStats['biggest_loss'] || $goalDiff < $fixtureStats['biggest_loss']['goal_difference'])
+                ) {
                     $fixtureStats['biggest_loss'] = [
                         'id' => $fixture->id,
                         'date' => $fixture->utc_date,
@@ -489,7 +482,8 @@ class TeamService
                 'stats' => $fixtureStats,
             ];
 
-            return $result;        } catch (\Exception $e) {
+            return $result;
+        } catch (\Exception $e) {
             Log::error('Error getting team stats by competition: ' . $e->getMessage());
             throw $e;
         }

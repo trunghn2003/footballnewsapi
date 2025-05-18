@@ -16,15 +16,19 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\ProfileRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-class AuthController extends Controller {
+
+class AuthController extends Controller
+{
     protected $authService;
     use ApiResponseTrait;
 
-    public function __construct(AuthService $authService) {
+    public function __construct(AuthService $authService)
+    {
         $this->authService = $authService;
     }
 
-    public function register(RegisterRequest $request) {
+    public function register(RegisterRequest $request)
+    {
         try {
             $result = $this->authService->register($request->validated());
             return $this->successResponse($result, 'User registered successfully', 201);
@@ -33,7 +37,8 @@ class AuthController extends Controller {
         }
     }
 
-    public function login(LoginRequest $request) {
+    public function login(LoginRequest $request)
+    {
         try {
             $fcm_token = $request->fcm_token ?? null;
             $token = $this->authService->login($request->validated(), $fcm_token);
@@ -45,7 +50,8 @@ class AuthController extends Controller {
         }
     }
 
-    public function logout() {
+    public function logout()
+    {
         try {
             $this->authService->logout();
             return $this->successResponse(null, 'Successfully logged out');
@@ -54,7 +60,8 @@ class AuthController extends Controller {
         }
     }
 
-    public function me() {
+    public function me()
+    {
         $user = $this->authService->getAuthenticatedUser();
         if ($user->avatar) {
             $user->avatar = config('app.url') . '/storage/' . $user->avatar;
@@ -62,13 +69,13 @@ class AuthController extends Controller {
         return $this->successResponse($user);
     }
 
-    public function updateProfile(ProfileRequest $request) {
+    public function updateProfile(ProfileRequest $request)
+    {
         try {
             $user = auth()->user();
             $data = $request->validated();
 
             if ($request->hasFile('avatar')) {
-
                 if ($user->avatar) {
                     Storage::delete($user->avatar);
                 }
@@ -88,7 +95,8 @@ class AuthController extends Controller {
         }
     }
 
-    public function deleteAvatar() {
+    public function deleteAvatar()
+    {
         try {
             $user = auth()->user();
             if ($user->avatar) {

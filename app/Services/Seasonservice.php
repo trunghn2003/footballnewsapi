@@ -15,7 +15,7 @@ class SeasonService
     private string $apiUrlFootball;
     private string $apiToken;
     private SeasonRepository $seasonRepository;
-    
+
 
     public function __construct(SeasonRepository $seasonRepository)
     {
@@ -43,14 +43,14 @@ class SeasonService
                 $response = Http::withHeaders([
                     'X-Auth-Token' => $this->apiToken
                 ])->get("{$this->apiUrlFootball}/competitions/" . $name);
-            
+
                 if (!$response->successful()) {
                     throw new \Exception("API request failed: {$response->status()}");
                 }
 
                 $data = $response->json()['seasons'];
                 $competitionId = $response->json()['id'];
-                
+
                 DB::beginTransaction();
 
                 if (isset($data) && is_array($data) && $competitionId) {
@@ -58,12 +58,12 @@ class SeasonService
                         $this->seasonRepository->syncSeason($seasonData, $competitionId);
                     }
                 }
-            
+
                 DB::commit();
             }
 
             return [
-                'success' => true   
+                'success' => true
             ];
         } catch (\Exception $e) {
             Log::error("Competition sync failed: {$e->getMessage()}");
@@ -90,7 +90,6 @@ class SeasonService
             }
 
             return $response->json();
-
         } catch (\Exception $e) {
             Log::error("Failed to get competition details: {$e->getMessage()}");
             return null;

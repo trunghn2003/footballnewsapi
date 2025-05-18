@@ -30,6 +30,7 @@ class SendMatchReminders extends Command
      */
     protected $description = 'Send reminders 30 minutes before matches start';
     use PushNotification;
+
     /**
      * Execute the console command.
      *
@@ -168,9 +169,9 @@ class SendMatchReminders extends Command
      */
     protected function getUsersToNotify(Fixture $match)
     {
-       if(isset($match->homeTeam) && isset($match->awayTeam) && isset($match->homeTeam->id) && isset($match->awayTeam->id)) {
+        if (isset($match->homeTeam) && isset($match->awayTeam) && isset($match->homeTeam->id) && isset($match->awayTeam->id)) {
             return User::whereJsonContains('favourite_teams', $match->homeTeam->id)
-                ->orWhereJsonContains('favourite_teams', $match->awayTeam->id)->where('id',1)
+                ->orWhereJsonContains('favourite_teams', $match->awayTeam->id)->where('id', 1)
                 ->get();
         }
         return [];

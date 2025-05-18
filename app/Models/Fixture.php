@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Fixture extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'id',
         'competition_id',

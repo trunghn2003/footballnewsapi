@@ -32,4 +32,4 @@ class PredictionServiceProvider extends ServiceProvider
     {
         //
     }
-} 
+}

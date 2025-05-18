@@ -30,4 +30,4 @@ class UserObserver
         $transaction->description = 'Số dư ban đầu khi đăng ký';
         $transaction->save();
     }
-} 
+}

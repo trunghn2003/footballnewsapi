@@ -14,7 +14,7 @@ class NotificationRepository
         $this->model = $model;
     }
 
-    public function getNotificationsByUser( $limit = 10)
+    public function getNotificationsByUser($limit = 10)
     {
         return $this->model->where('user_id', auth()->user()->id)
             // ->where('notifiable_type', 'App\Models\User')

@@ -1,14 +1,15 @@
 <?php
+
 namespace App\DTO;
+
 class SeasonDTO implements \JsonSerializable
 {
-    private int  $id;
-    private ?String $name;
-    private ?String $start;
-    private ?String $end;
+    private int $id;
+    private ?string $name;
+    private ?string $start;
+    private ?string $end;
     private ?string $competitionName = null;
-
-    /**
+/**
      * @param int $id
      * @param String|null $name
      * @param String|null $start
@@ -84,7 +85,4 @@ class SeasonDTO implements \JsonSerializable
             'competitionName' => $this->getCompetitionName()
         ];
     }
-
-
-
 }

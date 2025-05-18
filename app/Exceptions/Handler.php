@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class Handler extends ExceptionHandler
 {
     use ApiResponseTrait;
+
     /**
      * A list of exception types with their corresponding custom log levels.
      *
@@ -51,7 +52,8 @@ class Handler extends ExceptionHandler
         });
     }
 
-    public function render($request, Throwable $exception){
+    public function render($request, Throwable $exception)
+    {
         if ($exception instanceof ModelNotFoundException) {
             return $this->errorResponse($exception->getMessage(), 404);
         }

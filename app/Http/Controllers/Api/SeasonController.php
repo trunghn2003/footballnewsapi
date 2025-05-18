@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\SeasonService;
+
 class SeasonController extends Controller
 {
     private SeasonService $seasonService;

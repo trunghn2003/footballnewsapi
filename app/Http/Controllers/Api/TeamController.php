@@ -8,17 +8,15 @@ use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
-
 use PHPUnit\Framework\MockObject\Api;
 
 class TeamController extends Controller
 {
-    private TeamService $teamService;
     use ApiResponseTrait;
 
-    public function __construct(TeamService $teamService)
-    {
-        $this->teamService = $teamService;
+    public function __construct(
+        private TeamService $teamService
+    ) {
     }
 
     /**
@@ -49,7 +47,6 @@ class TeamController extends Controller
             return $this->errorResponse('Failed to add favorite team');
         }
         return $this->successResponse('Favorite team added successfully');
-
     }
 
     public function removeFavoriteTeam(int $teamId): JsonResponse
@@ -69,7 +66,6 @@ class TeamController extends Controller
         $result = $this->teamService->getTeams($filters, $perPage, $page);
 
         return $this->successResponse($result);
-
     }
 
     public function getTeam(int $teamId): JsonResponse
@@ -111,5 +107,4 @@ class TeamController extends Controller
             return $this->errorResponse($e->getMessage());
         }
     }
-
 }

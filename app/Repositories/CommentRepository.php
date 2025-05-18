@@ -20,7 +20,8 @@ class CommentRepository
     public function create(array $data)
     {
         DB::beginTransaction();
-        try {            $comment = new Comment();
+        try {
+            $comment = new Comment();
             // dd($data);
             $comment->parent_id = $data['parent_id'] ?? null;
             $comment->content = $data['content'];
@@ -30,7 +31,7 @@ class CommentRepository
             if ($comment->parent_id) {
                 $parentComment = $this->model->with('user')->find($comment->parent_id);
                 if ($parentComment && $parentComment->user_id !== $data['user_id'] && $parentComment->user->fcm_token) {
-                    $title =  auth()->user()->name.  " đã trả lời bình luận của bạn";
+                    $title =  auth()->user()->name .  " đã trả lời bình luận của bạn";
                     $message = $comment->content;
 
                     $this->sendNotification(

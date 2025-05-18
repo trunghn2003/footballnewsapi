@@ -5,23 +5,24 @@ namespace App\DTO;
 class StandingDTO
 {
     public function __construct(
-        private  int $id,
-        private  int $position,
-        private  int $playedGames,
-        private  int $won,
-        private  int $draw,
-        private  int $lost,
-        private  int $points,
-        private  int $goalsFor,
-        private  int $goalsAgainst,
-        private  int $goalDifference,
-        private  string $form,
-        private  int $teamId,
-        private  string $teamName,
-        private  string $teamShortName,
-        private  string $teamTla,
-        private  string $teamCrest
-    ) {}
+        private int $id,
+        private int $position,
+        private int $playedGames,
+        private int $won,
+        private int $draw,
+        private int $lost,
+        private int $points,
+        private int $goalsFor,
+        private int $goalsAgainst,
+        private int $goalDifference,
+        private string $form,
+        private int $teamId,
+        private string $teamName,
+        private string $teamShortName,
+        private string $teamTla,
+        private string $teamCrest
+    ) {
+    }
 
     public function toArray(): array
     {

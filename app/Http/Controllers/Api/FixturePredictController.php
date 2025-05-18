@@ -11,7 +11,7 @@ use Illuminate\Http\Response;
 class FixturePredictController extends Controller
 {
     use ApiResponseTrait;
-    
+
     private FixturePredictService $fixturePredictService;
 
     public function __construct(FixturePredictService $fixturePredictService)
@@ -29,7 +29,7 @@ class FixturePredictController extends Controller
     {
         try {
             $prediction = $this->fixturePredictService->predictMatchOutcome($fixtureId);
-            
+
             if (!$prediction['success']) {
                 return $this->errorResponse(
                     $prediction['error'] ?? 'Failed to generate prediction',
@@ -45,4 +45,4 @@ class FixturePredictController extends Controller
             );
         }
     }
-} 
+}

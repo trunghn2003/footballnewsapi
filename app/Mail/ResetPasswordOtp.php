@@ -11,7 +11,8 @@ use Illuminate\Queue\SerializesModels;
 
 class ResetPasswordOtp extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * The OTP code.

@@ -17,10 +17,10 @@ class TeamRepository
 
      private $model;
 
-     public function __construct(Team $team)
-     {
+    public function __construct(Team $team)
+    {
         $this->model = $team;
-     }
+    }
     public function updateOrCreateTeam(array $data): Team
     {
         try {
@@ -28,18 +28,18 @@ class TeamRepository
                 ['id' => $data['id']],
                 [
                 'name' => $data['name'],
-//                'short_name' => $data['shortName'],
-//                'tla' => $data['tla'],
-//                'crest' => $data['crest'],
-//                'website' => $data['website'] ?? null,
-//                'founded' => $data['founded'] ?? null,
-//                'venue' => $data['venue'] ?? null,
+                //                'short_name' => $data['shortName'],
+                //                'tla' => $data['tla'],
+                //                'crest' => $data['crest'],
+                //                'website' => $data['website'] ?? null,
+                //                'founded' => $data['founded'] ?? null,
+                //                'venue' => $data['venue'] ?? null,
                 'last_synced' => now(),
                 'area_id' => 2267,
                 'last_updated' => now()
-            ]
-        );
-        return $team;
+                ]
+            );
+            return $team;
         } catch (\Exception $e) {
             \Log::error('Error updating or creating team: ' . $e->getMessage());
             throw $e;
@@ -108,7 +108,8 @@ class TeamRepository
             \Log::error($e->getMessage());
         }
     }
-    public function findAll(){
+    public function findAll()
+    {
         return $this->model->all();
     }
 
@@ -138,7 +139,4 @@ class TeamRepository
         }
         return $this->model->whereIn('id', $favoriteTeams)->get();
     }
-
-
-
 }

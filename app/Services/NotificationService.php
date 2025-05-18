@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\User;
@@ -11,9 +12,9 @@ use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 
 class NotificationService
 {
-
     private $notificationRepository;
     use PushNotification;
+
 
     public function __construct(NotificationRepository $notificationRepository)
     {
@@ -37,18 +38,12 @@ class NotificationService
 
         // Create notification record
         $notification = $this->createNotification($user, $type, $data);
-
-        // Send push notification if FCM token exists
+// Send push notification if FCM token exists
         if (in_array('push', $channels) && $user->fcm_token) {
-            $this->sendNotification(
-                $user->fcm_token,
-                $data['title'] ?? $type,
-                $data['message'] ?? '',
-                array_merge($data, [
+            $this->sendNotification($user->fcm_token, $data['title'] ?? $type, $data['message'] ?? '', array_merge($data, [
                     'type' => $type,
                     'notification_id' => $notification->id
-                ])
-            );
+                ]));
         }
 
         return true;
@@ -69,14 +64,14 @@ class NotificationService
         ]);
     }
 
-   public function getNotificationsByUserId($perPage = 10)
-{
-    // Fetch notifications from repository (assumed to return a paginated query)
-    $result = $this->notificationRepository->getNotificationsByUser($perPage);
+    public function getNotificationsByUserId($perPage = 10)
+    {
+     // Fetch notifications from repository (assumed to return a paginated query)
+        $result = $this->notificationRepository->getNotificationsByUser($perPage);
+// Transform and group notifications
+        $notifications = $result->getCollection()->map(function ($notification) {
 
-    // Transform and group notifications
-    $notifications = $result->getCollection()->map(function ($notification) {
-        return [
+            return [
             'id' => $notification->id,
             'title' => $notification->title,
             'message' => $notification->message,
@@ -84,11 +79,12 @@ class NotificationService
             'created_at' => $notification->created_at,
             'data' => $notification->data,
             'is_read' => (bool) $notification->is_read
-        ];
-    })->sortByDesc('created_at') // Sort by newest first
-      ->groupBy('is_read'); // Group by read/unread
+            ];
+        })->sortByDesc('created_at') // Sort by newest first
+        ->groupBy('is_read');
+// Group by read/unread
 
-    return [
+        return [
         'notifications' => [
             'unread' => $notifications[false] ?? collect([]), // Unread notifications
             'read' => $notifications[true] ?? collect([]),    // Read notifications
@@ -97,8 +93,8 @@ class NotificationService
         'current_page' => $result->currentPage(),
         'last_page' => $result->lastPage(),
         'per_page' => $result->perPage(),
-    ];
-}
+        ];
+    }
     public function markAsRead($notificationId)
     {
         return $this->notificationRepository->markAsRead($notificationId);
@@ -114,8 +110,7 @@ class NotificationService
     public function updateNotificationPreferences($userId, array $preferences)
     {
         $user = User::findOrFail($userId);
-
-        // Lấy cài đặt hiện tại
+// Lấy cài đặt hiện tại
         $currentPrefs = json_decode($user->notification_pref, true) ?: [
             'global_settings' => [
                 'team_news' => true,
@@ -126,22 +121,17 @@ class NotificationService
             'team_settings' => [],
             'competition_settings' => []
         ];
-
-        // Cập nhật cài đặt toàn cục
+// Cập nhật cài đặt toàn cục
         if (isset($preferences['global_settings'])) {
-            $currentPrefs['global_settings'] = array_merge(
-                $currentPrefs['global_settings'] ?? [],
-                $preferences['global_settings']
-            );
+            $currentPrefs['global_settings'] = array_merge($currentPrefs['global_settings'] ?? [], $preferences['global_settings']);
         }
 
         // Cài đặt cho từng đội cụ thể
         if (isset($preferences['team_settings'])) {
-            // Xử lý trường hợp team_settings chỉ là mảng số nguyên
+// Xử lý trường hợp team_settings chỉ là mảng số nguyên
             if (is_array($preferences['team_settings']) && count($preferences['team_settings']) > 0) {
                 $teamSettings = [];
-
-                // Trường hợp 1: team_settings là mảng đối tượng đúng chuẩn
+// Trường hợp 1: team_settings là mảng đối tượng đúng chuẩn
                 if (isset($preferences['team_settings'][0]) && is_array($preferences['team_settings'][0])) {
                     foreach ($preferences['team_settings'] as $setting) {
                         if (isset($setting['team_id'])) {
@@ -175,11 +165,10 @@ class NotificationService
 
         // Cài đặt cho từng giải đấu cụ thể
         if (isset($preferences['competition_settings'])) {
-            // Xử lý tương tự như team_settings
+// Xử lý tương tự như team_settings
             if (is_array($preferences['competition_settings']) && count($preferences['competition_settings']) > 0) {
                 $competitionSettings = [];
-
-                // Trường hợp 1: mảng đối tượng
+// Trường hợp 1: mảng đối tượng
                 if (isset($preferences['competition_settings'][0]) && is_array($preferences['competition_settings'][0])) {
                     foreach ($preferences['competition_settings'] as $setting) {
                         if (isset($setting['competition_id'])) {
@@ -214,7 +203,6 @@ class NotificationService
         // Lưu cài đặt thông báo
         $user->notification_pref = json_encode($currentPrefs);
         $user->save();
-
         return $currentPrefs;
     }
 
@@ -231,12 +219,12 @@ class NotificationService
     {
         $user = User::find($userId);
         if (!$user || !$user->notification_pref) {
-            return true; // Mặc định là gửi thông báo nếu không có cài đặt
+            return true;
+        // Mặc định là gửi thông báo nếu không có cài đặt
         }
 
         $prefs = json_decode($user->notification_pref, true);
-
-        // Kiểm tra xem thông báo toàn cục có bật không
+// Kiểm tra xem thông báo toàn cục có bật không
         if (!isset($prefs['global_settings']) || !$this->isEnabledInGlobalSettings($prefs['global_settings'], $type)) {
             return false;
         }
@@ -245,8 +233,10 @@ class NotificationService
         if ($type === 'team_news' || $type === 'match_reminders' || $type === 'match_score') {
             if (isset($metadata['team_id'])) {
                 $teamId = $metadata['team_id'];
-                if ($this->hasTeamSpecificSetting($prefs, $teamId, $type) &&
-                    !$this->isEnabledForTeam($prefs, $teamId, $type)) {
+                if (
+                    $this->hasTeamSpecificSetting($prefs, $teamId, $type) &&
+                    !$this->isEnabledForTeam($prefs, $teamId, $type)
+                ) {
                     return false;
                 }
             }
@@ -256,8 +246,10 @@ class NotificationService
         if ($type === 'competition_news' || $type === 'match_reminders' || $type === 'match_score') {
             if (isset($metadata['competition_id'])) {
                 $competitionId = $metadata['competition_id'];
-                if ($this->hasCompetitionSpecificSetting($prefs, $competitionId, $type) &&
-                    !$this->isEnabledForCompetition($prefs, $competitionId, $type)) {
+                if (
+                    $this->hasCompetitionSpecificSetting($prefs, $competitionId, $type) &&
+                    !$this->isEnabledForCompetition($prefs, $competitionId, $type)
+                ) {
                     return false;
                 }
             }

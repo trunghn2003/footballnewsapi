@@ -39,8 +39,8 @@ class GeminiService
                 topP: 0.8,
                 topK: 40
             );
-        
-            
+
+
             $response = Gemini::generativeModel(ModelType::GEMINI_FLASH)
                 // ->withModel('models/gemini-2.0-flash-lite')
                 ->withSafetySetting($safetySettingDangerousContent)
@@ -48,17 +48,17 @@ class GeminiService
                 ->withGenerationConfig($generationConfig)
                 ->generateContent($prompt);
 
-        
+
             $text = $response->text();
-            
+
             // Extract win probabilities
             preg_match('/Home Win: (\d+)%/', $text, $homeWinMatches);
             preg_match('/Draw: (\d+)%/', $text, $drawMatches);
             preg_match('/Away Win: (\d+)%/', $text, $awayWinMatches);
-            
+
             // Extract predicted score
             preg_match('/Predicted score: (\d+)-(\d+)/', $text, $scoreMatches);
-            
+
             // Extract key factors
             preg_match('/Key factors influencing the prediction:(.*?)Confidence level:/s', $text, $factorsMatches);
             $factorsText = $factorsMatches[1] ?? '';
@@ -67,10 +67,10 @@ class GeminiService
             if (!empty($factorMatches[1])) {
                 $factors = $factorMatches[1];
             }
-            
+
             // Extract confidence level
             preg_match('/Confidence level: (\d+)%/', $text, $confidenceMatches);
-            
+
             return [
                 'success' => true,
                 'win_probability' => [
@@ -94,4 +94,4 @@ class GeminiService
             ];
         }
     }
-} 
+}

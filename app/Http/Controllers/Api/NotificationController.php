@@ -12,7 +12,9 @@ use App\Http\Requests\UpdateNotificationPreferencesRequest;
 
 class NotificationController extends Controller
 {
-    use PushNotification, ApiResponseTrait;
+    use PushNotification;
+    use ApiResponseTrait;
+
     protected $notificationService;
 
     public function __construct(NotificationService $notificationService)
@@ -33,10 +35,10 @@ class NotificationController extends Controller
             ->format('Y-m-d H:i:s');
 
          $result = $this->sendNotification(
-                $user->fcm_token,
-                $title,
-                $message,
-                [
+             $user->fcm_token,
+             $title,
+             $message,
+             [
                     'title' => $title,
                     'message' => $message,
                     'match_time' => $matchTime,
@@ -44,7 +46,7 @@ class NotificationController extends Controller
                     'user_id' => $user->id,
                     'logo' => $match->homeTeam->crest ?? null,
                 ]
-            );
+         );
            return response()->json([
                 'message' => 'Notification sent successfully',
                 'result' => $result,

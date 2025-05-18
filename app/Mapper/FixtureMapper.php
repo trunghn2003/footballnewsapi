@@ -20,8 +20,6 @@ class FixtureMapper
             // TeamMapper::fromModel($fixture->homeTeam),
             // TeamMapper::fromModel($fixture->awayTeam),
             ScoreMapper::fromModel($fixture),
-
-
         );
     }
 
@@ -38,7 +36,6 @@ class FixtureMapper
             TeamMapper::fromArray($data['homeTeam']),
             TeamMapper::fromArray($data['awayTeam']),
             ScoreMapper::fromArray($data['score']),
-
         );
     }
 }

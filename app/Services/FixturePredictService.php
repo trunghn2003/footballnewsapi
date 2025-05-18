@@ -99,7 +99,7 @@ class FixturePredictService
             $fixturePrediction = new FixturePrediction();
             $fixturePrediction->fixture_id = $fixtureId;
             $fixturePrediction->win_probability = $prediction['win_probability'];
-            $fixturePrediction->predicted_score =($prediction['predicted_score']);
+            $fixturePrediction->predicted_score = ($prediction['predicted_score']);
             $string = "";
             foreach ($prediction['key_factors'] as $key => $value) {
                 $string .= $value . "\n";
@@ -124,7 +124,6 @@ class FixturePredictService
                 ],
                 'analysis_data' => $analysisData
             ];
-
         } catch (\Exception $e) {
             Log::error("Match prediction failed: " . $e->getMessage());
             return [

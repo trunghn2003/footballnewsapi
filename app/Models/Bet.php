@@ -35,4 +35,4 @@ class Bet extends Model
     {
         return $this->belongsTo(Fixture::class);
     }
-} 
+}

@@ -149,26 +149,26 @@ class StandingService
         $competitionId = $request->competition_id;
         $seasonId = $request->season_id;
         $teamID = $request->team_id ?? null;
-        if(isset($request->teamName)){
+        if (isset($request->teamName)) {
             try {
                 $teamID = $this->teamRepository->findByName($request->teamName)->id;
             } catch (\Exception $e) {
                 return null;
             }
         }
-        if(isset($request->name)){
+        if (isset($request->name)) {
             try {
-            $competitionId = $this->competitionRepository->findByName($request->name)->id ;}
-            catch (\Exception $e) {
+                $competitionId = $this->competitionRepository->findByName($request->name)->id ;
+            } catch (\Exception $e) {
                 return null;
             }
         }
-        if(!isset($seasonId)){
+        if (!isset($seasonId)) {
             $seasonId = $this->competitionRepository->findById($competitionId)->currentSeason->id;
         }
 
         $matchday = $request->matchday;
-        if(!isset($matchday)){
+        if (!isset($matchday)) {
             $matchday = $this->competitionRepository->findById($competitionId)->currentSeason->current_matchday;
         }
         $type = $request->type ?? 'TOTAL';
@@ -184,7 +184,6 @@ class StandingService
     {
         try {
             $result =   $this->standingRepository->getStandingsByMatchday($competitionId, $seasonId, $matchday);
-
         } catch (\Exception $e) {
             Log::error('Error in StandingService getStandingsByMatchday: ' . $e->getMessage());
             throw $e;

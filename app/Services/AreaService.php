@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Area;
 use App\Repositories\AreaRepository;
-
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -14,13 +13,12 @@ class AreaService
 {
     private string $apiUrl;
     private string $apiToken;
-    private AreaRepository $areaRepository;
 
-    public function __construct(AreaRepository $areaRepository)
-    {
-        $this->apiToken = env('API_FOOTBALL_TOKEN');
-        $this->apiUrl = env('API_FOOTBALL_URL');
-        $this->areaRepository = $areaRepository;
+    public function __construct(
+        private AreaRepository $areaRepository
+    ) {
+        $this->apiToken = config('services.football_api.token');
+        $this->apiUrl = config('services.football_api.url');
     }
 
     /**
@@ -47,8 +45,6 @@ class AreaService
             ];
 
             foreach ($areas as $areaData) {
-
-
                 DB::beginTransaction();
                 try {
                     $area = $this->areaRepository->createOrUpdate([
@@ -87,7 +83,8 @@ class AreaService
      * @param int $id
      * @return Area
      */
-    public function getAreaById(int $id): Area{
+    public function getAreaById(int $id): Area
+    {
         $area = $this->areaRepository->findById($id);
         if (!$area) {
             throw new ModelNotFoundException("Area not found");

@@ -43,7 +43,6 @@ class BalanceService
                 'transaction' => $transaction,
                 'new_balance' => $balance->balance
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             return [
@@ -91,7 +90,6 @@ class BalanceService
                 'transaction' => $transaction,
                 'new_balance' => $balance->balance
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             return [
@@ -140,7 +138,6 @@ class BalanceService
                 'transaction' => $transaction,
                 'new_balance' => $balance->balance
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             return [
@@ -184,7 +181,6 @@ class BalanceService
                 'transaction' => $transaction,
                 'new_balance' => $balance->balance
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             return [
@@ -229,7 +225,6 @@ class BalanceService
     {
         DB::beginTransaction();
         try {
-
             foreach (User::all() as $user) {
                 // Tạo giao dịch nạp tiền
                 $transaction = new Transaction();
@@ -250,7 +245,6 @@ class BalanceService
                 $balance->save();
             }
             DB::commit();
-
         } catch (\Exception $e) {
             DB::rollBack();
         }

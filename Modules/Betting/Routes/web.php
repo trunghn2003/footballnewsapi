@@ -11,6 +11,6 @@
 |
 */
 
-Route::prefix('betting')->group(function() {
+Route::prefix('betting')->group(function () {
     Route::get('/', 'BettingController@index');
 });

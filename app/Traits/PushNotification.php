@@ -81,7 +81,7 @@ trait PushNotification
      */
     protected function shouldSendNotification($user, $type, $data = [])
     {
-        if($type == 'comment_reply') {
+        if ($type == 'comment_reply') {
             return true;
         }
         if (!$user->notification_pref) {

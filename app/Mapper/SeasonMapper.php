@@ -22,11 +22,11 @@ class SeasonMapper
         $config->registerMapping(Season::class, SeasonDTO::class)
             ->forMember('id', fn(Season $source) => $source->id)
             ->forMember('name', fn(Season $source) => $source->name)
-            ->forMember('start', function(Season $source) {
+            ->forMember('start', function (Season $source) {
                 // Convert Carbon to string format
                 return $source->start_date?->format('Y-m-d') ;
             })
-            ->forMember('end', function(Season $source) {
+            ->forMember('end', function (Season $source) {
                 return $source->end_date?->format('Y-m-d');
             });
 
@@ -34,11 +34,11 @@ class SeasonMapper
         $config->registerMapping(SeasonDTO::class, Season::class)
             ->forMember('id', fn(SeasonDTO $source) => $source->getId())
             ->forMember('name', fn(SeasonDTO $source) => $source->getName())
-            ->forMember('start_date', function(SeasonDTO $source) {
+            ->forMember('start_date', function (SeasonDTO $source) {
                 // Convert string back to Carbon
                 return $source->getStart() ? IlluminateCarbon::parse($source->getStart()) : null ;
             })
-            ->forMember('end_date', function(SeasonDTO $source) {
+            ->forMember('end_date', function (SeasonDTO $source) {
                 return $source->getEnd() ? IlluminateCarbon::parse($source->getEnd()) : null;
             });
 

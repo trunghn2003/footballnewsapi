@@ -11,7 +11,7 @@ class FixtureDTO implements \JsonSerializable
     private ?string $stage;
     private ?string $group;
 
-    private ?CompetitionDTO $competition =null;
+    private ?CompetitionDTO $competition = null;
 
     public ?TeamDTO $homeTeam = null;
     public ?TeamDTO $awayTeam = null;
@@ -29,7 +29,6 @@ class FixtureDTO implements \JsonSerializable
         // TeamDTO $homeTeam,
         // TeamDTO $awayTeam,
         ScoreDTO $score,
-
         // array $referees
     ) {
         $this->id = $id;

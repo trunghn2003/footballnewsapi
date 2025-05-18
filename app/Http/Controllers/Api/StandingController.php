@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class StandingController extends Controller
 {
     use ApiResponseTrait;
+
     protected $standingService;
 
     public function __construct(StandingService $standingService)

@@ -45,7 +45,6 @@ class BettingController extends Controller
             }
 
             return $this->successResponse($result['bet']);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -71,7 +70,6 @@ class BettingController extends Controller
             }
 
             return $this->successResponse($result['bets']);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
@@ -99,7 +97,6 @@ class BettingController extends Controller
                 'message' => 'Bet results processed successfully',
                 'processed_bets' => $result['processed_bets']
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 $e->getMessage(),
